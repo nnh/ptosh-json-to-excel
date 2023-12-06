@@ -1,3 +1,7 @@
+#
+*.txt
+*.url
+*.xlsm
 # History files
 .Rhistory
 .Rapp.history
