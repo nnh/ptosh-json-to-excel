@@ -9,7 +9,7 @@ library(tidyverse)
 library(here)
 library(readxl)
 # ------ constants ------
-kInputPath1 <- "~/Downloads"
+kInputPath1 <- here("output")
 kInputPath2 <- "~/Library/CloudStorage/Box-Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/output Bev-FOLFOX-SBC"
 # ------ functions ------
 ReadAllSheets <- function(file_path){

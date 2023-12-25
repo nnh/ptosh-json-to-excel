@@ -1,5 +1,5 @@
 #' Edit the output content for each sheet.
-#' 
+#'
 #' @file edit_field_items.R
 #' @author Mariko Ohtsuka
 #' @date 2023.12.25
@@ -66,7 +66,7 @@ EditFlipFlops <- function(raw_json){
 EditOutputFieldItems <- function(raw_json, flatten_json){
   field_items <- raw_json$field_items
   if (length(field_items) == 0){
-    return(list(field_items=NA, options=NA))
+    return(list(field_items=NA, options=NA, flip_flops=NA))
   }
   field_items_flatten <- flatten_json$field_items
   options <- EditOptions(raw_json, flatten_json)

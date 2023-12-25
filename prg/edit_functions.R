@@ -4,8 +4,8 @@
 #' @author Mariko Ohtsuka
 #' @date 2023.12.25
 # ------ constants ------
-source(here("edit_cdisc_sheet_configs.R"), encoding="UTF-8")
-source(here("edit_field_items.R"), encoding="UTF-8")
+source(here("prg", "edit_cdisc_sheet_configs.R"), encoding="UTF-8")
+source(here("prg", "edit_field_items.R"), encoding="UTF-8")
 # ------ functions ------
 EditAllocation <- function(flattenJson){
   allocation <- flattenJson$allocation

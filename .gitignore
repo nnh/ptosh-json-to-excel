@@ -1,6 +1,8 @@
 #
+*.JSON
 *.txt
 *.url
+*.xlsx
 *.xlsm
 # History files
 .Rhistory
