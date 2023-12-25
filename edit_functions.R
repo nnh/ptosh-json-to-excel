@@ -1,0 +1,23 @@
+#' Edit the output content for each sheet.
+#'
+#' @file edit_functions.R
+#' @author Mariko Ohtsuka
+#' @date 2023.12.25
+# ------ constants ------
+source(here("edit_cdisc_sheet_configs.R"), encoding="UTF-8")
+source(here("edit_field_items.R"), encoding="UTF-8")
+# ------ functions ------
+EditAllocation <- function(flattenJson){
+  allocation <- flattenJson$allocation
+  if (is.null(allocation)){
+    return(NA)
+  }
+  kGroupsColname <- "groups"
+  # "Rename the column names of a data frame from 'if' to 'groups.if'."
+  df_groups <- allocation[[kGroupsColname]] %>% rename_all( ~ str_c(kGroupsColname, ".", .))
+  df_others <- allocation %>% RemoveListElements(kGroupsColname)
+  res <- df_others %>% cbind(df_groups)
+  # あとで直す
+  res$groups.allocatees <- NA
+  return(res)
+}
