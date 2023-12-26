@@ -1,4 +1,5 @@
 #
+*.html
 *.JSON
 *.txt
 *.url
