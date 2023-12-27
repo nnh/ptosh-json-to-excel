@@ -46,3 +46,14 @@ CreateOutputFolder <- function(output_folder_name) {
   }
   return(output_path)
 }
+#' Edit data frame with Japanese name and alias name.
+#'
+#' This function creates a data frame with Japanese name and alias name.
+#'
+#' @param input_json Input JSON data.
+#' @return A data frame with Japanese name and alias name.
+#'
+#' @export
+EditDfJpNameAndAliasName <- function(input_json){
+  return(data.frame(jpname=input_json$name, alias_name=input_json$alias_name))
+}
