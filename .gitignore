@@ -3,9 +3,10 @@
 *.JSON
 *.txt
 *.url
-*.xlsx
 *.xlsm
-!/tools/test_compareTool/*
+/input/
+/input_*/
+/output/
 # History files
 .Rhistory
 .Rapp.history

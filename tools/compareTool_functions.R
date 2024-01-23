@@ -159,14 +159,11 @@ CheckExcelValuesConsistency <- function(value1, value2, sheetname, filename, com
   check_values1 <- value1 %>% GetValuesForCompare(col_names)
   check_values2 <- value2 %>% GetValuesForCompare(col_names)
   # 出力パッケージの違いによる差異を吸収
-  if (identical(check_values2 %>% colnames(), kJpnameAliasName) &
-      nrow(check_values2) == 0 &
-      nrow(check_values1) == 1){
-    if (check_values1[1, 1] == "" | is.na(check_values1[1, 1])){
-      check_values2[1, 1] <- check_values1[1, 1]
-    }
-    if (check_values1[1, 2] == "" | is.na(check_values1[1, 2])){
-      check_values2[1, 2] <- check_values1[1, 2]
+  if (nrow(check_values2) == 0 & nrow(check_values1) == 1){
+    for (col in 1:ncol(check_values1)){
+      if (check_values1[1, col] == "" | is.na(check_values1[1, col])){
+        check_values2[1, col] <- check_values1[1, col]
+      }
     }
   }
   # 改行コード等の調整
@@ -180,6 +177,15 @@ CheckExcelValuesConsistency <- function(value1, value2, sheetname, filename, com
       }
       if (str_detect(check_values2[row, col], '&amp;')){
         check_values2[row, col] <- check_values2[row, col] %>% str_replace_all('&amp;', "&")
+      }
+      if (str_detect(check_values2[row, col], '&lt;')){
+        check_values2[row, col] <- check_values2[row, col] %>% str_replace_all('&lt;', "<")
+      }
+      if (str_detect(check_values2[row, col], '&gt;')){
+        check_values2[row, col] <- check_values2[row, col] %>% str_replace_all('&gt;', ">")
+      }
+      if (str_detect(check_values2[row, col], '<br /<')){
+        check_values2[row, col] <- check_values2[row, col] %>% str_replace_all('<br /<', "<br />")
       }
     }
   }
@@ -206,8 +212,8 @@ ExecCompare_values <- function(file_path1, file_path2, filenames_and_sheetnames,
     target_file_path2 <- file.path(file_path2, filename)
     for (j in 1:length(sheetnames[[i]])){
       sheetname <- sheetnames[[i]][j]
-      value1 <- target_file_path1 %>% read.xlsx(sheetname)
-      value2 <- target_file_path2 %>% read.xlsx(sheetname)
+      value1 <- target_file_path1 %>% read.xlsx(sheetname, na.strings="test")
+      value2 <- target_file_path2 %>% read.xlsx(sheetname, na.strings="test")
       if (!CheckExcelValuesConsistency(value1, value2, sheetname, filename, compare_output_path)){
         cat(filename, "is not consistent.\n")
         return(F)

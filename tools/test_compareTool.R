@@ -171,3 +171,24 @@ test_that(testname %>% str_c("値が異なるブックが存在する"), {
   )
   expect_equal(result, F)
 })
+testname <- "CheckExcelValuesConsistency_5"
+test_that(testname %>% str_c(":指定したシートの値が異なる（空白とNA）"), {
+  result <- CheckExcelValuesConsistency(
+    read.xlsx(here("tools", "test_compareTool", testname, "dir1", "test1.xlsx"), "options", na.strings="test"),
+    read.xlsx(here("tools", "test_compareTool", testname, "dir2", "test1.xlsx"), "options", na.strings="test"),
+    "options",
+    "test1.xlsx",
+    NULL
+  )
+  expect_equal(result, F)
+})
+testname <- "ExecCompare_values_5"
+test_that(testname %>% str_c("値が異なるブックが存在する（空白とNA）"), {
+  result <- ExecCompare_values(
+    here("tools", "test_compareTool", "CheckExcelValuesConsistency_5", "dir1"),
+    here("tools", "test_compareTool", "CheckExcelValuesConsistency_5", "dir2"),
+    kNormalfilesAndSheets,
+    NULL
+  )
+  expect_equal(result, F)
+})
