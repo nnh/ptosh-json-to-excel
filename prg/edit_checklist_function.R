@@ -1,8 +1,8 @@
-#' title
-#' description
+#' Functions for checklist output.
+#'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2024.1.22
+#' @date 2024.1.23
 # ------ constants ------
 kReferenceSearchColname <- "input_text"
 kReferenceJoinColname <- "input_text_2"
@@ -12,11 +12,7 @@ GetTargetColumns <- function(input_list){
   kNamesAndNameAndLabel <- c(kNames, kNameAndLabelList)
   res <- list()
   res$name <- c("name", kSheetItemsKeys$alias_name ,"stylesheet", "fax_stylesheet", "javascript", "category", "images_count", "lab_department_id")
-  res$item <- c(kNamesAndNameAndLabel, "option.name", "default_value",
-                "validators.presence.validate_presence_if", "presence_if_references",
-                "validators.formula.validate_formula_if", "formula_if_references",
-                "validators.formula.validate_formula_message",
-                "validators.date.validate_date_after_or_equal_to", "references_after", "validators.date.validate_date_before_or_equal_to", "references_before")
+  res$item <- c(kNamesAndNameAndLabel, "option.name", "default_value", "validators.presence.validate_presence_if", "presence_if_references", "validators.formula.validate_formula_if", "formula_if_references", "validators.formula.validate_formula_message", "validators.date.validate_date_after_or_equal_to", "references_after", "validators.date.validate_date_before_or_equal_to", "references_before")
   res$option <- c(kNames, "option.name", "option.values_name", "option.values_seq", "option.values_code", "option.values_is_usable")
   res$visit <- c(kNames, "name", "default_value")
   res$number <- c(kNamesAndNameAndLabel, "default_value", "validators.numericality.validate_numericality_less_than_or_equal_to", "validators.numericality.validate_numericality_greater_than_or_equal_to")
@@ -35,7 +31,6 @@ GetTargetColumns <- function(input_list){
   res$allocation_sum <- input_list$df_allocation %>% colnames()
   return(res)
 }
-
 OutputChecklistSheet <- function(df_output, wb, sheet_name){
   output_colnames <- df_output %>% colnames()
   wordwrap_colnames <- c("stylesheet", "fax_stylesheet")
@@ -58,7 +53,6 @@ OutputChecklistXlsx <- function(output_list, output_checklist_path){
   }
   saveWorkbook(wb=wb, file=str_c(output_checklist_path, "/", kOutputChecklistName), overwrite=T)
 }
-
 GetFieldForReference <- function(json_files){
   res <- json_files %>% map_df( ~ {
     field_items <- .$flattenJson$field_items
@@ -101,7 +95,7 @@ ReplaceReferenceText <- function(df_target, input_colname, output_colname){
     return(df_target)
   }
   input_target[[output_colname]] <- ""
-  output_target <- input_target %>% select(kSheetItemsKeys$alias_name, input_colname)
+  output_target <- input_target %>% select(all_of(c(kSheetItemsKeys$alias_name, input_colname)))
   field_head <- "f"
   ref_head <- "ref\\('[a-z0-9]+'\\D+"
   condition_foot <- "\\d+"

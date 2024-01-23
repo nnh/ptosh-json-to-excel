@@ -1,8 +1,8 @@
-#' Compare tool.
+#' Functions for compare tool.
 #'
 #' @file compareTool_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2024.1.19
+#' @date 2024.1.23
 # ------ libraries ------
 library(tidyverse)
 library(here)
@@ -169,11 +169,17 @@ CheckExcelValuesConsistency <- function(value1, value2, sheetname, filename, com
       check_values2[1, 2] <- check_values1[1, 2]
     }
   }
-  # 改行コードの調整
+  # 改行コード等の調整
   for (row in 1:nrow(check_values2)){
     for (col in 1:ncol(check_values2)){
       if (str_detect(check_values2[row, col], "\r\n")){
         check_values2[row, col] <- check_values2[row, col] %>% str_replace_all("\r\n", "\n") %>% str_replace_all("\\n+", "\n")
+      }
+      if (str_detect(check_values2[row, col], 'xml:space="preserve">')){
+        check_values2[row, col] <- check_values2[row, col] %>% str_replace_all('xml:space="preserve">', "")
+      }
+      if (str_detect(check_values2[row, col], '&amp;')){
+        check_values2[row, col] <- check_values2[row, col] %>% str_replace_all('&amp;', "&")
       }
     }
   }

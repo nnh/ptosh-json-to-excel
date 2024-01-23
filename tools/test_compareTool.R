@@ -1,8 +1,8 @@
-#' title
-#' description
-#' @file xxx.R
+#' Test scripts for compare tool.
+#'
+#' @file test_compareTool.R
 #' @author Mariko Ohtsuka
-#' @date YYYY.MM.DD
+#' @date 2024.1.23
 rm(list=ls())
 # ------ libraries ------
 library(tidyverse)
