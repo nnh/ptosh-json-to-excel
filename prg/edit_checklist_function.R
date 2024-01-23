@@ -1,0 +1,238 @@
+#' title
+#' description
+#' @file edit_checklist_function.R
+#' @author Mariko Ohtsuka
+#' @date 2024.1.22
+# ------ constants ------
+kReferenceSearchColname <- "input_text"
+kReferenceJoinColname <- "input_text_2"
+kReferenceOutputColname <- "output_text"
+# ------ functions ------
+GetTargetColumns <- function(input_list){
+  kNamesAndNameAndLabel <- c(kNames, kNameAndLabelList)
+  res <- list()
+  res$name <- c("name", kSheetItemsKeys$alias_name ,"stylesheet", "fax_stylesheet", "javascript", "category", "images_count", "lab_department_id")
+  res$item <- c(kNamesAndNameAndLabel, "option.name", "default_value",
+                "validators.presence.validate_presence_if", "presence_if_references",
+                "validators.formula.validate_formula_if", "formula_if_references",
+                "validators.formula.validate_formula_message",
+                "validators.date.validate_date_after_or_equal_to", "references_after", "validators.date.validate_date_before_or_equal_to", "references_before")
+  res$option <- c(kNames, "option.name", "option.values_name", "option.values_seq", "option.values_code", "option.values_is_usable")
+  res$visit <- c(kNames, "name", "default_value")
+  res$number <- c(kNamesAndNameAndLabel, "default_value", "validators.numericality.validate_numericality_less_than_or_equal_to", "validators.numericality.validate_numericality_greater_than_or_equal_to")
+  res$master <- c(kNamesAndNameAndLabel, "link_type")
+  res$alert <- c(kNamesAndNameAndLabel, "normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to")
+  res$action <- c(kNames, "id", "field_item_id", "field_item_id.name", "field_item_id.label", "codes", "fields", "fields.label")
+  res$allocation <- c(kNames, "is_zelen", "zelen_imbalance", "is_double_blinded", "double_blind_emails", "allocation_method", "groups.code", "groups.label", "groups.if", "references", "groups.message")
+  res$presence <- kNamesAndNameAndLabel
+  res$display <- kNamesAndNameAndLabel
+  res$comment <- c(kNamesAndNameAndLabel, "content")
+  res$explanation <- c(kNamesAndNameAndLabel, "description")
+  res$title <- c(kNamesAndNameAndLabel, "level")
+  res$assigned <- c(kNamesAndNameAndLabel, "default_value")
+  res$fielditems_sum <- input_list$df_field_items %>% colnames() %>% .[-grep(kMatchesOption., .)] %>% c(kOptionName)
+  res$option_sum <- input_list$df_option %>% colnames() %>% .[. != kFieldItemsKeys$sheet_id]
+  res$allocation_sum <- input_list$df_allocation %>% colnames()
+  return(res)
+}
+
+OutputChecklistSheet <- function(df_output, wb, sheet_name){
+  output_colnames <- df_output %>% colnames()
+  wordwrap_colnames <- c("stylesheet", "fax_stylesheet")
+  wordwrap_colnames_index <- which(output_colnames %in% wordwrap_colnames)
+  addWorksheet(wb=wb, sheet=sheet_name)
+  writeDataTable(wb=wb, sheet=sheet_name, x=df_output,
+                 startRow=1, startCol=1, colNames=T, rowNames=F, withFilter=T,
+                 tableStyle=kTableStyle, keepNA=F)
+  if (length(wordwrap_colnames_index) > 0){
+    wordwrap_colnames_index %>% map( ~ addStyle(wb=wb, sheet=sheet_name,
+                                                style=createStyle(wrapText=T), rows=1:nrow(df_output), cols=.))
+  }
+  setColWidths(wb=wb, sheet=sheet_name, cols=1:ncol(df_output), widths="auto")
+  return(wb)
+}
+OutputChecklistXlsx <- function(output_list, output_checklist_path){
+  wb <- createWorkbook()
+  for (i in 1:length(output_list)){
+    wb <- OutputChecklistSheet(df_output=output_list[[i]], wb=wb, sheet_name=names(output_list)[i])
+  }
+  saveWorkbook(wb=wb, file=str_c(output_checklist_path, "/", kOutputChecklistName), overwrite=T)
+}
+
+GetFieldForReference <- function(json_files){
+  res <- json_files %>% map_df( ~ {
+    field_items <- .$flattenJson$field_items
+    if (length(field_items) == 0){
+      return(NULL)
+    }
+    field_items$field_id <- field_items$name %>% str_remove(kFieldText)
+    res <- field_items %>% select(any_of(c(kFieldItemsKeys$sheet_id, "field_id", "label")))
+    return(res)
+  })
+  return(res)
+}
+GetSheetnameList <- function(json_files){
+  res <- json_files %>% map_df( ~ c(sheet_id=.$flattenJson$id,
+                                    jpname=.$flattenJson$name,
+                                    alias_name=.$flattenJson$alias_name))
+  res$sheet_id <- as.numeric(res$sheet_id)
+  return(res)
+}
+GetSheetnameAndFieldForReference <- function(json_files){
+  sheetid_aliasname <- GetSheetnameList(json_files)
+  field_for_reference <- GetFieldForReference(json_files)
+  df_for_reference <- sheetid_aliasname %>%
+    left_join(field_for_reference, by=c(kFieldItemsKeys$sheet_id))
+  df_for_reference[[kReferenceOutputColname]] <- GetDfForReferenceOutputText(df_for_reference)
+  return(df_for_reference)
+}
+GetDfForReferenceOutputText <- function(df_for_reference){
+  return(str_c("(",
+               df_for_reference$alias_name, ",",
+               kFieldText, df_for_reference$field_id, ",",
+               df_for_reference$label,
+               ")",
+               sep=""))
+}
+ReplaceReferenceText <- function(df_target, input_colname, output_colname){
+  input_target <- df_target %>% filter(!!sym(input_colname) %>% str_detect("\\d"))
+  if (nrow(input_target) == 0){
+    df_target[[output_colname]] <- ""
+    return(df_target)
+  }
+  input_target[[output_colname]] <- ""
+  output_target <- input_target %>% select(kSheetItemsKeys$alias_name, input_colname)
+  field_head <- "f"
+  ref_head <- "ref\\('[a-z0-9]+'\\D+"
+  condition_foot <- "\\d+"
+  ref_index <- list(alias_name=2, field_id=3)
+  # "fieldx" or "fx" or "ref(sheetname, x)"
+  condition <- c(field_head, kFieldText, ref_head) %>% str_c(condition_foot) %>% paste0(collapse="|")
+  for (i in 1:nrow(output_target)){
+    alias <- output_target[i, kSheetItemsKeys$alias_name, drop=T]
+    target <- NULL
+    extract_text <- output_target[i, input_colname, drop=T]
+    while (str_detect(extract_text, condition)){
+      target <- c(target, str_extract(extract_text, condition))
+      extract_text <- extract_text %>% str_remove(condition) %>% str_remove_all("\\s")
+    }
+    output_value <- target %>% map( ~ {
+      target_text <- .
+      if (str_detect(target_text, ref_head)){
+        temp <- target_text %>% str_split("'") %>% list_c()
+        alias <- temp[ref_index$alias_name]
+        target_field_id <- temp[ref_index$field_id] %>% str_extract(condition_foot) %>% as.numeric()
+      } else {
+        target_field_id <- target_text %>% str_remove(kFieldText) %>% str_remove(field_head)
+      }
+      result <- df_reference %>% filter(alias_name == alias & field_id == target_field_id) %>% .[[kReferenceOutputColname]]
+    })
+    output_target[i, output_colname] <- output_value %>% unique() %>% paste0(collapse="")
+  }
+  output_target <- output_target %>% distinct()
+  res <- df_target %>% left_join(output_target, by=c(kSheetItemsKeys$alias_name, input_colname))
+  return(res)
+}
+EditAllocation <- function(allocation){
+  res <- allocation %>% ReplaceReferenceText("groups.if", "references")
+  res <- res %>% EditOutputColumns(target_columns$allocation)
+  return(res)
+}
+EditOutputFieldItemsSum <- function(df_field_items){
+  res <- df_field_items %>%
+    ReplaceReferenceText("validators.presence.validate_presence_if", "presence_if_references") %>%
+    ReplaceReferenceText("validators.formula.validate_formula_if", "formula_if_references") %>%
+    ReplaceReferenceText("validators.date.validate_date_after_or_equal_to", "references_after") %>%
+    ReplaceReferenceText("validators.date.validate_date_before_or_equal_to", "references_before")
+  return(res)
+}
+EditOutputItem <- function(df_field_items, df_sheet_items){
+  df_sheet_field <- df_sheet_items %>%
+    inner_join(df_field_items, by=c(kFieldItemsKeys$sheet_id, kSheetItemsKeys$jpname, kSheetItemsKeys$alias_name))
+  res <- df_sheet_field %>% EditOutputColumns(target_columns$item)
+  return(res)
+}
+EditOutputData <- function(target){
+  df_input <- input_list[[kInputList[[target]]]]
+  exec_function <- c(get(str_c("EditOutputData_", target)))
+  output_list <- list()
+  output_list <- output_list %>% exec_function[[1]](df_input, .)
+  return(output_list)
+}
+EditOutputData_sheet_items <- function(df_input, output_list){
+  return(NULL)
+}
+EditOutputData_field_items <- function(df_input, output_list){
+  conditions <- c(
+    visit='label == "Visit Number"',
+    number='(!is.na(validators.numericality.validate_numericality_less_than_or_equal_to) & validators.numericality.validate_numericality_less_than_or_equal_to !="") |
+            (!is.na(validators.numericality.validate_numericality_greater_than_or_equal_to) & validators.numericality.validate_numericality_greater_than_or_equal_to !="")',
+    master='!is.na(link_type) & link_type != ""',
+    alert='!is.na(normal_range.less_than_or_equal_to) | !is.na(normal_range.greater_than_or_equal_to)',
+    presence='type == "FieldItem::Article" & !validators.presence',
+    display='(type == "FieldItem::Assigned" & !is_invisible) | (type == "FieldItem::Article" & is_invisible)',
+    comment='!is.na(content)',
+    explanation='!is.na(description) & description != ""',
+    title='type == "FieldItem::Heading"',
+    assigned='type == "FieldItem::Assigned"'
+  )
+  output_list <- FilterDataByConditions(df_input, conditions)
+  return(output_list)
+}
+EditOutputData_option <- function(df_input, output_list){
+  conditions <- c(option="option.values_is_usable", option_sum=NA)
+  output_list <- FilterDataByConditions(df_input, conditions)
+  return(output_list)
+}
+EditOutputData_cdisc_sheet_config <- function(df_input, output_list){
+  return(NULL)
+}
+EditOutputData_flip_flops <- function(df_input, output_list){
+  conditions <- c(action=NA)
+  output_list <- FilterDataByConditions(df_input, conditions)
+  output_list$action$codes <- ""
+  return(output_list)
+}
+EditOutputData_allocation <- function(df_input, output_list){
+  conditions <- c(allocation_sum=NA)
+  output_list <- FilterDataByConditions(df_input, conditions)
+  output_list$allocation_sum$groups.allocatees <- ""
+  output_list$allocation <- df_input %>% EditAllocation()
+  return(output_list)
+}
+FilterDataByConditions <- function(df_input, conditions){
+  res <- map2(names(conditions), conditions, ~ {
+    condition <- .y
+    names(condition) <- .x
+    filter_data <- FilterDataByCondition(df_input, condition)
+    return(filter_data)
+  })
+  names(res) <- names(conditions)
+  return(res)
+}
+FilterDataByCondition <- function(df_input, condition_str){
+  target_col <- target_columns[[names(condition_str)]]
+  if (!is.na(condition_str)){
+    condition <- parse_expr(condition_str)
+    df_filter <- df_input %>% filter(!!condition)
+  } else {
+    df_filter <- df_input
+  }
+  result <- df_filter %>% EditOutputColumns(target_col)
+  return(result)
+}
+EditOutputDataList <- function(input_list){
+  target_names <- names(kInputList)
+  res <- target_names %>% map( ~ EditOutputData(.)) %>% discard(is.null) %>% list_flatten()
+  output_list <- list()
+  df_sheet_items <- input_list[[kInputList$sheet_items]] %>% rename(!!kFieldItemsKeys$sheet_id:=id)
+  name <- df_sheet_items %>% rename(name:=!!sym(kSheetItemsKeys$jpname)) %>% EditOutputColumns(target_columns$name)
+  fielditems <- input_list[[kInputList$field_items]] %>% EditOutputFieldItemsSum()
+  fielditems_sum <- fielditems %>% EditOutputColumns(target_columns$fielditems_sum)
+  fielditems_sum$flip_flops <- ""
+  fielditems_sum[[kOption_id]] <- ""
+  item <- fielditems %>% EditOutputItem(df_sheet_items)
+  temp_output_list <- c(list(name=name, item=item, fielditems_sum=fielditems_sum), res)
+  output_list <- temp_output_list[names(target_columns)]
+  return(output_list)
+}

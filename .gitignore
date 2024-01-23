@@ -5,6 +5,7 @@
 *.url
 *.xlsx
 *.xlsm
+!/tools/test_compareTool/*
 # History files
 .Rhistory
 .Rapp.history
