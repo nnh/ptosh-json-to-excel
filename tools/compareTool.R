@@ -5,9 +5,10 @@
 #' @date 2024.1.19
 rm(list=ls())
 # ------ libraries ------
+library(here)
 source(here("tools", "compareTool_functions.R"), encoding="UTF-8")
 # ------ target_dir ------
-kTargetFolder <- "20240123output_Bev"
+kTargetFolder <- "20240124output_Bev_win"
 target_dirs <- GetTargetDirs(kTargetFolder)
 # ------ functions ------
 ExecCompare <- function(){
