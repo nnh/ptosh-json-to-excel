@@ -2,7 +2,7 @@
 #'
 #' @file common_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2023.12.25
+#' @date 2024.1.24
 # ------ functions ------
 #' Remove specified elements from a list.
 #'
@@ -23,8 +23,21 @@ RemoveListElements <- function(list_to_modify, elements_to_remove) {
   res <- list_to_modify[setdiff(names(list_to_modify), elements_to_remove)]
   return(res)
 }
+#' Remove Nested Lists
+#'
+#' This function removes elements that are lists within a given list.
+#'
+#' @param input_list The input list containing nested and non-nested elements.
+#'
+#' @return A filtered list containing only non-nested elements.
+#'
+#' @examples
+#' input <- list(1, list(2, 3), 4, list(5, 6))
+#' RemoveNestedLists(input)
+#'
+#' @export
 RemoveNestedLists <- function(input_list){
-  # リスト内の要素がリストでない場合に抽出
+  # Filter elements that are not lists within the input_list
   filtered_list <- input_list %>% purrr::discard( ~ is.list(.))
   return(filtered_list)
 }
@@ -43,6 +56,7 @@ RemoveNestedLists <- function(input_list){
 #'
 #' @importFrom here here
 #'
+#' @import AddSlashIfMissing
 #' @export
 CreateOutputFolder <- function(output_folder_name, output_path=NULL) {
   if (is.null(output_path)){
@@ -55,6 +69,19 @@ CreateOutputFolder <- function(output_folder_name, output_path=NULL) {
   }
   return(output_path)
 }
+#' Add Slash if Missing
+#'
+#' This function adds a trailing slash ("/") to the input string if it is not already present.
+#'
+#' @param input_string A character string.
+#'
+#' @return A modified string with a trailing slash if it was missing.
+#'
+#' @examples
+#' input <- "path/to/directory"
+#' AddSlashIfMissing(input)
+#'
+#' @export
 AddSlashIfMissing <- function(input_string) {
   if (substr(input_string, nchar(input_string), nchar(input_string)) != "/") {
     return(paste0(input_string, "/"))
@@ -62,8 +89,22 @@ AddSlashIfMissing <- function(input_string) {
     return(input_string)
   }
 }
+#' Execute Reading JSON Files
+#'
+#' This function reads and processes JSON files from a specified folder.
+#'
+#' @return A list containing the processed JSON files.
+#'
+#' @examples
+#' ExecReadJsonFiles()
+#'
+#' @import here
+#' @import ReadJsonFiles
+#' @export
 ExecReadJsonFiles <- function(){
+  # Get a list of JSON filenames in the specified folder
   json_filenames <- list.files(here(kInputFolderName), pattern="*.json", full.names=F)
+  # Check if any JSON files were found
   if (length(json_filenames) == 0){
     stop("No JSON files found.")
     return(NULL)
@@ -71,6 +112,19 @@ ExecReadJsonFiles <- function(){
   json_files <- ReadJsonFiles(json_filenames, kInputFolderName)
   return(json_files)
 }
+#' Replace Text Function
+#'
+#' This function replaces a NULL value with NA.
+#'
+#' @param x A variable that may be NULL.
+#'
+#' @return If x is NULL, returns NA; otherwise, returns x unchanged.
+#'
+#' @examples
+#' ReplaceText(NULL)
+#' ReplaceText("Some Text")
+#'
+#' @export
 ReplaceText <- function(x){
   if (is.null(x)){
     return(NA)

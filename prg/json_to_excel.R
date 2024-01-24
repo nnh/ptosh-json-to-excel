@@ -4,13 +4,35 @@
 #' @author Mariko Ohtsuka
 #' @date 2024.1.22
 rm(list=ls())
+# ------ functions ------
+#' Install and Load R Package
+#'
+#' This function installs and loads an R package if it is not already installed.
+#'
+#' @param package_name The name of the R package to be installed and loaded.
+#'
+#' @details
+#' If the specified package is not already installed, this function installs it
+#' using install.packages(). After installation, the function loads the package
+#' into the R session using library().
+#'
+#' @examples
+#' InstallAndLoadPackage("tidyverse")
+#'
+#' @export
+InstallAndLoadPackage <- function(package_name){
+  if (!requireNamespace(package_name, quietly=T)) {
+    install.packages(package_name, dependencies=T)
+  }
+  library(package_name, character.only=TRUE)
+}
 # ------ libraries ------
-library(tidyverse)
-library(here)
-library(jsonlite)
-library(openxlsx)
-library(rlang)
-library(future)
+InstallAndLoadPackage("tidyverse")
+InstallAndLoadPackage("here")
+InstallAndLoadPackage("jsonlite")
+InstallAndLoadPackage("openxlsx")
+InstallAndLoadPackage("rlang")
+InstallAndLoadPackage("future")
 plan(multisession)
 source(here("prg", "common_functions.R"), encoding="UTF-8")
 source(here("prg", "edit_functions.R"), encoding="UTF-8")
