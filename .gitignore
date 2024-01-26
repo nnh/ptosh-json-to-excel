@@ -4,9 +4,10 @@
 *.txt
 *.url
 *.xlsm
-/input/
-/input_*/
-/output/
+/input/*.json
+/input_*/*.json
+/output/*
+!/output/dummy
 # History files
 .Rhistory
 .Rapp.history
