@@ -3,8 +3,10 @@
 *.JSON
 *.txt
 *.url
-*.xlsx
 *.xlsm
+/input/
+/input_*/
+/output/
 # History files
 .Rhistory
 .Rapp.history
