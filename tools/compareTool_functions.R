@@ -9,7 +9,7 @@ library(here)
 library(openxlsx)
 library(tools)
 library(daff)
-source(here("prg", "common_functions.R"), encoding="UTF-8")
+source(here("prg", "functions", "common_functions.R"), encoding="UTF-8")
 # ------ constants ------
 kOutputFolderName <- "output"
 kListFolderName <- "list"

@@ -34,10 +34,10 @@ InstallAndLoadPackage("openxlsx")
 InstallAndLoadPackage("rlang")
 InstallAndLoadPackage("future")
 plan(multisession)
-source(here("prg", "common_functions.R"), encoding="UTF-8")
-source(here("prg", "edit_functions.R"), encoding="UTF-8")
-source(here("prg", "io_functions.R"), encoding="UTF-8")
-source(here("prg", "edit_checklist_function.R"), encoding="UTF-8")
+source(here("prg", "functions", "common_functions.R"), encoding="UTF-8")
+source(here("prg", "functions", "edit_functions.R"), encoding="UTF-8")
+source(here("prg", "functions", "io_functions.R"), encoding="UTF-8")
+source(here("prg", "functions", "edit_checklist_function.R"), encoding="UTF-8")
 # ------ constants ------
 kInputFolderName <- "input"
 kOutputFolderName <- "output"

@@ -9,6 +9,7 @@ kFieldItemsKeys <- list(id="id", sheet_id="sheet_id", name="name", label="label"
 kNames <- c(kSheetItemsKeys$jpname, kSheetItemsKeys$alias_name)
 kNameAndLabelList <- c(kFieldItemsKeys$name, kFieldItemsKeys$label)
 kKeySheetIdAndId <- c(kFieldItemsKeys$sheet_id, kFieldItemsKeys$id)
+kNamesAndSheetIdAndId <- c(kNames, kFieldItemsKeys$id, kFieldItemsKeys$sheet_id)
 kGroups <- "groups"
 kMatchesOption. <- "^option\\."
 kOptionName <- "option.name"
@@ -115,7 +116,7 @@ GetDfAllocations <- function(json_files){
     groups <- flatten_json$allocation$groups %>%
       rename_with(~ paste0(kGroups, ".", .), everything())
     others <- flatten_json$allocation %>% RemoveListElements(c(kGroups)) %>% data.frame()
-    allocation <- groups %>% cbind(others)
+    allocation <- groups %>% cbind(others) %>% select(any_of(kNamesAndSheetIdAndId), everything())
     return(allocation)
   })
   return(res)
@@ -185,7 +186,7 @@ SelectFieldItemsBySheet <- function(field_items, options){
   }
   keep_colnames <- "^normal_range\\." %>% GetDiscardTargetColnames(field_items, ., keep_colnames)
   keep_colnames <- "^validators" %>% GetDiscardTargetColnames(field_items, ., keep_colnames)
-  res <- field_items %>% select(all_of(keep_colnames)) %>% select(all_of(kNames), everything())
+  res <- field_items %>% select(all_of(keep_colnames)) %>% select(all_of(kNamesAndSheetIdAndId), everything())
   return(res)
 }
 GetDiscardTargetColnames <- function(target_df, target_name, keep_colnames){
@@ -210,7 +211,7 @@ EditCdiscSheetConfigsBySheet <- function(alias_name){
   if (is.null(cdisc_sheet_config)){
     return(NULL)
   }
-  res <- cdisc_sheet_config %>% select(-c("uuid", "created_at", "updated_at")) %>% select(all_of(kNames), everything())
+  res <- cdisc_sheet_config %>% select(-c("uuid", "created_at", "updated_at")) %>% select(all_of(kNamesAndSheetIdAndId), everything())
   return(res)
 }
 EditCdiscSheetConfigsPivotBySheet <- function(cdisc_sheet_config){
