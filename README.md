@@ -16,6 +16,26 @@
    - 処理されたJSONファイルに対応する.xlsxファイルが `prg/output/output_処理年月/` ディレクトリに出力されます。
    - 同ディレクトリ内には、プログラムが生成した `list` フォルダがあり、その中には入力JSONファイルの内容を集計した `checklist.xlsx` が出力されます。
 
+## ディレクトリ構造
+```
+prg
+├── LICENSE
+├── README.md
+├── input
+│   ├── aaa.json
+│   └── zzz.json
+├── output
+│   └── output_YYYYMMDDHHMMSS
+│       ├── aaa.xlsx
+│       ├── list
+│       │   └── checklist.xlsx
+│       └── zzz.xlsx
+├── prg
+│   ├── functions
+│   └── json_to_excel.R
+└── tools
+```
+
 ## 注意事項
 
 - プログラムが前提とするディレクトリ構造が整っていることを確認してください。
