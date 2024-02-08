@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2024.2.7
+#' @date 2024.2.8
 # ------ constants ------
 kReferenceSearchColname <- "input_text"
 kReferenceJoinColname <- "input_text_2"
@@ -11,7 +11,7 @@ kReferenceOutputColname <- "output_text"
 GetTargetColumns <- function(input_list){
   kNamesAndNameAndLabel <- c(kNames, kNameAndLabelList)
   res <- list()
-  res$name <- c("name", kSheetItemsKeys$alias_name ,"stylesheet", "fax_stylesheet", "javascript", "category", "images_count", "lab_department_id")
+  res$name <- c("name", kSheetItemsKeys$alias_name , "images_count")
   res$item <- c(kNamesAndNameAndLabel, "option.name", "default_value", "validators.presence.validate_presence_if", "presence_if_references", "validators.formula.validate_formula_if", "formula_if_references", "validators.formula.validate_formula_message", "validators.date.validate_date_after_or_equal_to", "references_after", "validators.date.validate_date_before_or_equal_to", "references_before")
   res$option <- c(kNames, "option.name", "option.values_name", "option.values_seq", "option.values_code", "option.values_is_usable")
   res$visit <- c(kNames, "name", "default_value")
@@ -30,16 +30,10 @@ GetTargetColumns <- function(input_list){
 }
 OutputChecklistSheet <- function(df_output, wb, sheet_name){
   output_colnames <- df_output %>% colnames()
-  wordwrap_colnames <- c("stylesheet", "fax_stylesheet")
-  wordwrap_colnames_index <- which(output_colnames %in% wordwrap_colnames)
   addWorksheet(wb=wb, sheet=sheet_name)
   writeDataTable(wb=wb, sheet=sheet_name, x=df_output,
                  startRow=1, startCol=1, colNames=T, rowNames=F, withFilter=T,
                  tableStyle=kTableStyle, keepNA=F)
-  if (length(wordwrap_colnames_index) > 0){
-    wordwrap_colnames_index %>% map( ~ addStyle(wb=wb, sheet=sheet_name,
-                                                style=createStyle(wrapText=T), rows=1:nrow(df_output), cols=.))
-  }
   setColWidths(wb=wb, sheet=sheet_name, cols=1:ncol(df_output), widths="auto")
   return(wb)
 }
