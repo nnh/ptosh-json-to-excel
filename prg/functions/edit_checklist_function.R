@@ -172,7 +172,12 @@ EditOutputData_field_items <- function(df_input, output_list){
 }
 EditOutputData_option <- function(df_input, output_list){
   conditions <- c(option="option.values_is_usable")
-  output_list <- FilterDataByConditions(df_input, conditions)
+  df_target_field_items <- input_list$df_field_items %>%
+    select(all_of(c(kFieldItemsKeys$sheet_id, kOption_id, "type"))) %>%
+      filter(type == "FieldItem::Article" & !is.na(get(kOption_id))) %>%
+        distinct()
+  df_target_option <- df_input %>% inner_join(df_target_field_items, by=c(kFieldItemsKeys$sheet_id, kOption_id))
+  output_list <- FilterDataByConditions(df_target_option, conditions)
   return(output_list)
 }
 EditOutputData_cdisc_sheet_config <- function(df_input, output_list){
