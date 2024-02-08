@@ -138,10 +138,11 @@ EditOutputFieldItemsSum <- function(df_field_items){
   return(res)
 }
 EditOutputItem <- function(df_field_items, df_sheet_items){
+  conditions <- c(item='type == "FieldItem::Article"')
   df_sheet_field <- df_sheet_items %>%
     inner_join(df_field_items, by=c(kFieldItemsKeys$sheet_id, kSheetItemsKeys$jpname, kSheetItemsKeys$alias_name))
-  res <- df_sheet_field %>% EditOutputColumns(target_columns$item)
-  return(res)
+  output_list <- FilterDataByConditions(df_sheet_field, conditions)
+  return(output_list$item)
 }
 EditOutputData <- function(target){
   df_input <- input_list[[kInputList[[target]]]]
