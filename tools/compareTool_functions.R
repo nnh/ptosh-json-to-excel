@@ -2,7 +2,7 @@
 #'
 #' @file compareTool_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2024.1.23
+#' @date 2024.2.9
 # ------ libraries ------
 library(tidyverse)
 library(here)
@@ -210,13 +210,18 @@ ExecCompare_values <- function(file_path1, file_path2, filenames_and_sheetnames,
     filename <- filenames[i]
     target_file_path1 <- file.path(file_path1, filename)
     target_file_path2 <- file.path(file_path2, filename)
-    for (j in 1:length(sheetnames[[i]])){
-      sheetname <- sheetnames[[i]][j]
-      value1 <- target_file_path1 %>% read.xlsx(sheetname, na.strings="test")
-      value2 <- target_file_path2 %>% read.xlsx(sheetname, na.strings="test")
-      if (!CheckExcelValuesConsistency(value1, value2, sheetname, filename, compare_output_path)){
-        cat(filename, "is not consistent.\n")
-        return(F)
+    wb1 <- target_file_path1 %>% loadWorkbook()
+    wb2 <- target_file_path2 %>% loadWorkbook()
+    checkEqual <- all.equal(wb1, wb2)
+    if (!isTRUE(checkEqual)){
+      for (j in 1:length(sheetnames[[i]])){
+        sheetname <- sheetnames[[i]][j]
+        value1 <- target_file_path1 %>% read.xlsx(sheetname, na.strings="test")
+        value2 <- target_file_path2 %>% read.xlsx(sheetname, na.strings="test")
+        if (!CheckExcelValuesConsistency(value1, value2, sheetname, filename, compare_output_path)){
+          cat(filename, "is not consistent.\n")
+          return(F)
+        }
       }
     }
   }
