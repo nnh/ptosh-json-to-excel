@@ -78,7 +78,7 @@ Issue8ReadJsonFiles <- function(json_filenames, input_path){
   }) %>% keep(~ !is.null(.))
   sheetid_name <- json_files %>% map_df( ~ c(alias_name=.$alias_name, sheet_id=.$id))
   sheetid_name$sheet_id <- as.integer(sheetid_name$sheet_id)
-  field_items <- json_files %>% map_df( ~ .$field_items) %>% filter(type == "FieldItem::Assigned" & !is.na(option.id))
+  field_items <- json_files %>% map_df( ~ .$field_items) %>% filter(type != "FieldItem::Article")
   res <- field_items %>% inner_join(sheetid_name, by="sheet_id") %>% select(c("alias_name", "name")) %>% distinct()
   return(res)
 }
@@ -93,7 +93,6 @@ ExecIssue8 <- function(wb, json_path){
 ExecIssue9 <- function(wb){
   name_values <- wb %>% openxlsx::read.xlsx(sheet="name")
   write_values <- name_values %>% select(c("name", "alias_name", "images_count"))
-  colnames(write_values) <- c("jpname", "alias_name", "images_count")
   wb %>% openxlsx::removeWorksheet(sheet="name")
   wb %>% openxlsx::addWorksheet(sheet="name")
   wb %>% writeData(sheet="name", write_values, startRow=1, startCol=1, colNames=T)
