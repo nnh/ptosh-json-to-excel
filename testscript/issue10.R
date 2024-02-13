@@ -2,7 +2,7 @@
 #' description
 #' @file issue10.R
 #' @author Mariko Ohtsuka
-#' @date 2024.2.9
+#' @date 2024.2.13
 rm(list=ls())
 # ------ libraries ------
 library(tidyverse)
@@ -15,12 +15,14 @@ source(here("tools", "compareTool_functions.R"), encoding="UTF-8")
 # ------ constants ------
 kTableStyle <- "TableStyleMedium2"
 kParentPath <- "~/Library/CloudStorage/Box-Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON"
-kInputAndOutputFolderList <- list(
-  list(input="20240123output_Bev", output="20240208output_Bev"),
-  list(input="output ALL-B19", output="20240208outputALL-B19")
-)
-kJsonPathBev <- "/Users/mariko/Library/CloudStorage/Box-Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/Bev-FOLFOX-SBC"
-kJsonPathAllB19 <- "/Users/mariko/Library/CloudStorage/Box-Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/ALL-B19"
+kTrialName_bev <- "bev"
+kTrialName_allb19 <- "all_b19"
+kInputAndOutputFolderList <- list()
+kInputAndOutputFolderList[[kTrialName_bev]] <- list(input="20240123output_Bev", output="20240208output_Bev")
+kInputAndOutputFolderList[[kTrialName_allb19]] <- list(input="output ALL-B19", output="20240208outputALL-B19")
+kJsonPath <- list()
+kJsonPath[[kTrialName_bev]] <- "/Users/mariko/Library/CloudStorage/Box-Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/Bev-FOLFOX-SBC"
+kJsonPath[[kTrialName_allb19]] <- "/Users/mariko/Library/CloudStorage/Box-Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/ALL-B19"
 # ------ functions ------
 ExecIssue6 <- function(input_output_path){
   source_excel <- loadWorkbook(input_output_path$input)
@@ -47,17 +49,16 @@ Issue7ReadJsonFiles <- function(json_filenames, input_path){
   }) %>% keep(~ !is.null(.))
   sheetid_name <- json_files %>% map_df( ~ c(alias_name=.$alias_name, sheet_id=.$id))
   sheetid_name$sheet_id <- as.integer(sheetid_name$sheet_id)
-  field_items <- json_files %>% map_df( ~ .$field_items) %>% filter(type != "FieldItem::Article" & !is.na(option.id))
+  field_items <- json_files %>% map_df( ~ .$field_items) %>% filter(type == "FieldItem::Article")
   res <- field_items %>% inner_join(sheetid_name, by="sheet_id") %>% select(c("alias_name", "option.name")) %>% distinct()
   return(res)
 }
 ExecIssue7 <- function(wb, json_path){
-  remove_target <- Issue7ExecReadJsonFiles(json_path)
-  option_values <- wb %>% openxlsx::read.xlsx(sheet="option")
-  write_values <- option_values %>% anti_join(remove_target, by=c("alias_name", "option.name"))
-  wb %>% deleteData(sheet="option", cols=1:ncol(option_values), rows=2:nrow(option_values)+1, gridExpand=T)
-  wb %>% writeData(sheet="option", write_values, startRow=2, startCol=1, colNames=F)
-  return(wb)
+  remain_target <- Issue7ExecReadJsonFiles(json_path)
+  option_values <- wb %>% openxlsx::read.xlsx(sheet="option", na.strings="NA")
+  option_values$option.values_code <- ifelse(is.na(option_values$option.values_code), "NA", option_values$option.values_code)
+  write_values <- option_values %>% inner_join(remain_target, by=c("alias_name", "option.name"))
+  return(write_values)
 }
 Issue8ExecReadJsonFiles <- function(input_path){
   # Get a list of JSON filenames in the specified folder
@@ -86,46 +87,22 @@ ExecIssue8 <- function(wb, json_path){
   remove_target <- Issue8ExecReadJsonFiles(json_path)
   item_values <- wb %>% openxlsx::read.xlsx(sheet="item")
   write_values <- item_values %>% anti_join(remove_target, by=c("alias_name", "name"))
-  wb %>% deleteData(sheet="item", cols=1:ncol(item_values), rows=2:nrow(item_values)+1, gridExpand=T)
-  wb %>% writeData(sheet="item", write_values, startRow=2, startCol=1, colNames=F)
-  return(wb)
+  return(write_values)
 }
 ExecIssue9 <- function(wb){
   name_values <- wb %>% openxlsx::read.xlsx(sheet="name")
   write_values <- name_values %>% select(c("name", "alias_name", "images_count"))
-  wb %>% openxlsx::removeWorksheet(sheet="name")
-  wb %>% openxlsx::addWorksheet(sheet="name")
-  wb %>% writeData(sheet="name", write_values, startRow=1, startCol=1, colNames=T)
-  worksheetOrder(wb) <- c(15, 1:14)
-  return(wb)
+  return(write_values)
 }
-# ------ main ------
-fullpath_list <- kInputAndOutputFolderList %>% map( ~ {
-  temp <- .
-  input <- temp$input %>% str_c(kParentPath, "/", ., "/", "list/checklist.xlsx")
-  output <- temp$output %>% str_c(kParentPath, "/", ., "/", "list/checklist.xlsx")
-  return(list(input=input, output=output))
-})
-names(fullpath_list) <- c("bev", "all_b19")
-
-# issue 6
-wb_bev <- ExecIssue6(fullpath_list$bev)
-wb_all_b19 <- ExecIssue6(fullpath_list$all_b19)
-# issue 7
-wb_bev <- ExecIssue7(wb_bev, kJsonPathBev)
-wb_all_b19 <- ExecIssue7(wb_all_b19, kJsonPathAllB19)
-# issue 8
-wb_bev <- ExecIssue8(wb_bev, kJsonPathBev)
-wb_all_b19 <- ExecIssue8(wb_all_b19, kJsonPathAllB19)
-# issue 9
-wb_bev <- ExecIssue9(wb_bev)
-wb_all_b19 <- ExecIssue9(wb_all_b19)
-# output excel
-WriteExcel <- function(wb){
+WriteExcel <- function(wb, trial_name, option, item, name){
   sheetNames <- c("name", "item", "option", "visit", "number", "master", "alert", "action", "allocation", "presence", "display", "comment", "explanation", "title", "assigned")
   for(i in 1:length(sheetNames)){
     sheet_name <- sheetNames[i]
-    df_output <- openxlsx::read.xlsx(wb, sheet=sheet_name)
+    if (sheet_name == "option" | sheet_name == "name" | sheet_name == "item"){
+      df_output <- get(sheet_name)
+    } else {
+      df_output <- openxlsx::read.xlsx(wb, sheet=sheet_name)
+    }
     wb %>% openxlsx::removeWorksheet(sheet=sheet_name)
     wb %>% openxlsx::addWorksheet(sheet=sheet_name)
     writeDataTable(wb=wb, sheet=sheet_name, x=df_output,
@@ -136,9 +113,26 @@ WriteExcel <- function(wb){
     id_index <- which(colnames(df_output) == "id")
     removeColWidths(wb=wb, sheet=sheet_name, cols=id_index)
   }
-  return(wb)
+  saveWorkbook(wb, fullpath_list[[trial_name]]$output, overwrite=T)
 }
-wb_bev <- wb_bev %>% WriteExcel()
-wb_all_b19 <- wb_all_b19 %>% WriteExcel()
-saveWorkbook(wb_bev, fullpath_list$bev$output, overwrite=T)
-saveWorkbook(wb_all_b19, fullpath_list$all_b19$output, overwrite=T)
+# ------ main ------
+fullpath_list <- kInputAndOutputFolderList %>% map( ~ {
+  temp <- .
+  input <- temp$input %>% str_c(kParentPath, "/", ., "/", "list/checklist.xlsx")
+  output <- temp$output %>% str_c(kParentPath, "/", ., "/", "list/checklist.xlsx")
+  return(list(input=input, output=output))
+})
+ExecIssue10 <- function(trial_name){
+  # issue 6
+  wb <- ExecIssue6(fullpath_list[[trial_name]])
+  # issue 7
+  option <- ExecIssue7(wb, kJsonPath[[trial_name]])
+  # issue 8
+  item <- ExecIssue8(wb, kJsonPath[[trial_name]])
+  # issue 9
+  name <- ExecIssue9(wb)
+  # output excel
+  wb %>% WriteExcel(trial_name, option, item, name)
+}
+ExecIssue10(kTrialName_bev)
+ExecIssue10(kTrialName_allb19)

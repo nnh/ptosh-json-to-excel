@@ -9,8 +9,8 @@ library(here)
 source(here("tools", "compareTool_functions.R"), encoding="UTF-8")
 # ------ target_dir ------
 #kTargetFolder <- "20240124output_Bev_win"
-#kTargetFolder <- "20240208output_Bev"
-kTargetFolder <- "output ALL-B19"
+kTargetFolder <- "20240208output_Bev"
+#kTargetFolder <- "20240208outputALL-B19"
 target_dirs <- GetTargetDirs(kTargetFolder)
 # ------ functions ------
 ExecCompare <- function(){
