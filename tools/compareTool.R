@@ -2,15 +2,15 @@
 #'
 #' @file compareTool.R
 #' @author Mariko Ohtsuka
-#' @date 2024.1.19
+#' @date 2024.2.9
 rm(list=ls())
 # ------ libraries ------
 library(here)
 source(here("tools", "compareTool_functions.R"), encoding="UTF-8")
 # ------ target_dir ------
-kTargetFolder <- "20240124output_Bev_win"
-#kTargetFolder <- "20240123output_Bev"
-#kTargetFolder <- "output ALL-B19"
+#kTargetFolder <- "20240124output_Bev_win"
+kTargetFolder <- "20240208output_Bev"
+#kTargetFolder <- "20240208outputALL-B19"
 target_dirs <- GetTargetDirs(kTargetFolder)
 # ------ functions ------
 ExecCompare <- function(){
@@ -21,13 +21,6 @@ ExecCompare <- function(){
     target_dirs$json_to_excel_2
   )
   if (is.null(filenames_and_sheetnames)){
-    return(NULL)
-  }
-  check_filename_sheetname <- ExecCompare_fileNameAndSheetName(
-    target_dirs$json_to_excel_2,
-    target_dirs$json_to_excel_1
-  )
-  if (is.null(check_filename_sheetname)){
     return(NULL)
   }
   output_foldername <- format(Sys.time(), "%Y%m%d%H%M%S") %>% paste0("compare_", .)

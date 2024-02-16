@@ -6,6 +6,8 @@
 *.xlsm
 /input/*.json
 /input_*/*.json
+/input_bev/
+/input_allb19/
 /output/*
 !/output/dummy
 # History files

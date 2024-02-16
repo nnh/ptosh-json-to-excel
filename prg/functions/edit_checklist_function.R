@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2024.1.23
+#' @date 2024.2.8
 # ------ constants ------
 kReferenceSearchColname <- "input_text"
 kReferenceJoinColname <- "input_text_2"
@@ -11,7 +11,7 @@ kReferenceOutputColname <- "output_text"
 GetTargetColumns <- function(input_list){
   kNamesAndNameAndLabel <- c(kNames, kNameAndLabelList)
   res <- list()
-  res$name <- c("name", kSheetItemsKeys$alias_name ,"stylesheet", "fax_stylesheet", "javascript", "category", "images_count", "lab_department_id")
+  res$name <- c("name", kSheetItemsKeys$alias_name , "images_count")
   res$item <- c(kNamesAndNameAndLabel, "option.name", "default_value", "validators.presence.validate_presence_if", "presence_if_references", "validators.formula.validate_formula_if", "formula_if_references", "validators.formula.validate_formula_message", "validators.date.validate_date_after_or_equal_to", "references_after", "validators.date.validate_date_before_or_equal_to", "references_before")
   res$option <- c(kNames, "option.name", "option.values_name", "option.values_seq", "option.values_code", "option.values_is_usable")
   res$visit <- c(kNames, "name", "default_value")
@@ -26,23 +26,14 @@ GetTargetColumns <- function(input_list){
   res$explanation <- c(kNamesAndNameAndLabel, "description")
   res$title <- c(kNamesAndNameAndLabel, "level")
   res$assigned <- c(kNamesAndNameAndLabel, "default_value")
-  res$fielditems_sum <- input_list$df_field_items %>% colnames() %>% .[-grep(kMatchesOption., .)] %>% c(kOptionName)
-  res$option_sum <- input_list$df_option %>% colnames() %>% .[. != kFieldItemsKeys$sheet_id]
-  res$allocation_sum <- input_list$df_allocation %>% colnames()
   return(res)
 }
 OutputChecklistSheet <- function(df_output, wb, sheet_name){
   output_colnames <- df_output %>% colnames()
-  wordwrap_colnames <- c("stylesheet", "fax_stylesheet")
-  wordwrap_colnames_index <- which(output_colnames %in% wordwrap_colnames)
   addWorksheet(wb=wb, sheet=sheet_name)
   writeDataTable(wb=wb, sheet=sheet_name, x=df_output,
                  startRow=1, startCol=1, colNames=T, rowNames=F, withFilter=T,
                  tableStyle=kTableStyle, keepNA=F)
-  if (length(wordwrap_colnames_index) > 0){
-    wordwrap_colnames_index %>% map( ~ addStyle(wb=wb, sheet=sheet_name,
-                                                style=createStyle(wrapText=T), rows=1:nrow(df_output), cols=.))
-  }
   setColWidths(wb=wb, sheet=sheet_name, cols=1:ncol(df_output), widths="auto")
   return(wb)
 }
@@ -141,10 +132,11 @@ EditOutputFieldItemsSum <- function(df_field_items){
   return(res)
 }
 EditOutputItem <- function(df_field_items, df_sheet_items){
+  conditions <- c(item='type == "FieldItem::Article"')
   df_sheet_field <- df_sheet_items %>%
     inner_join(df_field_items, by=c(kFieldItemsKeys$sheet_id, kSheetItemsKeys$jpname, kSheetItemsKeys$alias_name))
-  res <- df_sheet_field %>% EditOutputColumns(target_columns$item)
-  return(res)
+  output_list <- FilterDataByConditions(df_sheet_field, conditions)
+  return(output_list$item)
 }
 EditOutputData <- function(target){
   df_input <- input_list[[kInputList[[target]]]]
@@ -174,8 +166,13 @@ EditOutputData_field_items <- function(df_input, output_list){
   return(output_list)
 }
 EditOutputData_option <- function(df_input, output_list){
-  conditions <- c(option="option.values_is_usable", option_sum=NA)
-  output_list <- FilterDataByConditions(df_input, conditions)
+  conditions <- c(option="option.values_is_usable")
+  df_target_field_items <- input_list$df_field_items %>%
+    select(all_of(c(kFieldItemsKeys$sheet_id, kOption_id, "type"))) %>%
+      filter(type == "FieldItem::Article" & !is.na(get(kOption_id))) %>%
+        distinct()
+  df_target_option <- df_input %>% inner_join(df_target_field_items, by=c(kFieldItemsKeys$sheet_id, kOption_id))
+  output_list <- FilterDataByConditions(df_target_option, conditions)
   return(output_list)
 }
 EditOutputData_cdisc_sheet_config <- function(df_input, output_list){
@@ -188,9 +185,6 @@ EditOutputData_flip_flops <- function(df_input, output_list){
   return(output_list)
 }
 EditOutputData_allocation <- function(df_input, output_list){
-  conditions <- c(allocation_sum=NA)
-  output_list <- FilterDataByConditions(df_input, conditions)
-  output_list$allocation_sum$groups.allocatees <- ""
   output_list$allocation <- df_input %>% EditAllocation()
   return(output_list)
 }
@@ -222,11 +216,8 @@ EditOutputDataList <- function(input_list){
   df_sheet_items <- input_list[[kInputList$sheet_items]] %>% rename(!!kFieldItemsKeys$sheet_id:=id)
   name <- df_sheet_items %>% rename(name:=!!sym(kSheetItemsKeys$jpname)) %>% EditOutputColumns(target_columns$name)
   fielditems <- input_list[[kInputList$field_items]] %>% EditOutputFieldItemsSum()
-  fielditems_sum <- fielditems %>% EditOutputColumns(target_columns$fielditems_sum)
-  fielditems_sum$flip_flops <- ""
-  fielditems_sum[[kOption_id]] <- ""
   item <- fielditems %>% EditOutputItem(df_sheet_items)
-  temp_output_list <- c(list(name=name, item=item, fielditems_sum=fielditems_sum), res)
+  temp_output_list <- c(list(name=name, item=item), res)
   output_list <- temp_output_list[names(target_columns)]
   return(output_list)
 }
