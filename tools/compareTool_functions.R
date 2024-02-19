@@ -2,7 +2,7 @@
 #'
 #' @file compareTool_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2024.2.9
+#' @date 2024.2.19
 # ------ libraries ------
 library(tidyverse)
 library(here)
@@ -16,26 +16,35 @@ kListFolderName <- "list"
 kJpnameAliasName <- c("jpname", "alias_name")
 kNameAliasName <- c("name", "alias_name")
 # ------ functions ------
-GetTargetDirs <- function(compare_target){
+GetTargetDirs <- function(){
   dir_list <- list.dirs(here(kOutputFolderName), full.names=F, recursive=F)
   target_folder_name <- dir_list %>% grep("^output_\\d+$", ., value=T) %>%
     sub("^output_(\\d+)$", "\\1", .) %>% as.numeric() %>% max() %>% str_c("output_", .)
   json_to_excel_1 <- here(kOutputFolderName, target_folder_name)
+  file_names <- json_to_excel_1 %>% list.files(full.names=F, include.dirs=F)
   os_info <- tolower(Sys.info()["sysname"])
+  kAllB19FileName <- "blin1.xlsx"
   if (os_info == "windows") {
     json_to_excel_2 <- "C:/Users/Mariko/Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/"
+    compare_target <- ifelse(any(file_names == kAllB19FileName), "20240208outputALL-B19", "20240208output_Bev_win")
   } else {
     json_to_excel_2 <- "/Users/mariko/Library/CloudStorage/Box-Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/"
+    compare_target <- ifelse(any(file_names == kAllB19FileName), "20240208outputALL-B19", "20240208output_Bev")
   }
   json_to_excel_2 <- json_to_excel_2 %>% str_c(compare_target)
   checklist_1 <- here(kOutputFolderName, target_folder_name, kListFolderName)
   checklist_2 <- str_c(json_to_excel_2, "/", kListFolderName)
-  return(list(
-    json_to_excel_1=json_to_excel_1,
-    json_to_excel_2=json_to_excel_2,
-    checklist_1=checklist_1,
-    checklist_2=checklist_2
-  ))
+  return(
+    list(
+      target_dirs=list(
+        json_to_excel_1=json_to_excel_1,
+        json_to_excel_2=json_to_excel_2,
+        checklist_1=checklist_1,
+        checklist_2=checklist_2
+      ),
+      kTargetFolder=compare_target
+    )
+  )
 }
 GetXlsxFileNames <- function(dir_path) {
   return(list.files(path=dir_path, pattern="\\.xlsx$", full.names=F))
