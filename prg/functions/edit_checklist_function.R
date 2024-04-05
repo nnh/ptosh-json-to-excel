@@ -149,12 +149,21 @@ EditOutputData_sheet_items <- function(df_input, output_list){
   return(NULL)
 }
 EditOutputData_field_items <- function(df_input, output_list){
+  alert_cols <- c("normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to")
+  alert_condition <- alert_cols %>% map( ~ {
+    col_name <- .
+    if (col_name %in% colnames(df_input)) {
+      return(str_c("!is.na(",col_name, ")"))
+    } else {
+      return(NULL)
+    }
+  }) %>% keep( ~ !is.null(.)) %>% str_c(collapse = " | ")
   conditions <- c(
     visit='label == "Visit Number"',
     number='(!is.na(validators.numericality.validate_numericality_less_than_or_equal_to) & validators.numericality.validate_numericality_less_than_or_equal_to !="") |
             (!is.na(validators.numericality.validate_numericality_greater_than_or_equal_to) & validators.numericality.validate_numericality_greater_than_or_equal_to !="")',
     master='!is.na(link_type) & link_type != ""',
-    alert='!is.na(normal_range.less_than_or_equal_to) | !is.na(normal_range.greater_than_or_equal_to)',
+    alert=alert_condition,
     presence='type == "FieldItem::Article" & !validators.presence',
     display='(type == "FieldItem::Assigned" & !is_invisible) | (type == "FieldItem::Article" & is_invisible)',
     comment='!is.na(content)',
@@ -192,6 +201,7 @@ FilterDataByConditions <- function(df_input, conditions){
   res <- map2(names(conditions), conditions, ~ {
     condition <- .y
     names(condition) <- .x
+    print(.x)
     filter_data <- FilterDataByCondition(df_input, condition)
     return(filter_data)
   })
