@@ -201,7 +201,6 @@ FilterDataByConditions <- function(df_input, conditions){
   res <- map2(names(conditions), conditions, ~ {
     condition <- .y
     names(condition) <- .x
-    print(.x)
     filter_data <- FilterDataByCondition(df_input, condition)
     return(filter_data)
   })
