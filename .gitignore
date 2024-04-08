@@ -10,6 +10,8 @@
 /input_allb19/
 /output/*
 !/output/dummy
+!/input/dummy
+*.Rproj
 # History files
 .Rhistory
 .Rapp.history
