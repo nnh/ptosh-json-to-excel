@@ -2,7 +2,7 @@
 #'
 #' @file compareTool_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2024.2.19
+#' @date 2024.4.8
 # ------ libraries ------
 library(tidyverse)
 library(here)
@@ -25,8 +25,8 @@ GetTargetDirs <- function(){
   os_info <- tolower(Sys.info()["sysname"])
   kAllB19FileName <- "blin1.xlsx"
   if (os_info == "windows") {
-    json_to_excel_2 <- "C:/Users/Mariko/Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/"
-    compare_target <- ifelse(any(file_names == kAllB19FileName), "20240208outputALL-B19", "20240208output_Bev_win")
+    json_to_excel_2 <- "C:/Users/MarikoOhtsuka/Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/"
+    compare_target <- ifelse(any(file_names == kAllB19FileName), "compare_allb-19", "compare_bev")
   } else {
     json_to_excel_2 <- "/Users/mariko/Library/CloudStorage/Box-Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/"
     compare_target <- ifelse(any(file_names == kAllB19FileName), "20240208outputALL-B19", "20240208output_Bev")

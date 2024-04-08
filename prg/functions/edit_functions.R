@@ -86,8 +86,10 @@ GetDfFlipFlops <- function(json_files){
     fields <- NULL
     for (i in 1:length(flip_flops$id)){
       temp_fieldItems <- flip_flops$fields[[i]] %>% data.frame(field=.)
-      temp_fields <- data.frame(id=flip_flops$id[i],
-                                codes=flip_flops$codes[[i]]) %>% cbind(temp_fieldItems)
+      temp_id <- flip_flops$id[i] %>% data.frame(id=.)
+      temp_codes <- flip_flops$codes[[i]] %>% data.frame(codes=.)
+      temp_id_codes <- temp_id %>% merge(temp_codes, by=NULL)
+      temp_fields <- temp_id_codes %>% merge(temp_fieldItems, by=NULL)
       fields <- rbind(fields, temp_fields)
     }
     df_field_label <- field_items %>% select(any_of(kNameAndLabelList)) %>% rename(fields.label=label)
