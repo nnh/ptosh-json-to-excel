@@ -2,7 +2,7 @@
 #' description
 #' @file issue15.R
 #' @author Mariko Ohtsuka
-#' @date YYYY.MM.DD
+#' @date 2024.4.9
 rm(list=ls())
 # ------ libraries ------
 library(tidyverse)
@@ -15,6 +15,7 @@ source(here("prg", "functions", "common_functions.R"), encoding="UTF-8")
 # ------ constants ------
 kTrialName_bev <- "bev"
 kTrialName_allb19 <- "all-b19"
+kTrialName_tranilast <- "tranilast"
 # ------ functions ------
 ExecCompare <- function(trialName, path_list){
   beforeXlsx <- path_list[[trialName]]$before %>% openxlsx::loadWorkbook()
@@ -39,7 +40,10 @@ ExecCompare <- function(trialName, path_list){
       render_diff(daff_result, file.path("C:/Users/MarikoOhtsuka/Downloads", paste0(before_sheetname[i], ".html")), view=F)
       print("!!!test NG!!!")
       check_flag <- T
-      break
+      # tranilastはチェックリストがNGでも処理継続
+      if (trialName != kTrialName_tranilast) {
+        break
+      }
     }
     print(str_c("test ok.row:", nrow(after_value), ",col:", ncol(after_value)))
   }
@@ -64,8 +68,10 @@ ExecCheckIssue15 <- function(trialName){
   path_list_checklist[[trialName]] <- path_list[[trialName]] %>% map( ~ str_c(., "list/checklist.xlsx"))
   print("*** checklist ***")
   check_flag <- ExecCompare(trialName, path_list_checklist)
-  if (check_flag) {
+  if (trialName != kTrialName_tranilast & check_flag) {
     return(F)
+  } else {
+    print("tranilastはchecklist ngでもチェック続行")
   }
   print("*** files ***")
   for (i in 1:length(path_list_files[[trialName]]$before)) {
@@ -80,18 +86,25 @@ ExecCheckIssue15 <- function(trialName){
   return(T)
 }
 # ------ main ------
-# 修正前後で同じ内容であればOK
+# Bev, all-b19は修正前後で同じ内容であればOK、tranilastはchecklistのaction以外が同じならOKなので、ダウンロードフォルダにtranilastのaction.htmlだけできてればOK
 path_list <- list()
+path_list[[kTrialName_tranilast]] <- list(
+  before="C:/Users/MarikoOhtsuka/Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/20240409output_issue15-2_before_Tranilast-DMD-2/",
+  after="C:/Users/MarikoOhtsuka/Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/20240409output_issue15-2_after_Tranilast-DMD-2/"
+)
+print("*** Tranilast-DMD-2 ***")
+checkTranilast <- ExecCheckIssue15(kTrialName_tranilast)
+
 path_list[[kTrialName_bev]] <- list(
   before="C:/Users/MarikoOhtsuka/Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/20240405output_Bev/",
-  after="C:/Users/MarikoOhtsuka/Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/20240408issue15after_output_bev/"
+  after="C:/Users/MarikoOhtsuka/Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/20240409output_issue15-2_after_bev/"
 )
 print("*** Bev-FOLFOX-SBC ***")
 checkBev <- ExecCheckIssue15(kTrialName_bev)
 
 path_list[[kTrialName_allb19]] <- list(
   before="C:/Users/MarikoOhtsuka/Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/20240408outputALL-B19/",
-  after="C:/Users/MarikoOhtsuka/Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/20240408issue15after_output_ALL-B19/"
+  after="C:/Users/MarikoOhtsuka/Box/Projects/NMC ISR 情報システム研究室/Ptosh/JSON/20240409output_issue15-2_after_allb19/"
 )
 print("*** ALL-B19 ***")
 checkAllb19 <- ExecCheckIssue15(kTrialName_allb19)

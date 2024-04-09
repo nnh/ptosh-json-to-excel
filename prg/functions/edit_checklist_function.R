@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2024.2.8
+#' @date 2024.4.9
 # ------ constants ------
 kReferenceSearchColname <- "input_text"
 kReferenceJoinColname <- "input_text_2"
@@ -228,5 +228,6 @@ EditOutputDataList <- function(input_list){
   item <- fielditems %>% EditOutputItem(df_sheet_items)
   temp_output_list <- c(list(name=name, item=item), res)
   output_list <- temp_output_list[names(target_columns)]
+  output_list$action <- output_list$action %>% distinct()
   return(output_list)
 }
