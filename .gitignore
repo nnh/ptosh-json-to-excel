@@ -6,8 +6,7 @@
 *.xlsm
 /input/*.json
 /input_*/*.json
-/input_bev/
-/input_allb19/
+/input_*/
 /output/*
 !/output/dummy
 !/input/dummy
