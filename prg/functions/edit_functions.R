@@ -171,7 +171,6 @@ GetValidatorsPresence <- function(json_files){
 }
 EditFieldItemsBySheet <- function(target_id){
   field_items <- target_id %>% map_df( ~ filter(input_list[[kInputList$field_items]], sheet_id == .))
-  #field_items <- input_list[[kInputList$field_items]] %>% filter(sheet_id == target_id)
   if (nrow(field_items) == 0){
     return(NULL)
   }
