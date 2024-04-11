@@ -277,9 +277,6 @@ EditOutputColumns <- function(df_target, target_column){
   return(res)
 }
 ExecEditOutputData <- function(id, jpname, alias_name){
-  testid <<- id
-  testjpname <<- jpname
-  testalias <<- alias_name
   options <- EditOptionsBySheet(id)
   field_items <- EditFieldItemsBySheet(id) %>% SelectFieldItemsBySheet(options)
   cdisc_sheet_config <- EditCdiscSheetConfigsBySheet(alias_name)
