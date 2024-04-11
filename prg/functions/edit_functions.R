@@ -2,7 +2,7 @@
 #'
 #' @file edit_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2024.1.19
+#' @date 2024.4.11
 # ------ constants ------
 kSheetItemsKeys <- list(id="id", jpname="jpname", alias_name="alias_name")
 kFieldItemsKeys <- list(id="id", sheet_id="sheet_id", name="name", label="label", option.id="option.id")
@@ -41,9 +41,11 @@ EditInputDataList <- function(json_files){
     df_name <- kInputList[[target]]
     input_list[[df_name]] <- function_list[[target]](json_files)
     if (target != kSheetItems & is.data.frame(input_list[[df_name]])){
-      df_sheet_items <- kInputList[[kSheetItems]] %>% input_list[[.]]
-      input_list[[df_name]] <- input_list[[df_name]] %>%
-        JoinJpnameAndAliasName(df_sheet_items) %>% select(all_of(kNames), everything())
+      if (nrow(input_list[[df_name]]) > 0){
+        df_sheet_items <- kInputList[[kSheetItems]] %>% input_list[[.]]
+        input_list[[df_name]] <- input_list[[df_name]] %>%
+          JoinJpnameAndAliasName(df_sheet_items) %>% select(all_of(kNames), everything())
+      }
     }
   }
   return(input_list)
@@ -168,7 +170,8 @@ GetValidatorsPresence <- function(json_files){
   return(validators_presence)
 }
 EditFieldItemsBySheet <- function(target_id){
-  field_items <- input_list[[kInputList$field_items]] %>% filter(sheet_id == target_id)
+  field_items <- target_id %>% map_df( ~ filter(input_list[[kInputList$field_items]], sheet_id == .))
+  #field_items <- input_list[[kInputList$field_items]] %>% filter(sheet_id == target_id)
   if (nrow(field_items) == 0){
     return(NULL)
   }
@@ -209,8 +212,8 @@ EditOptionsBySheet <- function(id){
   return(options)
 }
 EditCdiscSheetConfigsBySheet <- function(alias_name){
-  cdisc_sheet_config <- input_list[[kInputList$cdisc_sheet_config]][[alias_name]]
-  if (is.null(cdisc_sheet_config)){
+  cdisc_sheet_config <- alias_name %>% map_df( ~ input_list[[kInputList$cdisc_sheet_config]][[.]])
+  if (nrow(cdisc_sheet_config) == 0){
     return(NULL)
   }
   res <- cdisc_sheet_config %>% select(-c("uuid", "created_at", "updated_at")) %>% select(all_of(kNamesAndSheetIdAndId), everything())
@@ -257,7 +260,11 @@ EditFlipFlopsBySheet <- function(id){
   return(res)
 }
 FilterDfByID <- function(target_name, target_id){
-  return(input_list[[target_name]] %>% filter(sheet_id == target_id))
+  if (nrow(input_list[[target_name]]) == 0) {
+    return(input_list[[target_name]])
+  }
+  res <- target_id %>% map_df( ~ filter(input_list[[target_name]], sheet_id == .))
+  return(res)
 }
 JoinJpnameAndAliasName <- function(target, sheet_items){
   df_sheet_items <- sheet_items %>% select(kSheetItemsKeys %>% unlist()) %>% rename(sheet_id=id)
@@ -271,6 +278,9 @@ EditOutputColumns <- function(df_target, target_column){
   return(res)
 }
 ExecEditOutputData <- function(id, jpname, alias_name){
+  testid <<- id
+  testjpname <<- jpname
+  testalias <<- alias_name
   options <- EditOptionsBySheet(id)
   field_items <- EditFieldItemsBySheet(id) %>% SelectFieldItemsBySheet(options)
   cdisc_sheet_config <- EditCdiscSheetConfigsBySheet(alias_name)

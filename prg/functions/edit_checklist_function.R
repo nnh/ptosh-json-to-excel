@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2024.4.9
+#' @date 2024.4.11
 # ------ constants ------
 kReferenceSearchColname <- "input_text"
 kReferenceJoinColname <- "input_text_2"
@@ -119,6 +119,11 @@ ReplaceReferenceText <- function(df_target, input_colname, output_colname){
   return(res)
 }
 EditAllocation <- function(allocation){
+  if (nrow(allocation) == 0) {
+    empty_df <- data.frame(matrix(ncol = length(target_columns$allocation), nrow = 0))
+    colnames(empty_df) <- target_columns$allocation
+    return(empty_df)
+  }
   res <- allocation %>% ReplaceReferenceText("groups.if", "references")
   res <- res %>% EditOutputColumns(target_columns$allocation)
   return(res)
