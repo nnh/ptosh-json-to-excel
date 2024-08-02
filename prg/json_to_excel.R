@@ -44,7 +44,8 @@ kOutputFolderName <- "output"
 kOutputPath <- here(kOutputFolderName)
 kOutputChecklistName <- "checklist.xlsx"
 # ------ main ------
-json_files <- ExecReadJsonFiles()
+raw_json_files <- ExecReadJsonFiles()
+json_files <- raw_json_files
 input_list <- EditInputDataList(json_files)
 # json to excel
 df_dummyNames <- data.frame(matrix(ncol=length(kNames), nrow=0))
@@ -63,6 +64,8 @@ for (i in 1:length(output_list)){
   WriteExcel(output_list[[i]], names(output_list)[i], output_folder_path)
 }
 # checklist
+json_files <- GetTargetJsonForChecklist(raw_json_files)
+input_list <- EditInputDataList(json_files)
 target_columns <- GetTargetColumns(input_list)
 df_reference <- GetSheetnameAndFieldForReference(json_files)
 output_checklist <- EditOutputDataList(input_list)
