@@ -131,3 +131,11 @@ ReplaceText <- function(x){
   }
   return(x)
 }
+setFontStyle <- function() {
+    style <- createStyle(
+    fontName = "Meiryo",     
+    fontSize = 11,           
+    fontColour = "#000000"   
+  )  
+  return(style)
+}

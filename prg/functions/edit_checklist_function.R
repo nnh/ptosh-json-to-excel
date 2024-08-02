@@ -35,6 +35,9 @@ OutputChecklistSheet <- function(df_output, wb, sheet_name){
                  startRow=1, startCol=1, colNames=T, rowNames=F, withFilter=T,
                  tableStyle=kTableStyle, keepNA=F)
   setColWidths(wb=wb, sheet=sheet_name, cols=1:ncol(df_output), widths="auto")
+  fontStyle <- setFontStyle()  
+  addStyle(wb = wb, sheet = sheet_name, style = fontStyle, rows = 1:(nrow(df_output) + 1), cols = 1:ncol(df_output), gridExpand = TRUE)
+  
   return(wb)
 }
 OutputChecklistXlsx <- function(output_list, output_checklist_path){
@@ -235,4 +238,57 @@ EditOutputDataList <- function(input_list){
   output_list <- temp_output_list[names(target_columns)]
   output_list$action <- output_list$action %>% distinct()
   return(output_list)
+}
+GetTargetJsonForChecklist <- function(raw_json_files) {
+  rawJsons <- raw_json_files %>% map( ~ .$rawJson)
+  visitJsons <- rawJsons %>% map( ~ {
+    rawJson <- .
+    if (.$category != "visit") {
+      return(NULL)
+    }
+    return(rawJson)
+  }) %>% keep( ~ !is.null(.))
+  visitJsonsNames <- names(visitJsons)
+  visitJsonFileNamesHead <- visitJsonsNames %>% str_remove("_[0-9]+$") %>% unique()
+  targetFileNameHead <- visitJsonFileNamesHead %>% map( ~ {
+    targetHead <- .
+    filecount <- names(visitJsons) %>% str_detect(str_c("^", targetHead, "_[0-9]+$")) %>% sum()
+    if (filecount == 1) {
+      return(NULL)
+    }
+    return(targetHead) 
+  }) %>% keep( ~ !is.null(.))
+  if (length(targetFileNameHead) == 0) {
+    return(raw_json_files)
+  }
+  targetVisitRawJson <- targetFileNameHead %>% map( ~ {
+    targetHead <- .
+    for (i in 1:length(visitJsonsNames)) {
+      if (str_detect(visitJsonsNames[[i]], str_c("^", targetHead, "_[0-9]+$"))) {
+        target <- raw_json_files[[i]]
+        newAliasname <- str_c(targetHead, "_xxx")
+        target$rawJson$alias_name <- newAliasname
+        target$flattenJson$alias_name <- newAliasname
+        return(target)
+        break
+      }
+    }
+  })
+  names(targetVisitRawJson) <- targetFileNameHead
+  notVisitJsons <- raw_json_files
+  raw_json_files_names <- names(notVisitJsons)
+  for (i in 1:length(raw_json_files_names)) {
+    filename <- raw_json_files_names[i]
+    for (j in 1:length(targetFileNameHead)) {
+      if (str_detect(filename, str_c(targetFileNameHead[[j]], "_[0-9]+$"))) {
+        notVisitJsons[[i]] <- NA
+        break
+      }
+    }
+  }
+  notVisitJsonList <- notVisitJsons %>% map( ~ .[!is.na(.)]) %>% discard( ~ length(.) == 0)
+  res <- append(notVisitJsonList, targetVisitRawJson)
+  sorted_indices <- res %>% names() %>% order()
+  res <- res[sorted_indices]  
+  return(res)
 }

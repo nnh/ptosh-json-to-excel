@@ -37,6 +37,8 @@ WriteExcel <- function(output_list, filename, output_path){
                      startRow=1, startCol=1, colNames=T, rowNames=F, withFilter=T,
                      tableStyle=kTableStyle, keepNA=F)
       setColWidths(wb=wb, sheet=sheet_name, cols=1:ncol(df_output), widths="auto")
+      fontStyle <- setFontStyle()  
+      addStyle(wb = wb, sheet = sheet_name, style = fontStyle, rows = 1:(nrow(df_output) + 1), cols = 1:ncol(df_output), gridExpand = TRUE)
       # Reset the width of the ID column.
       id_index <- which(colnames(df_output) == "id")
       removeColWidths(wb=wb, sheet=sheet_name, cols=id_index)

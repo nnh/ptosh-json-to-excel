@@ -4,12 +4,14 @@
 *.txt
 *.url
 *.xlsm
+/temp/
 /input/*.json
 /input_*/*.json
 /input_*/
 /output/*
 !/output/dummy
 !/input/dummy
+!/temp/dummy
 *.Rproj
 # History files
 .Rhistory
