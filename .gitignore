@@ -4,7 +4,7 @@
 *.txt
 *.url
 *.xlsm
-/temp/
+/temp/*
 /input/*.json
 /input_*/*.json
 /input_*/
