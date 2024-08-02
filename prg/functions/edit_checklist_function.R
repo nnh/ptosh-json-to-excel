@@ -35,6 +35,9 @@ OutputChecklistSheet <- function(df_output, wb, sheet_name){
                  startRow=1, startCol=1, colNames=T, rowNames=F, withFilter=T,
                  tableStyle=kTableStyle, keepNA=F)
   setColWidths(wb=wb, sheet=sheet_name, cols=1:ncol(df_output), widths="auto")
+  fontStyle <- setFontStyle()  
+  addStyle(wb = wb, sheet = sheet_name, style = fontStyle, rows = 1:(nrow(df_output) + 1), cols = 1:ncol(df_output), gridExpand = TRUE)
+  
   return(wb)
 }
 OutputChecklistXlsx <- function(output_list, output_checklist_path){
