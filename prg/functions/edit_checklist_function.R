@@ -148,6 +148,9 @@ EditOutputItem <- function(df_field_items, df_sheet_items){
 }
 EditOutputData <- function(target){
   df_input <- input_list[[kInputList[[target]]]]
+  if (is.null(df_input)) {
+    return(NULL)
+  }
   exec_function <- c(get(str_c("EditOutputData_", target)))
   output_list <- list()
   output_list <- output_list %>% exec_function[[1]](df_input, .)
@@ -217,7 +220,7 @@ FilterDataByConditions <- function(df_input, conditions){
 }
 FilterDataByCondition <- function(df_input, condition_str){
   target_col <- target_columns[[names(condition_str)]]
-  if (!is.na(condition_str)){
+  if (!is.na(condition_str) && condition_str != ""){
     condition <- parse_expr(condition_str)
     df_filter <- df_input %>% filter(!!condition)
   } else {
@@ -235,8 +238,10 @@ EditOutputDataList <- function(input_list){
   fielditems <- input_list[[kInputList$field_items]] %>% EditOutputFieldItemsSum()
   item <- fielditems %>% EditOutputItem(df_sheet_items)
   temp_output_list <- c(list(name=name, item=item), res)
-  output_list <- temp_output_list[names(target_columns)]
-  output_list$action <- output_list$action %>% distinct()
+  output_list <- temp_output_list[names(target_columns)] %>% keep( ~ !is.null(.))
+  if (!is.null(output_list$action)) {
+    output_list$action <- output_list$action %>% distinct()
+  }
   return(output_list)
 }
 GetTargetJsonForChecklist <- function(raw_json_files) {
