@@ -2,7 +2,7 @@
 #'
 #' @file edit_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2024.4.11
+#' @date 2024.8.20
 # ------ constants ------
 kSheetItemsKeys <- list(id="id", jpname="jpname", alias_name="alias_name")
 kFieldItemsKeys <- list(id="id", sheet_id="sheet_id", name="name", label="label", option.id="option.id")
@@ -74,7 +74,7 @@ GetListCdiscSheetConfig <- function(json_files){
   return(cdisc_sheet_config_list)
 }
 GetDfFlipFlops <- function(json_files){
-  df_flip_flops <- json_files %>% map( ~ {
+  temp_df_flip_flops <- json_files %>% map( ~ {
     flatten_json <- .$flattenJson
     flip_flops <- flatten_json$field_items$flip_flops
     if (is.null(flip_flops)){
@@ -106,7 +106,11 @@ GetDfFlipFlops <- function(json_files){
       rename(c(field_item_id.name=name, field_item_id.label=label))
     flip_flops$sheet_id <- flatten_json$id
     return(flip_flops)
-  }) %>% compact() %>% bind_rows()
+  }) %>% keep( ~ !is.null(.))
+  if (length(temp_df_flip_flops) == 0) {
+    return(NULL)
+  }
+  df_flip_flops <- temp_df_flip_flops %>% compact() %>% bind_rows()
   df_flip_flops <- df_flip_flops %>% rename(!!kFlipFlopsField:=all_of(kFieldText))
   return(df_flip_flops)
 }
@@ -251,7 +255,7 @@ EditAllocationBySheet <- function(id){
 }
 EditFlipFlopsBySheet <- function(id){
   flip_flops <- FilterDfByID(kInputList$flip_flops, id)
-  if (nrow(flip_flops) == 0){
+  if (is.null(flip_flops)){
     return(NULL)
   }
   res <- flip_flops %>% select(any_of(c(kNames, "id", "field_item_id", "codes", "fields", "created_at", "updated_at")))
@@ -259,6 +263,9 @@ EditFlipFlopsBySheet <- function(id){
   return(res)
 }
 FilterDfByID <- function(target_name, target_id){
+  if (is.null(input_list[[target_name]])) {
+    return(NULL)
+  }
   if (nrow(input_list[[target_name]]) == 0) {
     return(input_list[[target_name]])
   }
