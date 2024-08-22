@@ -1,8 +1,8 @@
 #' title
 #' description
-#' @file issue27.R
+#' @file issue27_28.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.21
+#' @date 2024.8.22
 rm(list=ls())
 # ------ libraries ------
 library(tidyverse)
@@ -56,29 +56,33 @@ GetRefBefAft <- function(target, befAft) {
   output_df <- output_df |> select(-c("test", "text"))
   return(output_df)
 }
+IsExceptionItem <- function(rowCount, colCount, test2) {
+  (rowCount == 135 & colCount == 10 & test2 == "(primary_diag_100,field87,プロトコール)(primary_diag_100,field85,アーム)") ||
+    ((rowCount == 158 | rowCount == 159) & colCount == 15 & test2 == "(prior_medications_110,field2,造血細胞移植歴の有無)(prior_medications_110,field4,ドナー情報)")
+}
 
 # ------ main ------
 beforeSheets <- "output_20240820095805_gpower" |> ReadChecklist()
-afterSheets <- "output_20240820111307_gpower" |> ReadChecklist()
+afterSheets <- "output_20240822165938_gpower" |> ReadChecklist()
 print("gpower")
 ExecCompareIssue27(beforeSheets, afterSheets)
 
 beforeSheets <- "output_20240820095158_allb19" |> ReadChecklist()
-afterSheets <- "output_20240820110734_allb19" |> ReadChecklist()
+afterSheets <- "output_20240822165425_allb19" |> ReadChecklist()
 print("allb19")
 ExecCompareIssue27(beforeSheets, afterSheets)
 
 beforeSheets <- "output_20240820095547_bev" |> ReadChecklist()
-afterSheets <- "output_20240820111145_bev" |> ReadChecklist()
+afterSheets <- "output_20240822165821_bev" |> ReadChecklist()
 print("bev")
 ExecCompareIssue27(beforeSheets, afterSheets)
 
 beforeSheets <- "output_20240820095931_tran" |> ReadChecklist()
-afterSheets <- "output_20240820111418_tran" |> ReadChecklist()
+afterSheets <- "output_20240822170047_tran" |> ReadChecklist()
 print("tran")
 ExecCompareIssue27(beforeSheets, afterSheets)
 
-allr23Sheets <- "output_20240820110816_allr23" |> ReadChecklist()
+allr23Sheets <- "output_20240822165505_allr23" |> ReadChecklist()
 
 
 allr23inputPath <- here("input_allr23") |> list.files(pattern="*.json", full.names=T)
@@ -182,8 +186,9 @@ for (rowCount in 1:nrow(output_allr23_items)) {
   for (colCount in 1:ncol(output_allr23_items)) {
     test1 <- ifelse(is.na(output_allr23_items[rowCount, colCount]), "", output_allr23_items[rowCount, colCount])
     test2 <- ifelse(is.na(test_df_items[rowCount, colCount]), "", test_df_items[rowCount, colCount])
+    
     if (test1 != test2) {
-      if (rowCount != 135 & rowCount != 10){
+      if (IsExceptionItem(rowCount, colCount, test2)) {
         print(test1)
         print(test2)
         stop("test ng.")
@@ -191,3 +196,35 @@ for (rowCount in 1:nrow(output_allr23_items)) {
     }
   }
 }
+print("item check end.")
+##############
+# allocation #
+##############
+check_allocation <- allr23Sheets$allocation |> map_lgl( ~ all(is.na(.x) | .x == "")) |> all()
+if (check_allocation) {
+  print("allocation check end.")
+  
+} else {
+  stop("allocation ng.")
+}
+##########
+# action #
+##########
+flipFlops <- fieldItems |> map( ~ {
+  temp <- .
+  res <- . |> map( ~ .$flip_flops |> list_flatten()) |> list_flatten()
+  return(res)
+}) |> flatten_chr()
+if (flipFlops |> length() == 0) {
+  print("action check end.")
+} else {
+  stop("action ng.")
+}
+###########
+# display #
+###########
+display_target <- fieldItems |> map( ~ {
+  fieldItem <- .
+  res <- fieldItem |> map( ~ .$type)
+  return(res)
+})

@@ -148,9 +148,6 @@ EditOutputItem <- function(df_field_items, df_sheet_items){
 }
 EditOutputData <- function(target){
   df_input <- input_list[[kInputList[[target]]]]
-  if (is.null(df_input)) {
-    return(NULL)
-  }
   exec_function <- c(get(str_c("EditOutputData_", target)))
   output_list <- list()
   output_list <- output_list %>% exec_function[[1]](df_input, .)
@@ -199,6 +196,10 @@ EditOutputData_cdisc_sheet_config <- function(df_input, output_list){
   return(NULL)
 }
 EditOutputData_flip_flops <- function(df_input, output_list){
+  if (is.null(df_input)) {
+    # Create an empty dataframe
+    df_input <- tibble(!!!set_names(rep("", length(target_columns$action)), target_columns$action))
+  }
   conditions <- c(action=NA)
   output_list <- FilterDataByConditions(df_input, conditions)
   output_list$action$codes <- ""
