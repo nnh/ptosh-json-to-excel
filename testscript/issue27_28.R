@@ -7,17 +7,9 @@ rm(list=ls())
 # ------ libraries ------
 library(tidyverse)
 library(here)
-library(openxlsx)
-library(jsonlite)
+source(here("tools", "excel_json_validator_common.R"), encoding="UTF-8")
 # ------ constants ------
 # ------ functions ------
-ReadChecklist <- function(inputFolder) {
-  inputPath <- here("output", inputFolder, "list", "checklist.xlsx")
-  sheetNames <- inputPath |> getSheetNames()
-  sheets <- sheetNames |> map( ~ read.xlsx(inputPath, .))
-  names(sheets) <- sheetNames
-  return(sheets)
-}
 ExecCompareIssue27 <- function(bef, aft) {
   if (!identical(names(bef), names(aft))) {
     print(names(bef))
@@ -34,10 +26,6 @@ ExecCompareIssue27 <- function(bef, aft) {
   }
   print("compare ok.")
 } 
-GetNameAndLabel <- function(target) {
-  res <- target |> select("jpname", "alias_name", "name", "label")
-  return(res)
-}
 GetRefBefAft <- function(target, befAft) {
   if (befAft == "before" | befAft == "after") {
     target_colname <- str_c("validate_date_", befAft, "_or_equal_to")
@@ -85,10 +73,12 @@ ExecCompareIssue27(beforeSheets, afterSheets)
 allr23Sheets <- "output_20240822165505_allr23" |> ReadChecklist()
 
 
-allr23inputPath <- here("input_allr23") |> list.files(pattern="*.json", full.names=T)
-allr23jsonList <- allr23inputPath |> map( ~ read_json(.))
-names(allr23jsonList) <- allr23inputPath |> basename() |> str_remove(".json")
-fieldItems <- allr23jsonList |> map( ~ .$field_items)
+#allr23inputPath <- here("input_allr23") |> list.files(pattern="*.json", full.names=T)
+#allr23jsonList <- allr23inputPath |> map( ~ read_json(.))
+#names(allr23jsonList) <- allr23inputPath |> basename() |> str_remove(".json")
+allr23jsonList <- here("input_allr23") |> LoadJsonList()
+fieldItems <- allr23jsonList |> GetFieldItemsByJsonList()
+jpNameAndAliasName <- allr23jsonList |>  GetNameAndAliasNameByJson()
 ##############
 # item sheet #
 ##############
@@ -287,47 +277,15 @@ if (test_number1 & test_number2 & test_number3) {
 ########
 # name #
 ########
-aliasName <- nameAndAliasname |> map_chr( ~ .$alias_name)
-jpname <- nameAndAliasname |> map_chr( ~ .$jpname) 
-if (all(aliasName == allr23Sheets$name$alias_name) & all(jpname == allr23Sheets$name$jpname)) {
-  print("name check end.")
-} else {
-  stop("name ng.")
-}
+check_name <- allr23Sheets |> CheckName(allr23jsonList)
 ##########
 # option #
 ##########
-check_option <- allr23Sheets$option
-options <- map2(fieldItems, names(fieldItems), ~ {
-  fieldItem <- .x 
-  aliasName <- .y
-  res <- fieldItem |> map( ~ {
-    item <- .
-    if (item$type != "FieldItem::Article") {
-      return(NULL)
-    }
-    option <- item$option
-    if (is.null(option)){
-      return(NULL)
-    }
-    option$values <- option$values |> keep( ~ .$is_usable)
-    optionName <- option$name
-    optionValues <- option$values |> map( ~  list(option.name=optionName, option.values_name=.$name, option.values_seq=.$seq, option.values_code=.$code, option.values_is_usable=.$is_usable))
-    return(optionValues)
-  }) |> keep( ~ !is.null(.)) |> map_df(~ .)
-  res$alias_name <- aliasName
-  return(res)
-}) |> bind_rows() |> distinct()
-test_option1 <- check_option |> anti_join(options, by=c("alias_name", "option.values_code"))
-test_option1_1 <- check_option |> inner_join(test_option1, by=c("alias_name", "option.values_code"))
-test_option1_1_1 <- check_option |> anti_join(test_option1, by=c("alias_name", "option.values_code"))
-
-test_option1_2 <- options |> anti_join(test_option1_1_1, by=c("alias_name", "option.values_code"))
-test_option2 <- nrow(check_option) & nrow(options)
-test_number3 <- T
-
-
-
+check_option <- allr23Sheets |> CheckOption()
+###########
+# comment #
+###########
+check_content <- allr23Sheets |> CheckContent()
 
 #########
 # alert #
