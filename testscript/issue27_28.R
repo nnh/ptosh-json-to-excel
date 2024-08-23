@@ -79,6 +79,7 @@ allr23Sheets <- "output_20240822165505_allr23" |> ReadChecklist()
 allr23jsonList <- here("input_allr23") |> LoadJsonList()
 fieldItems <- allr23jsonList |> GetFieldItemsByJsonList()
 jpNameAndAliasName <- allr23jsonList |>  GetNameAndAliasNameByJson()
+checkChecklist <- list()
 ##############
 # item sheet #
 ##############
@@ -200,92 +201,27 @@ if (check_allocation) {
 ##########
 # action #
 ##########
-check_action <- allr23Sheets$action |> map_lgl( ~ all(is.na(.x) | .x == "")) |> all()
-flipFlops <- fieldItems |> map( ~ {
-  temp <- .
-  res <- . |> map( ~ .$flip_flops |> list_flatten()) |> list_flatten()
-  return(res)
-}) |> flatten_chr()
-if (flipFlops |> length() == 0 & check_action) {
-  print("action check end.")
-} else {
-  stop("action ng.")
-}
+checkChecklist$action <- allr23Sheets |> CheckAction()
 ###########
 # display #
 ###########
-check_display <- allr23Sheets$display |> map_lgl( ~ all(is.na(.x) | .x == "")) |> all()
-display <- fieldItems |> map( ~ {
-  fieldItem <- .
-  res <- fieldItem |> map( ~ {
-    type <- .$type
-    is_invisible <- .$is_invisible
-    if (type == "FieldItem::Assigned" & !is_invisible) {
-      return(.)
-    }
-    if (type == "FieldItem::Article" & is_invisible) {
-      return(.)
-    }
-    return(NULL)
-  }) |> keep( ~ !is.null(.))
-  return(res)
-}) |> list_flatten()
-if (display |> length() == 0 & check_display) {
-  print("display check end.")
-} else {
-  stop("display ng.")
-}
+checkChecklist$display <- allr23Sheets |> CheckDisplay()
 ##########
 # number #
 ##########
-check_number <- allr23Sheets$number
-number_target <- fieldItems |> map( ~ {
-  fieldItem <- .
-  res <- fieldItem |> map( ~ {
-    lessThan <- .$validators$numericality$validate_numericality_less_than_or_equal_to
-    greaterThan <- .$validators$numericality$validate_numericality_greater_than_or_equal_to
-    if (is.null(lessThan) & 
-        is.null(greaterThan)) {
-      return(NULL)
-    }
-    res <- list(name=.$name, label=.$label, default_value=.$default_value, 
-                validators.numericality.validate_numericality_less_than_or_equal_to=lessThan,
-                validators.numericality.validate_numericality_greater_than_or_equal_to=greaterThan)
-    return(res)
-  }) |> keep( ~ !is.null(.)) |> list_flatten()
-}) |> keep( ~ length(.) > 0)
-df_number <- number_target |> map_df( ~ .)
-df_number$alias_name <- names(number_target)
-test_number1 <- check_number |> anti_join(df_number, by=c("alias_name", "name")) |> nrow() == 0
-test_number2 <- nrow(check_number) & nrow(df_number)
-test_number3 <- T
-for (i in 1:nrow(check_number)) {
-  if (check_number[i, "validators.numericality.validate_numericality_less_than_or_equal_to"] != df_number[i, "validators.numericality.validate_numericality_less_than_or_equal_to"]) {
-    test_number3 <- F
-    break
-  }
-  if (check_number[i, "validators.numericality.validate_numericality_greater_than_or_equal_to"] != df_number[i, "validators.numericality.validate_numericality_greater_than_or_equal_to"]) {
-    test_number3 <- F
-    break
-  }
-}
-if (test_number1 & test_number2 & test_number3) {
-  print("number check end.")
-} else {
-  stop("number ng.")
-}
+checkChecklist$number <- allr23Sheets |> CheckNumber()
 ########
 # name #
 ########
-check_name <- allr23Sheets |> CheckName(allr23jsonList)
+checkChecklist$name <- allr23Sheets |> CheckName(allr23jsonList)
 ##########
 # option #
 ##########
-check_option <- allr23Sheets |> CheckOption()
+checkChecklist$option <- allr23Sheets |> CheckOption()
 ###########
 # comment #
 ###########
-check_content <- allr23Sheets |> CheckContent()
+checkChecklist$content <- allr23Sheets |> CheckContent()
 
 #########
 # alert #
