@@ -210,12 +210,13 @@ if (check_allocation) {
 ##########
 # action #
 ##########
+check_action <- allr23Sheets$action |> map_lgl( ~ all(is.na(.x) | .x == "")) |> all()
 flipFlops <- fieldItems |> map( ~ {
   temp <- .
   res <- . |> map( ~ .$flip_flops |> list_flatten()) |> list_flatten()
   return(res)
 }) |> flatten_chr()
-if (flipFlops |> length() == 0) {
+if (flipFlops |> length() == 0 & check_action) {
   print("action check end.")
 } else {
   stop("action ng.")
@@ -223,8 +224,116 @@ if (flipFlops |> length() == 0) {
 ###########
 # display #
 ###########
-display_target <- fieldItems |> map( ~ {
+check_display <- allr23Sheets$display |> map_lgl( ~ all(is.na(.x) | .x == "")) |> all()
+display <- fieldItems |> map( ~ {
   fieldItem <- .
-  res <- fieldItem |> map( ~ .$type)
+  res <- fieldItem |> map( ~ {
+    type <- .$type
+    is_invisible <- .$is_invisible
+    if (type == "FieldItem::Assigned" & !is_invisible) {
+      return(.)
+    }
+    if (type == "FieldItem::Article" & is_invisible) {
+      return(.)
+    }
+    return(NULL)
+  }) |> keep( ~ !is.null(.))
   return(res)
-})
+}) |> list_flatten()
+if (display |> length() == 0 & check_display) {
+  print("display check end.")
+} else {
+  stop("display ng.")
+}
+##########
+# number #
+##########
+check_number <- allr23Sheets$number
+number_target <- fieldItems |> map( ~ {
+  fieldItem <- .
+  res <- fieldItem |> map( ~ {
+    lessThan <- .$validators$numericality$validate_numericality_less_than_or_equal_to
+    greaterThan <- .$validators$numericality$validate_numericality_greater_than_or_equal_to
+    if (is.null(lessThan) & 
+        is.null(greaterThan)) {
+      return(NULL)
+    }
+    res <- list(name=.$name, label=.$label, default_value=.$default_value, 
+                validators.numericality.validate_numericality_less_than_or_equal_to=lessThan,
+                validators.numericality.validate_numericality_greater_than_or_equal_to=greaterThan)
+    return(res)
+  }) |> keep( ~ !is.null(.)) |> list_flatten()
+}) |> keep( ~ length(.) > 0)
+df_number <- number_target |> map_df( ~ .)
+df_number$alias_name <- names(number_target)
+test_number1 <- check_number |> anti_join(df_number, by=c("alias_name", "name")) |> nrow() == 0
+test_number2 <- nrow(check_number) & nrow(df_number)
+test_number3 <- T
+for (i in 1:nrow(check_number)) {
+  if (check_number[i, "validators.numericality.validate_numericality_less_than_or_equal_to"] != df_number[i, "validators.numericality.validate_numericality_less_than_or_equal_to"]) {
+    test_number3 <- F
+    break
+  }
+  if (check_number[i, "validators.numericality.validate_numericality_greater_than_or_equal_to"] != df_number[i, "validators.numericality.validate_numericality_greater_than_or_equal_to"]) {
+    test_number3 <- F
+    break
+  }
+}
+if (test_number1 & test_number2 & test_number3) {
+  print("number check end.")
+} else {
+  stop("number ng.")
+}
+########
+# name #
+########
+aliasName <- nameAndAliasname |> map_chr( ~ .$alias_name)
+jpname <- nameAndAliasname |> map_chr( ~ .$jpname) 
+if (all(aliasName == allr23Sheets$name$alias_name) & all(jpname == allr23Sheets$name$jpname)) {
+  print("name check end.")
+} else {
+  stop("name ng.")
+}
+##########
+# option #
+##########
+check_option <- allr23Sheets$option
+options <- map2(fieldItems, names(fieldItems), ~ {
+  fieldItem <- .x 
+  aliasName <- .y
+  res <- fieldItem |> map( ~ {
+    item <- .
+    if (item$type != "FieldItem::Article") {
+      return(NULL)
+    }
+    option <- item$option
+    if (is.null(option)){
+      return(NULL)
+    }
+    option$values <- option$values |> keep( ~ .$is_usable)
+    optionName <- option$name
+    optionValues <- option$values |> map( ~  list(option.name=optionName, option.values_name=.$name, option.values_seq=.$seq, option.values_code=.$code, option.values_is_usable=.$is_usable))
+    return(optionValues)
+  }) |> keep( ~ !is.null(.)) |> map_df(~ .)
+  res$alias_name <- aliasName
+  return(res)
+}) |> bind_rows() |> distinct()
+test_option1 <- check_option |> anti_join(options, by=c("alias_name", "option.values_code"))
+test_option1_1 <- check_option |> inner_join(test_option1, by=c("alias_name", "option.values_code"))
+test_option1_1_1 <- check_option |> anti_join(test_option1, by=c("alias_name", "option.values_code"))
+
+test_option1_2 <- options |> anti_join(test_option1_1_1, by=c("alias_name", "option.values_code"))
+test_option2 <- nrow(check_option) & nrow(options)
+test_number3 <- T
+
+
+
+
+#########
+# alert #
+#########
+normalRanges <- fieldItems |> map( ~ {
+  fieldItem <- .
+  res <- fieldItem |> map( ~ .$normal_range) |> list_flatten()
+  return(res)
+}) |> list_flatten()
