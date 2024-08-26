@@ -2,7 +2,6 @@
 #' description
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.23
 # ------ libraries ------
 library(tidyverse)
 library(here)
@@ -61,6 +60,164 @@ CheckTarget <- function(sheet, json) {
     return(list(sheet=sheet, json=json))
   }
   return(NULL)
+}
+# item
+GetRefBefAft <- function(target, befAft) {
+  targetAliasNameAndNameAndLabel <<- target |> select(c("alias_name", "name", "label")) |> distinct()
+  target$test <- NA
+  testList <- list()
+  if (befAft == "before" | befAft == "after") {
+    target_colname <- str_c("validate_date_", befAft, "_or_equal_to")
+    output_colname <-str_c("references_", befAft)
+    for (i in 1:length(target[[target_colname]])) {
+      if (!is.na(target[[target_colname]][[i]])) {
+        if (str_detect(target[[target_colname]][[i]], "f[0-9]*")) {
+          testList[[i]] <- target[[target_colname]][[i]] |> str_replace("f", "field")
+        } else {
+          testList[[i]] <- NA
+        }
+      } else {
+        testList[[i]] <- NA
+      }
+    }
+    
+#    target$test <- ifelse(target[[target_colname]] |> str_detect("f[0-9]*"), target[[target_colname]] |> str_replace("f", "field")  , NA)
+  } else {
+    target_colname <- str_c("validate_", befAft)
+    output_colname <-str_c(befAft, "_references")
+    for (i in 1:length(target[[target_colname]])) {
+      if (!is.na(target[[target_colname]][[i]])) {
+        if (str_detect(target[[target_colname]][[i]], "field[0-9]*")) {
+          testList[[i]] <- target[[target_colname]][[i]] |> str_extract_all("field[0-9]*")
+        } else {
+          testList[[i]] <- NA
+        }
+      } else {
+        testList[[i]] <- NA
+      }
+    }
+  }
+  for (i in 1:length(testList)) {
+    if (!is.na(testList[[i]])) {
+      test_item <- testList[[i]][[1]] |> unique()
+      refText <- ""
+      for (j in 1:length(test_item)) {
+        temp_test <- targetAliasNameAndNameAndLabel |> filter(alias_name == target[i, "alias_name", drop=T] & name == test_item[j])
+        refText <- str_c(refText, "(", str_c(temp_test, collapse=","), ")")
+        target[i, "test"] <- refText
+      }
+    }
+  }
+
+  output_df <- target
+  output_df[[output_colname]] <- output_df$test
+  output_df <- output_df |> select(-c("test"))
+  return(output_df)
+}
+GetItemFromJson <- function(sheetList, jsonList) {
+  article <- fieldItems |> map( ~ {
+    df <- .
+    res <- df |> map( ~ {
+      if (.$type == "FieldItem::Article") {
+        return(.)
+      } else {
+        return(NULL)
+      }
+    }) |> keep( ~ !is.null(.))
+  })
+  article_option_name <- article |> map( ~ {
+    df <- .
+    res <- df |> map( ~ {
+      if (!is.list(.)) {
+        return("")
+      }
+      option <- .$option
+      if (is.null(option)) {
+        return("")
+      } else {
+        temp <- list(option.name=option$name)
+        return(temp)
+      }
+    })
+    return(res)
+  })
+  article_validatores <- article |> map( ~ {
+    df <- .
+    res <- df |> map( ~ {
+      if (!is.list(.)) {
+        return("")
+      }
+      validators <- .$validators
+      if (is.null(validators)) {
+        return("")
+      } else {
+        validatorsDate <- validators$date
+        temp <- list()
+        temp <- temp |> 
+          append(validators$presence) |> 
+          append(validators$formula)
+        if (!is.null(validatorsDate$validate_date_after_or_equal_to)) {
+          temp2 <- list(validate_date_after_or_equal_to=validatorsDate$validate_date_after_or_equal_to)
+          temp <- temp |> append(temp2) 
+        }
+        if (!is.null(validatorsDate$validate_date_before_or_equal_to)) {
+          temp2 <- list(validate_date_before_or_equal_to=validatorsDate$validate_date_before_or_equal_to)
+          temp <- temp |> append(temp2) 
+        }
+        return(temp)
+      }
+    })
+    return(res)
+  })
+  nameAndAliasname <- jsonList |> map( ~ list(jpname=.$name, alias_name=.$alias_name))
+  list_items <- list()
+  for (i in 1:length(nameAndAliasname)) {
+    list_items[[i]] <- list()
+    for (j in 1:length(article_option_name[[i]])) {
+      list_items[[i]][[j]] <- list()
+      list_items[[i]][[j]] <- list_items[[i]][[j]] |> 
+        append(nameAndAliasname[[i]]) |> 
+        append(list(name=article[[i]][[j]]$name)) |>
+        append(list(label=article[[i]][[j]]$label)) |>
+        append(list(default_value=article[[i]][[j]]$default_value)) |>
+        append(article_option_name[[i]][[j]]) |>
+        append(article_validatores[[i]][[j]])
+      list_items[[i]][[j]] <- list_items[[i]][[j]] %>% keep(~ !is.null(.) && . != "")
+    }
+  }
+  names(list_items) <- names(jsonList)
+  output_items <- sheetList$item |> 
+    rename(validate_formula_message=validators.formula.validate_formula_message,
+           validate_formula_if=validators.formula.validate_formula_if,
+           validate_date_after_or_equal_to=validators.date.validate_date_after_or_equal_to,
+           validate_date_before_or_equal_to=validators.date.validate_date_before_or_equal_to,
+           validate_presence_if=validators.presence.validate_presence_if)
+  itemCols <- output_items |> colnames()
+  df_items <- list_items |> flatten_df()
+  template_df_items <- tibble(!!!setNames(rep(list(NA), length(itemCols)), itemCols))
+  df_items <- template_df_items |> bind_rows(df_items) |> filter(!is.na(jpname))
+  nameAndLable <- df_items |> select("jpname", "alias_name", "name", "label")
+  test_df_items <- df_items |> GetRefBefAft("before") |>  GetRefBefAft("after") |> GetRefBefAft("formula_if") |>  GetRefBefAft("presence_if")
+  return(list(json=test_df_items, sheet=output_items))
+}
+# allocation
+CheckAllocation <- function(sheetList, jsonList) {
+  sheet <- sheetList[["allocation"]]
+  json <- GetAllocationFromJson(jsonList)
+  return(CheckTarget(sheet, json))
+}
+GetAllocationFromJson <- function(jsonList) {
+  allocationColnames <- c("jpname", "alias_name", "is_zelen", "zelen_imbalance", "is_double_blinded", 
+                          "double_blind_emails", "allocation_method", "groups.code", "groups.label", 
+                          "groups.if", "references", "groups.message")
+  allocationList <- jsonList |> keep( ~ .$alias_name |> str_detect("^allocation_[0-9]+"))
+  if (length(allocationList) == 0) {
+    df <- tibble(!!!setNames(vector("list", length(allocationColnames)), allocationColnames))
+  } else {
+    df <- allocationList |> map_df( ~ .|> select(all_of(allocationColnames)))
+  }
+  res <- GetItemsSelectColnames(df, allocationColnames)
+  return(res)
 }
 # action
 CheckAction <- function(sheetList) {

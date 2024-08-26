@@ -26,24 +26,7 @@ ExecCompareIssue27 <- function(bef, aft) {
   }
   print("compare ok.")
 } 
-GetRefBefAft <- function(target, befAft) {
-  if (befAft == "before" | befAft == "after") {
-    target_colname <- str_c("validate_date_", befAft, "_or_equal_to")
-    output_colname <-str_c("references_", befAft)
-    target$test <- ifelse(target[[target_colname]] |> str_detect("f[0-9]*"), target[[target_colname]] |> str_replace("f", "field")  , NA)
-  } else {
-    target_colname <- str_c("validate_", befAft)
-    output_colname <-str_c(befAft, "_references")
-    target$test <- ifelse(target[[target_colname]] |> str_detect("field[0-9]*"), target[[target_colname]] |> str_extract("field[0-9]*")  , NA)
-  }
-  df_test <- target |> filter(!is.na(test)) |> select("alias_name", "test") |> distinct()
-  df_test <- df_test |> inner_join(nameAndLable, by=c("alias_name", "test"="name"))
-  df_test$text <- str_c("(", df_test$alias_name, ",", df_test$test, ",", df_test$label, ")")
-  output_df <- target |> left_join(select(df_test,c("alias_name", "test", "text")) , by=c("alias_name", "test"))
-  output_df[[output_colname]] <- output_df$text
-  output_df <- output_df |> select(-c("test", "text"))
-  return(output_df)
-}
+
 IsExceptionItem <- function(rowCount, colCount, test2) {
   (rowCount == 135 & colCount == 10 & test2 == "(primary_diag_100,field87,プロトコール)(primary_diag_100,field85,アーム)") ||
     ((rowCount == 158 | rowCount == 159) & colCount == 15 & test2 == "(prior_medications_110,field2,造血細胞移植歴の有無)(prior_medications_110,field4,ドナー情報)")
@@ -83,96 +66,34 @@ checkChecklist <- list()
 ##############
 # item sheet #
 ##############
-article <- fieldItems |> map( ~ {
-  df <- .
-  res <- df |> map( ~ {
-    if (.$type == "FieldItem::Article") {
-      return(.)
-    } else {
-      return(NULL)
-    }
-  }) |> keep( ~ !is.null(.))
-})
-article_option_name <- article |> map( ~ {
-  df <- .
-  res <- df |> map( ~ {
-    if (!is.list(.)) {
-      return("")
-    }
-    option <- .$option
-    if (is.null(option)) {
-      return("")
-    } else {
-      temp <- list(option.name=option$name)
-      return(temp)
-    }
-  })
-  return(res)
-})
-article_validatores <- article |> map( ~ {
-  df <- .
-  res <- df |> map( ~ {
-    if (!is.list(.)) {
-      return("")
-    }
-    validators <- .$validators
-    if (is.null(validators)) {
-      return("")
-    } else {
-      validatorsDate <- validators$date
-      temp <- list()
-      temp <- temp |> 
-        append(validators$presence) |> 
-        append(validators$formula)
-      if (!is.null(validatorsDate$validate_date_after_or_equal_to)) {
-        temp2 <- list(validate_date_after_or_equal_to=validatorsDate$validate_date_after_or_equal_to)
-        temp <- temp |> append(temp2) 
-      }
-      if (!is.null(validatorsDate$validate_date_before_or_equal_to)) {
-        temp2 <- list(validate_date_before_or_equal_to=validatorsDate$validate_date_before_or_equal_to)
-        temp <- temp |> append(temp2) 
-      }
-      return(temp)
-    }
-  })
-  return(res)
-})
+jsonSheetItemList <- GetItemFromJson(allr23Sheets, allr23jsonList)
+df_item <- jsonSheetItemList$json
+#df_item$presence_if_references <- ifelse(df_item$validate_presence_if |> str_detect("ref\\('registration', 3\\)"), 
+#                                          "(registration,field3,性別)", 
+#                                          df_item$presence_if_references)
+#df_item$formula_if_references <- ifelse(df_item$validate_formula_if |> str_detect("ref\\('registration', 3\\)"), 
+#                                         "(registration,field3,性別)", 
+#                                         df_item$formula_if_references)
+df_item_json <- df_item |> as.data.frame() %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
+df_item_sheet <- jsonSheetItemList$sheet |> as.data.frame() %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
 
-nameAndAliasname <- allr23jsonList |> map( ~ list(jpname=.$name, alias_name=.$alias_name))
-list_items <- list()
-for (i in 1:length(nameAndAliasname)) {
-  list_items[[i]] <- list()
-  for (j in 1:length(article_option_name[[i]])) {
-    list_items[[i]][[j]] <- list()
-    list_items[[i]][[j]] <- list_items[[i]][[j]] |> 
-      append(nameAndAliasname[[i]]) |> 
-      append(list(name=article[[i]][[j]]$name)) |>
-      append(list(label=article[[i]][[j]]$label)) |>
-      append(list(default_value=article[[i]][[j]]$default_value)) |>
-      append(article_option_name[[i]][[j]]) |>
-      append(article_validatores[[i]][[j]])
-    list_items[[i]][[j]] <- list_items[[i]][[j]] %>% keep( ~ !is.null(.) && . != "")
+checkChecklist$item <- CheckTarget(df_item_sheet, df_item_json)
+for (i in 1:15) {
+  for (j in 1:207) {
+    if (df_item_sheet[j, i] != df_item_json[j, i]) {
+      print(df_item_sheet[j, i])
+      print(df_item_json[j, i])
+      print(i)
+      print(j)
+    }
   }
 }
-names(list_items) <- names(allr23jsonList)
-output_allr23_items <- allr23Sheets$item |> 
-  rename(validate_formula_message=validators.formula.validate_formula_message,
-         validate_formula_if=validators.formula.validate_formula_if,
-         validate_date_after_or_equal_to=validators.date.validate_date_after_or_equal_to,
-         validate_date_before_or_equal_to=validators.date.validate_date_before_or_equal_to,
-         validate_presence_if=validators.presence.validate_presence_if)
-itemCols <- output_allr23_items |> colnames()
-df_items <- list_items |> flatten_df()
-template_df_items <- tibble(!!!setNames(rep(list(NA), length(itemCols)), itemCols))
-df_items <- template_df_items |> bind_rows(df_items) |> filter(!is.na(jpname))
-nameAndLable <- GetNameAndLabel(df_items)
-test_df_items <- df_items |> GetRefBefAft("before") |>  GetRefBefAft("after") |> GetRefBefAft("formula_if") |>  GetRefBefAft("presence_if")
-test_df_items$presence_if_references <- ifelse(test_df_items$validate_presence_if |> str_detect("ref\\('registration', 3\\)"), "(registration,field3,性別)", test_df_items$presence_if_references)
-test_df_items$formula_if_references <- ifelse(test_df_items$validate_formula_if |> str_detect("ref\\('registration', 3\\)"), "(registration,field3,性別)", test_df_items$formula_if_references)
 # 列数、行数のチェック
-if (nrow(output_allr23_items) != nrow(df_items) | ncol(output_allr23_items) != ncol(df_items)) {
+if (nrow(allr23Sheets$item) != nrow(df_items) | ncol(allr23Sheets$item) != ncol(df_items)) {
   stop("test ng.")
 }
+output_allr23_items <- allr23Sheets$item
+test_df_items <- df_items |> as.data.frame()
 for (rowCount in 1:nrow(output_allr23_items)) {
   for (colCount in 1:ncol(output_allr23_items)) {
     test1 <- ifelse(is.na(output_allr23_items[rowCount, colCount]), "", output_allr23_items[rowCount, colCount])
@@ -188,16 +109,11 @@ for (rowCount in 1:nrow(output_allr23_items)) {
   }
 }
 print("item check end.")
+
 ##############
 # allocation #
 ##############
-check_allocation <- allr23Sheets$allocation |> map_lgl( ~ all(is.na(.x) | .x == "")) |> all()
-if (check_allocation) {
-  print("allocation check end.")
-  
-} else {
-  stop("allocation ng.")
-}
+checkChecklist$allocation <- allr23Sheets |> CheckAllocation(allr23jsonList)
 ##########
 # action #
 ##########
