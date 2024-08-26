@@ -338,4 +338,132 @@ GetContentFromJson <- function() {
   res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "content"))
   return(res)
 }
+# explanation
+CheckExplanation <- function(sheetList) {
+  sheet <- sheetList[["explanation"]]
+  json <- GetExplanationFromJson()
+  return(CheckTarget(sheet, json))
+}
+GetExplanationFromJson <- function() {
+  df <- map2(fieldItems, names(fieldItems), ~ {
+    fieldItem <- .x 
+    aliasName <- .y
+    res <- fieldItem |> keep( ~ !is.null(.$description))
+    explanation <- res |> map_df( ~ list(name=.$name, label=.$label, description=.$description))
+    explanation$alias_name <- aliasName
+    return(explanation)
+  }) |> bind_rows() |> filter(description != "")
+  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "description"))
+  return(res)
+}
+# presence
+CheckPresence <- function(sheetList) {
+  sheet <- sheetList[["presence"]]
+  json <- GetPresenceFromJson()
+  return(CheckTarget(sheet, json))
+}
+GetPresenceFromJson <- function() {
+  df <- map2(fieldItems, names(fieldItems), ~ {
+    fieldItem <- .x 
+    aliasName <- .y
+    res <- fieldItem |> keep( ~ .$type == "FieldItem::Article" & is.null(.$validators$presence))
+    presence <- res |> map_df( ~ list(name=.$name, label=.$label))
+    presence$alias_name <- aliasName
+    return(presence)
+  }) |> bind_rows()
+  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label"))
+  return(res)
+}
+# master
+CheckMaster <- function(sheetList) {
+  sheet <- sheetList[["master"]]
+  json <- GetMasterFromJson()
+  return(CheckTarget(sheet, json))
+}
+GetMasterFromJson <- function() {
+  df <- map2(fieldItems, names(fieldItems), ~ {
+    fieldItem <- .x 
+    aliasName <- .y
+    res <- fieldItem |> keep( ~ !is.null(.$link_type))
+    master <- res |> map_df( ~ list(name=.$name, label=.$label, link_type=.$link_type))
+    master$alias_name <- aliasName
+    return(master)
+  }) |> bind_rows() |> filter(link_type != "")
+  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "link_type"))
+  return(res)
+}
+# visit
+CheckVisit <- function(sheetList) {
+  sheet <- sheetList[["visit"]]
+  json <- GetVisitFromJson()
+  return(CheckTarget(sheet, json))
+}
+GetVisitFromJson <- function() {
+  df <- map2(fieldItems, names(fieldItems), ~ {
+    fieldItem <- .x 
+    aliasName <- .y
+    res <- fieldItem |> keep( ~ .$label == "Visit Number")
+    visit <- res |> map_df( ~ list(name=.$name, default_value=.$default_value))
+    visit$alias_name <- aliasName
+    return(visit)
+  }) |> bind_rows()
+  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "default_value"))
+  return(res)
+}
+# alert
+CheckAlert <- function(sheetList) {
+  sheet <- sheetList[["alert"]]
+  json <- GetAlertFromJson()
+  return(CheckTarget(sheet, json))
+}
+GetAlertFromJson <- function() {
+  df <- map2(fieldItems, names(fieldItems), ~ {
+    fieldItem <- .x 
+    aliasName <- .y
+    res <- fieldItem |> keep( ~ !is.null(.$normal_range$less_than_or_equal_to) | !is.null(.$normal_range$greater_than_or_equal_to))
+    alert <- res |> map_df( ~ list(name=.$name, normal_range=.$normal_range))
+    alert$alias_name <- aliasName
+    return(alert)
+  }) |> bind_rows()
+  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "normal_range"))
+  return(res)
+}
+# title
+CheckTitle <- function(sheetList) {
+  sheet <- sheetList[["title"]]
+  json <- GetTitleFromJson()
+  return(CheckTarget(sheet, json))
+}
+GetTitleFromJson <- function() {
+  df <- map2(fieldItems, names(fieldItems), ~ {
+    fieldItem <- .x 
+    aliasName <- .y
+    res <- fieldItem |> keep( ~ .$type == "FieldItem::Heading")
+    title <- res |> map_df( ~ list(name=.$name, label=.$label, level=.$level))
+    title$alias_name <- aliasName
+    return(title)
+  }) |> bind_rows()
+  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "level"))
+  res <- res |> mutate(level = as.numeric(level))
+  return(res)
+}
+# assigned
+CheckAssigned <- function(sheetList) {
+  sheet <- sheetList[["assigned"]]
+  json <- GetAssignedFromJson()
+  return(CheckTarget(sheet, json))
+}
+GetAssignedFromJson <- function() {
+  df <- map2(fieldItems, names(fieldItems), ~ {
+    fieldItem <- .x 
+    aliasName <- .y
+    res <- fieldItem |> keep( ~ .$type == "FieldItem::Assigned")
+    assigned <- res |> map_df( ~ list(name=.$name, label=.$label, default_value=.$default_value))
+    assigned$alias_name <- aliasName
+    return(assigned)
+  }) |> bind_rows()
+  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "default_value"))
+  return(res)
+}
+test <- GetAssignedFromJson()
 # ------ main ------

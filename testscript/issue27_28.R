@@ -108,12 +108,31 @@ checkChecklist$option <- allr23Sheets |> CheckOption()
 # comment #
 ###########
 checkChecklist$content <- allr23Sheets |> CheckContent()
-
+###############
+# explanation #
+###############
+checkChecklist$explanation <- allr23Sheets |> CheckExplanation()
+############
+# presence #
+############
+checkChecklist$presence <- allr23Sheets |> CheckPresence()
+##########
+# master #
+##########
+checkChecklist$master <- allr23Sheets |> CheckMaster()
+#########
+# visit #
+#########
+checkChecklist$visit <- allr23Sheets |> CheckVisit()
 #########
 # alert #
 #########
-normalRanges <- fieldItems |> map( ~ {
-  fieldItem <- .
-  res <- fieldItem |> map( ~ .$normal_range) |> list_flatten()
-  return(res)
-}) |> list_flatten()
+checkChecklist$alert <- allr23Sheets |> CheckAlert()
+#########
+# title #
+#########
+checkChecklist$title <- allr23Sheets |> CheckTitle()
+############
+# assigned #
+############
+checkChecklist$assigned <- allr23Sheets |> CheckAssigned()
