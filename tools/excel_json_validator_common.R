@@ -76,7 +76,6 @@ GetRefBefAft <- function(target, befAft) {
   for (i in 1:length(target[[target_colname]])) {
     if (!is.na(target[[target_colname]][[i]])) {
       temp <- target[[target_colname]][[i]] %>% gsub("f(\\d+)", "field\\1", .)
-      print(temp)
       if (str_detect(temp, "field[0-9]*")) {
           testList[[i]] <- temp |> str_extract_all("field[0-9]*")
       } else {
@@ -465,5 +464,4 @@ GetAssignedFromJson <- function() {
   res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "default_value"))
   return(res)
 }
-test <- GetAssignedFromJson()
 # ------ main ------
