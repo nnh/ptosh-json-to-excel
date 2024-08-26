@@ -69,34 +69,24 @@ GetRefBefAft <- function(target, befAft) {
   if (befAft == "before" | befAft == "after") {
     target_colname <- str_c("validate_date_", befAft, "_or_equal_to")
     output_colname <-str_c("references_", befAft)
-    for (i in 1:length(target[[target_colname]])) {
-      if (!is.na(target[[target_colname]][[i]])) {
-        if (str_detect(target[[target_colname]][[i]], "f[0-9]*")) {
-          testList[[i]] <- target[[target_colname]][[i]] |> str_replace("f", "field")
-        } else {
-          testList[[i]] <- NA
-        }
-      } else {
-        testList[[i]] <- NA
-      }
-    }
-    
-#    target$test <- ifelse(target[[target_colname]] |> str_detect("f[0-9]*"), target[[target_colname]] |> str_replace("f", "field")  , NA)
   } else {
     target_colname <- str_c("validate_", befAft)
     output_colname <-str_c(befAft, "_references")
-    for (i in 1:length(target[[target_colname]])) {
-      if (!is.na(target[[target_colname]][[i]])) {
-        if (str_detect(target[[target_colname]][[i]], "field[0-9]*")) {
-          testList[[i]] <- target[[target_colname]][[i]] |> str_extract_all("field[0-9]*")
-        } else {
-          testList[[i]] <- NA
-        }
+  }
+  for (i in 1:length(target[[target_colname]])) {
+    if (!is.na(target[[target_colname]][[i]])) {
+      temp <- target[[target_colname]][[i]] %>% gsub("f(\\d+)", "field\\1", .)
+      print(temp)
+      if (str_detect(temp, "field[0-9]*")) {
+          testList[[i]] <- temp |> str_extract_all("field[0-9]*")
       } else {
-        testList[[i]] <- NA
+          testList[[i]] <- NA
       }
+    } else {
+      testList[[i]] <- NA
     }
   }
+  
   for (i in 1:length(testList)) {
     if (!is.na(testList[[i]])) {
       test_item <- testList[[i]][[1]] |> unique()
