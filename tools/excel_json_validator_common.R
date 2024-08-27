@@ -199,11 +199,25 @@ GetAllocationFromJson <- function(jsonList) {
   allocationColnames <- c("jpname", "alias_name", "is_zelen", "zelen_imbalance", "is_double_blinded", 
                           "double_blind_emails", "allocation_method", "groups.code", "groups.label", 
                           "groups.if", "references", "groups.message")
-  allocationList <- jsonList |> keep( ~ .$alias_name |> str_detect("^allocation_[0-9]+"))
+  allocationList <- jsonList |> 
+    keep(~ .$alias_name |> str_detect("(?i)^allocation(_[0-9]+)?$"))
   if (length(allocationList) == 0) {
     df <- tibble(!!!setNames(vector("list", length(allocationColnames)), allocationColnames))
   } else {
-    df <- allocationList |> map_df( ~ .|> select(all_of(allocationColnames)))
+    df <- allocationList |> map( ~ {
+      name <- .$name
+      aliasName <- .$alias_name
+      allocation <- .$allocation
+      groups <- allocation$groups |> map_df( ~ c(groups.code=.$code, groups.label=.$label, groups.if=.$`if`, groups.message=.$message))
+      groups$alias_name <- aliasName
+      groups$is_zelen <- allocation$is_zelen
+      groups$zelen_imbalance <- allocation$zelen_imbalance |> as.numeric()
+      groups$is_double_blinded <- allocation$is_double_blinded
+      groups$double_blind_emails <- allocation$double_blind_emails
+      groups$allocation_method <- allocation$allocation_method
+      groups$references <- ""
+      return(groups)
+    }) |> bind_rows()
   }
   res <- GetItemsSelectColnames(df, allocationColnames)
   return(res)
