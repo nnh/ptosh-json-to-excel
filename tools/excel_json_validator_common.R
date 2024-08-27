@@ -458,11 +458,21 @@ GetAlertFromJson <- function() {
     fieldItem <- .x 
     aliasName <- .y
     res <- fieldItem |> keep( ~ !is.null(.$normal_range$less_than_or_equal_to) | !is.null(.$normal_range$greater_than_or_equal_to))
-    alert <- res |> map_df( ~ list(name=.$name, normal_range=.$normal_range))
+    alert <- res |> map_df( ~ {
+      temp_alert <- .
+      normal_range <- temp_alert$normal_range
+      less_than <- ifelse(!is.null(normal_range$less_than_or_equal_to), normal_range$less_than_or_equal_to, NA)
+      greater_than <- ifelse(!is.null(normal_range$greater_than_or_equal_to), normal_range$greater_than_or_equal_to, NA)
+      res <- list(name=.$name, 
+                  label=.$label,
+                  normal_range.less_than_or_equal_to=less_than,
+                  normal_range.greater_than_or_equal_to=greater_than)
+      return(res)
+    })
     alert$alias_name <- aliasName
     return(alert)
   }) |> bind_rows()
-  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "normal_range"))
+  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to"))
   return(res)
 }
 # title
