@@ -113,7 +113,7 @@ GetItemFromJson <- function(sheetList, jsonList) {
         return(NULL)
       }
     }) |> keep( ~ !is.null(.))
-  })
+  }) |> keep( ~ length(.) > 0)
   article_option_name <- article |> map( ~ {
     df <- .
     res <- df |> map( ~ {
@@ -158,7 +158,7 @@ GetItemFromJson <- function(sheetList, jsonList) {
     })
     return(res)
   })
-  nameAndAliasname <- jsonList |> map( ~ list(jpname=.$name, alias_name=.$alias_name))
+  nameAndAliasname <- jsonList |> map( ~ list(jpname=.$name, alias_name=.$alias_name)) |> keep( ~ !is.null(article[[.$alias_name]]))
   list_items <- list()
   for (i in 1:length(nameAndAliasname)) {
     list_items[[i]] <- list()
@@ -174,7 +174,7 @@ GetItemFromJson <- function(sheetList, jsonList) {
       list_items[[i]][[j]] <- list_items[[i]][[j]] %>% keep(~ !is.null(.) && . != "")
     }
   }
-  names(list_items) <- names(jsonList)
+  names(list_items) <- nameAndAliasname |> map_chr( ~ .$alias_name)
   output_items <- sheetList$item |> 
     rename(validate_formula_message=validators.formula.validate_formula_message,
            validate_formula_if=validators.formula.validate_formula_if,
@@ -215,11 +215,39 @@ CheckAction <- function(sheetList) {
   return(CheckTarget(sheet, json))
 }
 GetActionFromJson <- function() {
-  df <- fieldItems |> map( ~ {
-    fieldItem <- .
-    res <- fieldItem |> map( ~ .$flip_flops) |> keep( ~ length(.) > 0)
+  action <- map2(fieldItems, names(fieldItems), ~ {
+    fieldItem <- .x 
+    aliasName <- .y
+    flip_flops <- fieldItem |> map( ~ list(aliasName=aliasName, name=.$name, label=.$label, flip_flops=.$flip_flops)) |> keep( ~ length(.$flip_flops) > 0)
+    if (length(flip_flops) == 0) {
+      return(NULL)
+    }
+    res <- flip_flops |> map( ~ {
+      flip_flop <- .$flip_flops
+      field_item_id.name <- .$name
+      field_item_id.label <- .$label
+      alias_name <- .$aliasName
+      res <- flip_flop |> map_df( ~ {
+        temp <- crossing(codes=flatten_chr(.$code), fields=flatten_chr(.$fields)) |> tibble()
+        temp$alias_name <- alias_name
+        temp$id <- .$id
+        temp$field_item_id <- .$field_item_id
+        temp$field_item_id.name <- field_item_id.name
+        temp$field_item_id.label <- field_item_id.label
+        return(temp)
+      })
+      return(res)
+    })
+    return(res)
+  }) |> keep( ~ !is.null(.)) |> bind_rows()
+  aliasnameAndFieldIdAndLabel <- map2(fieldItems, names(fieldItems), ~ {
+    fieldItem <- .x 
+    aliasName <- .y
+    res <- fieldItem |> map_df( ~ c(fields=.$name, fields.label=.$label))
+    res$alias_name <- aliasName
     return(res)
   }) |> bind_rows()
+  df <- action |> inner_join(aliasnameAndFieldIdAndLabel, by=c("alias_name", "fields"))
   res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "id", "field_item_id", "field_item_id.name", "field_item_id.label", "codes", "fields", "fields.label"))
   return(res)
 }
