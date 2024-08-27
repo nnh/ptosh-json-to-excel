@@ -49,7 +49,7 @@ ExecCompareIssue27(beforeSheets, afterSheets)
 
 sheetList <- "output_20240822165425_allb19" |> ReadChecklist()
 jsonList <- here("input_allb19") |> LoadJsonList()
-source(here("tools", "trials", "excel_json_validator_tran.R"), encoding="UTF-8")
+source(here("tools", "trials", "excel_json_validator_allb19.R"), encoding="UTF-8")
 
 sheetList <- "output_20240822165821_bev" |> ReadChecklist()
 jsonList <- here("input_bev") |> LoadJsonList()

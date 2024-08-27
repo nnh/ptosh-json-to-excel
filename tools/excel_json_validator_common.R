@@ -200,7 +200,7 @@ GetAllocationFromJson <- function(jsonList) {
                           "double_blind_emails", "allocation_method", "groups.code", "groups.label", 
                           "groups.if", "references", "groups.message")
   allocationList <- jsonList |> 
-    keep(~ .$alias_name |> str_detect("(?i)^allocation(_[0-9]+)?$"))
+    keep(~ .$alias_name |> str_detect("(?i)^allocation([0-9]+)?$"))
   if (length(allocationList) == 0) {
     df <- tibble(!!!setNames(vector("list", length(allocationColnames)), allocationColnames))
   } else {
