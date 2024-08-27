@@ -276,21 +276,25 @@ CheckDisplay <- function(sheetList) {
   return(CheckTarget(sheet, json))
 }
 GetDisplayFromJson <- function() {
-  df <- fieldItems |> map_df( ~ {
-    fieldItem <- .
+  df <- map2(fieldItems, names(fieldItems), ~ {
+    fieldItem <- .x 
+    aliasName <- .y
     res <- fieldItem |> map( ~ {
-      type <- .$type
-      is_invisible <- .$is_invisible
+      temp <- .
+      type <- temp$type
+      is_invisible <- temp$is_invisible
       if (type == "FieldItem::Assigned" & !is_invisible) {
-        return(.)
+        res <- tibble(alias_name=aliasName, name=temp$name, label=temp$label)
+        return(res)
       }
       if (type == "FieldItem::Article" & is_invisible) {
-        return(.)
+        res <- tibble(alias_name=aliasName, name=temp$name, label=temp$label)
+        return(res)
       }
       return(NULL)
     }) |> keep( ~ !is.null(.))
     return(res)
-  })
+  }) |> bind_rows()
   res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label"))
   return(res)
 }

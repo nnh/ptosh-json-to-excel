@@ -1,8 +1,8 @@
 #' title
 #' description
-#' @file excel_json_validator_ALL-R23.R
+#' @file excel_json_validator_bev.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.26
+#' @date 2024.8.27
 keep_objects <- c("jsonList", "sheetList")
 rm(list = setdiff(ls(), keep_objects))
 # ------ libraries ------
@@ -20,15 +20,12 @@ checkChecklist <- list()
 ##############
 jsonSheetItemList <- GetItemFromJson(sheetList, jsonList)
 df_item <- jsonSheetItemList$json
-df_item$presence_if_references <- ifelse(df_item$validate_presence_if |> str_detect("ref\\('registration', 3\\)"), 
-                                         "(registration,field3,性別)", 
+df_item$presence_if_references <- ifelse(df_item$validate_presence_if |> str_detect("ref\\('registration', 4\\)"), 
+                                         "(registration,field4,性別)", 
                                          df_item$presence_if_references)
-df_item$formula_if_references <- ifelse(df_item$validate_formula_if |> str_detect("ref\\('registration', 3\\)"), 
-                                        "(registration,field3,性別)", 
+df_item$formula_if_references <- ifelse(df_item$validate_formula_if |> str_detect("ref\\('registration', 4\\)"), 
+                                        "(registration,field4,性別)", 
                                         df_item$formula_if_references)
-df_item[177, 8] <- ifelse(df_item[177, 8] == "(registration,field3,性別)", "(radiotherapy_500,field46,本研究登録後から再発/観察終了までに放射線療法を実施しましたか)(registration,field3,性別)", NA)
-df_item[176, 10] <- ifelse(df_item[176, 10] == "(registration,field3,性別)", "(radiotherapy_500,field46,本研究登録後から再発/観察終了までに放射線療法を実施しましたか)(registration,field3,性別)", NA)
-df_item[177, 10] <- ifelse(df_item[177, 10] == "(registration,field3,性別)", "(radiotherapy_500,field46,本研究登録後から再発/観察終了までに放射線療法を実施しましたか)(registration,field3,性別)", NA)
 df_item_json <- df_item |> as.data.frame() %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
 df_item_sheet <- jsonSheetItemList$sheet |> as.data.frame() %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
 checkChecklist$item <- CheckTarget(df_item_sheet, df_item_json)
@@ -39,7 +36,10 @@ checkChecklist$allocation <- sheetList |> CheckAllocation(jsonList)
 ##########
 # action #
 ##########
-checkChecklist$action <- sheetList |> CheckAction()
+temp_action <- sheetList
+temp_action$action$id <- temp_action$action$id |> as.integer()
+temp_action$action$field_item_id <- temp_action$action$field_item_id |> as.integer()
+checkChecklist$action <- temp_action |> CheckAction()
 ###########
 # display #
 ###########

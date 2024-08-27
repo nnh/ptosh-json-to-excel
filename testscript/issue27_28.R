@@ -47,11 +47,17 @@ afterSheets <- "output_20240822170047_tran" |> ReadChecklist()
 print("tran")
 ExecCompareIssue27(beforeSheets, afterSheets)
 
+sheetList <- "output_20240822165425_allb19" |> ReadChecklist()
+jsonList <- here("input_allb19") |> LoadJsonList()
+source(here("tools", "trials", "excel_json_validator_tran.R"), encoding="UTF-8")
+
+sheetList <- "output_20240822165821_bev" |> ReadChecklist()
+jsonList <- here("input_bev") |> LoadJsonList()
+source(here("tools", "trials", "excel_json_validator_bev.R"), encoding="UTF-8")
+
 sheetList <- "output_20240822170047_tran" |> ReadChecklist()
 jsonList <- here("input_tran") |> LoadJsonList()
 source(here("tools", "trials", "excel_json_validator_tran.R"), encoding="UTF-8")
-
-
 
 sheetList <- "output_20240822165505_allr23" |> ReadChecklist()
 jsonList <- here("input_allr23") |> LoadJsonList()
