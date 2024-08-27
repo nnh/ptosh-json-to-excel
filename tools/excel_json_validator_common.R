@@ -28,6 +28,16 @@ ReadChecklist <- function(inputFolder) {
   names(sheets) <- sheetNames
   return(sheets)
 }
+GetAliasnameAndFieldIdAndLabel <- function(fieldItems) {
+  res <- map2(fieldItems, names(fieldItems), ~ {
+    fieldItem <- .x 
+    aliasName <- .y
+    res <- fieldItem |> map_df( ~ c(fields=.$name, fields.label=.$label))
+    res$alias_name <- aliasName
+    return(res)
+  }) |> bind_rows()
+  return(res)
+}
 GetNameAndAliasNameByJson <- function(json_list) {
   res <- json_list |> map_df( ~ list(jpname=.$name, alias_name=.$alias_name))
   return(res)
@@ -192,6 +202,7 @@ GetItemFromJson <- function(sheetList, jsonList) {
 # allocation
 CheckAllocation <- function(sheetList, jsonList) {
   sheet <- sheetList[["allocation"]]
+  sheet$references <- ifelse(is.na(sheet$references), "", sheet$references)
   json <- GetAllocationFromJson(jsonList)
   return(CheckTarget(sheet, json))
 }
@@ -204,6 +215,7 @@ GetAllocationFromJson <- function(jsonList) {
   if (length(allocationList) == 0) {
     df <- tibble(!!!setNames(vector("list", length(allocationColnames)), allocationColnames))
   } else {
+    aliasnameAndFieldIdAndLabel <- GetAliasnameAndFieldIdAndLabel(fieldItems)
     df <- allocationList |> map( ~ {
       name <- .$name
       aliasName <- .$alias_name
@@ -215,9 +227,25 @@ GetAllocationFromJson <- function(jsonList) {
       groups$is_double_blinded <- allocation$is_double_blinded
       groups$double_blind_emails <- allocation$double_blind_emails
       groups$allocation_method <- allocation$allocation_method
-      groups$references <- ""
       return(groups)
     }) |> bind_rows()
+    temp_ref <- df$groups.if |> str_remove_all(" ") |> str_extract_all("ref\\('[a-zA-Z0-9]+',[0-9]+\\)")
+    temp_ref2 <- temp_ref |> map( ~ {
+      if (length(.) == 0) {
+        return(c(references=""))
+      }
+      temp <- . |> map_chr( ~ {
+        temp <- . |> str_split(",") |> flatten_chr()
+        aliasName <- temp[1] |> str_remove("ref") |> str_extract("[a-zA-Z0-9]+") |> unlist()
+        fieldName <- temp[2] |> str_extract("[0-9]+") %>% str_c("field", .)
+        label <- aliasnameAndFieldIdAndLabel |> filter(alias_name == aliasName & fields == fieldName) %>% .[1, "fields.label"] |> unlist()
+        res <- str_c("(", aliasName, ",", fieldName, ",", label, ")")
+        return(res)
+      })
+      res <- temp |> unique() |> str_c(collapse="")
+      return(c(references=res))
+    }) |> bind_rows()
+    df <- df |> cbind(temp_ref2)
   }
   res <- GetItemsSelectColnames(df, allocationColnames)
   return(res)
@@ -254,13 +282,7 @@ GetActionFromJson <- function() {
     })
     return(res)
   }) |> keep( ~ !is.null(.)) |> bind_rows()
-  aliasnameAndFieldIdAndLabel <- map2(fieldItems, names(fieldItems), ~ {
-    fieldItem <- .x 
-    aliasName <- .y
-    res <- fieldItem |> map_df( ~ c(fields=.$name, fields.label=.$label))
-    res$alias_name <- aliasName
-    return(res)
-  }) |> bind_rows()
+  aliasnameAndFieldIdAndLabel <- GetAliasnameAndFieldIdAndLabel(fieldItems)
   if (nrow(action) > 0) {
     df <- action |> inner_join(aliasnameAndFieldIdAndLabel, by=c("alias_name", "fields"))
   } else {
