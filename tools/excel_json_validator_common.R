@@ -247,7 +247,11 @@ GetActionFromJson <- function() {
     res$alias_name <- aliasName
     return(res)
   }) |> bind_rows()
-  df <- action |> inner_join(aliasnameAndFieldIdAndLabel, by=c("alias_name", "fields"))
+  if (nrow(action) > 0) {
+    df <- action |> inner_join(aliasnameAndFieldIdAndLabel, by=c("alias_name", "fields"))
+  } else {
+    df <- action
+  }
   res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "id", "field_item_id", "field_item_id.name", "field_item_id.label", "codes", "fields", "fields.label"))
   return(res)
 }
@@ -279,31 +283,37 @@ GetDisplayFromJson <- function() {
 # number
 CheckNumber <- function(sheetList) {
   sheet <- sheetList[["number"]]
+  sheet$default_value <- sheet$default_value |> as.character()
   json <- GetNumberFromJson()
+  json$default_value <- json$default_value |> as.character()
   return(CheckTarget(sheet, json))
 }
 GetNumberFromJson <- function() {
-  number_target <- fieldItems |> map( ~ {
-    fieldItem <- .
+  df <- map2(fieldItems, names(fieldItems), ~ {
+    fieldItem <- .x 
+    aliasName <- .y
     res <- fieldItem |> map( ~ {
       lessThan <- .$validators$numericality$validate_numericality_less_than_or_equal_to
       greaterThan <- .$validators$numericality$validate_numericality_greater_than_or_equal_to
-      if (is.null(lessThan) & 
-          is.null(greaterThan)) {
+      if (is.null(lessThan)) {
+        lessThan <- ""
+      }
+      if (is.null(greaterThan)) {
+        greaterThan <- ""
+      }
+      if (lessThan == "" & 
+          greaterThan == "") {
         return(NULL)
       }
       defaultValue <- ifelse(is.null(.$default_value), NA, .$default_value)
-      res <- list(name=.$name, label=.$label, default_value=.$default_value, 
+      res <- list(alias_name=aliasName, name=.$name, label=.$label, default_value=defaultValue, 
                   validators.numericality.validate_numericality_less_than_or_equal_to=lessThan,
-                  validators.numericality.validate_numericality_greater_than_or_equal_to=greaterThan, 
-                  default_value=defaultValue)
+                  validators.numericality.validate_numericality_greater_than_or_equal_to=greaterThan)
       return(res)
-    }) |> keep( ~ !is.null(.)) |> list_flatten()
+    }) |> keep( ~ !is.null(.))
   }) |> keep( ~ length(.) > 0)
-  df_number <- number_target |> map_df( ~ .)
-  df_number$alias_name <- names(number_target)
+  df_number <- df |> map_df( ~ .)
   res <- GetItemsSelectColnames(df_number, c("jpname", "alias_name", "name", "label", "default_value", "validators.numericality.validate_numericality_less_than_or_equal_to", "validators.numericality.validate_numericality_greater_than_or_equal_to"))
-  res <- res |> mutate(default_value = as.numeric(default_value))
   return(res)
 }
 # name
