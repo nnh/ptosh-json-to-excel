@@ -32,7 +32,7 @@ sheetList <- "output_20240822165821_bev" |> ReadChecklist()
 jsonList <- here("input_bev") |> LoadJsonList()
 source(here("tools", "trials", "excel_json_validator_bev.R"), encoding="UTF-8")
 
-sheetList <- "output_20240822170047_tran" |> ReadChecklist()
+sheetList <- "output_20240828122541" |> ReadChecklist()
 jsonList <- here("input_tran") |> LoadJsonList()
 source(here("tools", "trials", "excel_json_validator_tran.R"), encoding="UTF-8")
 

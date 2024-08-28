@@ -235,7 +235,7 @@ GetAllocationFromJson <- function(jsonList) {
         return(c(references=""))
       }
       temp <- . |> map_chr( ~ {
-        temp <- . |> str_split(",") |> flatten_chr()
+        temp <- . |> str_split(",") |> list_flatten()
         aliasName <- temp[1] |> str_remove("ref") |> str_extract("[a-zA-Z0-9]+") |> unlist()
         fieldName <- temp[2] |> str_extract("[0-9]+") %>% str_c("field", .)
         label <- aliasnameAndFieldIdAndLabel |> filter(alias_name == aliasName & fields == fieldName) %>% .[1, "fields.label"] |> unlist()
@@ -501,8 +501,8 @@ GetAlertFromJson <- function() {
     alert <- res |> map_df( ~ {
       temp_alert <- .
       normal_range <- temp_alert$normal_range
-      less_than <- ifelse(!is.null(normal_range$less_than_or_equal_to), normal_range$less_than_or_equal_to, NA)
-      greater_than <- ifelse(!is.null(normal_range$greater_than_or_equal_to), normal_range$greater_than_or_equal_to, NA)
+      less_than <- ifelse(!is.null(normal_range$less_than_or_equal_to), normal_range$less_than_or_equal_to, NA_real_)
+      greater_than <- ifelse(!is.null(normal_range$greater_than_or_equal_to), normal_range$greater_than_or_equal_to, NA_real_)
       res <- list(name=.$name, 
                   label=.$label,
                   normal_range.less_than_or_equal_to=less_than,

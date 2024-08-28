@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2024.4.11
+#' @date 2024.8.28
 # ------ constants ------
 kReferenceSearchColname <- "input_text"
 kReferenceJoinColname <- "input_text_2"
@@ -17,7 +17,7 @@ GetTargetColumns <- function(input_list){
   res$visit <- c(kNames, "name", "default_value")
   res$number <- c(kNamesAndNameAndLabel, "default_value", "validators.numericality.validate_numericality_less_than_or_equal_to", "validators.numericality.validate_numericality_greater_than_or_equal_to")
   res$master <- c(kNamesAndNameAndLabel, "link_type")
-  res$alert <- c(kNamesAndNameAndLabel, "normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to")
+  res$alert <- c(kNamesAndNameAndLabel, kAlertTargetColnames)
   res$action <- c(kNames, "id", "field_item_id", "field_item_id.name", "field_item_id.label", "codes", "fields", "fields.label")
   res$allocation <- c(kNames, "is_zelen", "zelen_imbalance", "is_double_blinded", "double_blind_emails", "allocation_method", "groups.code", "groups.label", "groups.if", "references", "groups.message")
   res$presence <- kNamesAndNameAndLabel
@@ -153,25 +153,20 @@ EditOutputData <- function(target){
   output_list <- output_list %>% exec_function[[1]](df_input, .)
   return(output_list)
 }
+EditOutputData_alert <- function(df_input, output_list){
+  res <- df_input %>% filter(if_any(kAlertTargetColnames, ~ . != "")) %>% select(target_columns$alert)
+  output_list[["alert"]] <- res
+  return(output_list)
+}
 EditOutputData_sheet_items <- function(df_input, output_list){
   return(NULL)
 }
 EditOutputData_field_items <- function(df_input, output_list){
-  alert_cols <- c("normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to")
-  alert_condition <- alert_cols %>% map( ~ {
-    col_name <- .
-    if (col_name %in% colnames(df_input)) {
-      return(str_c("!is.na(",col_name, ")"))
-    } else {
-      return(NULL)
-    }
-  }) %>% keep( ~ !is.null(.)) %>% str_c(collapse = " | ")
   conditions <- c(
     visit='label == "Visit Number"',
     number='(!is.na(validators.numericality.validate_numericality_less_than_or_equal_to) & validators.numericality.validate_numericality_less_than_or_equal_to !="") |
             (!is.na(validators.numericality.validate_numericality_greater_than_or_equal_to) & validators.numericality.validate_numericality_greater_than_or_equal_to !="")',
     master='!is.na(link_type) & link_type != ""',
-    alert=alert_condition,
     presence='type == "FieldItem::Article" & !validators.presence',
     display='(type == "FieldItem::Assigned" & !is_invisible) | (type == "FieldItem::Article" & is_invisible)',
     comment='!is.na(content)',
