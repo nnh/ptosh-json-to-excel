@@ -29,6 +29,8 @@ checkChecklist$allocation <- sheetList |> CheckAllocation(jsonList)
 ##########
 # action #
 ##########
+sheetList$action$id <- sheetList$action$id |> as.integer()
+sheetList$action$field_item_id <- sheetList$action$field_item_id |> as.integer()
 checkChecklist$action <- sheetList |> CheckAction()
 ###########
 # display #
