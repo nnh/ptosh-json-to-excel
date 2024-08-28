@@ -31,7 +31,9 @@ checkChecklist$allocation <- sheetList |> CheckAllocation(jsonList)
 ##########
 sheetList$action$id <- sheetList$action$id |> as.integer()
 sheetList$action$field_item_id <- sheetList$action$field_item_id |> as.integer()
-checkChecklist$action <- sheetList |> CheckAction()
+sheetAction <- sheetList[["action"]] |> arrange(id, field_item_id, codes)
+jsonAction <- GetActionFromJson() |> arrange(id, field_item_id, codes)
+checkChecklist$action <- CheckTarget(sheetAction, jsonAction)
 ###########
 # display #
 ###########

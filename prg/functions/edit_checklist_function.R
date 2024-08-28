@@ -199,7 +199,6 @@ EditOutputData_flip_flops <- function(df_input, output_list){
   }
   conditions <- c(action=NA)
   output_list <- FilterDataByConditions(df_input, conditions)
-  output_list$action$codes <- ""
   return(output_list)
 }
 EditOutputData_allocation <- function(df_input, output_list){

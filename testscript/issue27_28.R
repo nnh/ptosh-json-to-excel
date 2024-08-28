@@ -11,7 +11,7 @@ source(here("tools", "excel_json_validator_common.R"), encoding="UTF-8")
 # ------ constants ------
 # ------ functions ------
 # ------ main ------
-sheetList <- "output_20240828143607_gpower" |> ReadChecklist()
+sheetList <- "output_20240828161023_gpower" |> ReadChecklist()
 tempJsonList <- here("input_gpower") |> LoadJsonList()
 removeJsonList <- names(tempJsonList) %>% .[2:10]
 jsonList <- tempJsonList
@@ -26,25 +26,25 @@ source(here("tools", "trials", "excel_json_validator_gpower.R"), encoding="UTF-8
 print("gpower")
 print(checkChecklist |> names())
 
-sheetList <- "output_20240828142958_allb19" |> ReadChecklist()
+sheetList <- "output_20240828160448_allb19" |> ReadChecklist()
 jsonList <- here("input_allb19") |> LoadJsonList()
 source(here("tools", "trials", "excel_json_validator_allb19.R"), encoding="UTF-8")
 print("allb19")
 print(checkChecklist |> names())
 
-sheetList <- "output_20240828143441_bev" |> ReadChecklist()
+sheetList <- "output_20240828160859_bev" |> ReadChecklist()
 jsonList <- here("input_bev") |> LoadJsonList()
 source(here("tools", "trials", "excel_json_validator_bev.R"), encoding="UTF-8")
 print("bev")
 print(checkChecklist |> names())
 
-sheetList <- "output_20240828143718_tran" |> ReadChecklist()
+sheetList <- "output_20240828161134_tran" |> ReadChecklist()
 jsonList <- here("input_tran") |> LoadJsonList()
 source(here("tools", "trials", "excel_json_validator_tran.R"), encoding="UTF-8")
 print("tran")
 print(checkChecklist |> names())
 
-sheetList <- "output_20240828143037_allr23" |> ReadChecklist()
+sheetList <- "output_20240828160530_allr23" |> ReadChecklist()
 jsonList <- here("input_allr23") |> LoadJsonList()
 source(here("tools", "trials", "excel_json_validator_ALL-R23.R"), encoding="UTF-8")
 print("allr23")
