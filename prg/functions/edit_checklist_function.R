@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2024.4.11
+#' @date 2024.8.28
 # ------ constants ------
 kReferenceSearchColname <- "input_text"
 kReferenceJoinColname <- "input_text_2"
@@ -17,7 +17,7 @@ GetTargetColumns <- function(input_list){
   res$visit <- c(kNames, "name", "default_value")
   res$number <- c(kNamesAndNameAndLabel, "default_value", "validators.numericality.validate_numericality_less_than_or_equal_to", "validators.numericality.validate_numericality_greater_than_or_equal_to")
   res$master <- c(kNamesAndNameAndLabel, "link_type")
-  res$alert <- c(kNamesAndNameAndLabel, "normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to")
+  res$alert <- c(kNamesAndNameAndLabel, kAlertTargetColnames)
   res$action <- c(kNames, "id", "field_item_id", "field_item_id.name", "field_item_id.label", "codes", "fields", "fields.label")
   res$allocation <- c(kNames, "is_zelen", "zelen_imbalance", "is_double_blinded", "double_blind_emails", "allocation_method", "groups.code", "groups.label", "groups.if", "references", "groups.message")
   res$presence <- kNamesAndNameAndLabel
@@ -148,33 +148,27 @@ EditOutputItem <- function(df_field_items, df_sheet_items){
 }
 EditOutputData <- function(target){
   df_input <- input_list[[kInputList[[target]]]]
-  if (is.null(df_input)) {
-    return(NULL)
-  }
   exec_function <- c(get(str_c("EditOutputData_", target)))
   output_list <- list()
   output_list <- output_list %>% exec_function[[1]](df_input, .)
+  return(output_list)
+}
+EditOutputData_alert <- function(df_input, output_list){
+  res <- df_input %>%
+    filter(if_any(all_of(kAlertTargetColnames), ~ . != "")) %>%
+    select(target_columns$alert)
+  output_list[["alert"]] <- res
   return(output_list)
 }
 EditOutputData_sheet_items <- function(df_input, output_list){
   return(NULL)
 }
 EditOutputData_field_items <- function(df_input, output_list){
-  alert_cols <- c("normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to")
-  alert_condition <- alert_cols %>% map( ~ {
-    col_name <- .
-    if (col_name %in% colnames(df_input)) {
-      return(str_c("!is.na(",col_name, ")"))
-    } else {
-      return(NULL)
-    }
-  }) %>% keep( ~ !is.null(.)) %>% str_c(collapse = " | ")
   conditions <- c(
     visit='label == "Visit Number"',
     number='(!is.na(validators.numericality.validate_numericality_less_than_or_equal_to) & validators.numericality.validate_numericality_less_than_or_equal_to !="") |
             (!is.na(validators.numericality.validate_numericality_greater_than_or_equal_to) & validators.numericality.validate_numericality_greater_than_or_equal_to !="")',
     master='!is.na(link_type) & link_type != ""',
-    alert=alert_condition,
     presence='type == "FieldItem::Article" & !validators.presence',
     display='(type == "FieldItem::Assigned" & !is_invisible) | (type == "FieldItem::Article" & is_invisible)',
     comment='!is.na(content)',
@@ -199,9 +193,12 @@ EditOutputData_cdisc_sheet_config <- function(df_input, output_list){
   return(NULL)
 }
 EditOutputData_flip_flops <- function(df_input, output_list){
+  if (is.null(df_input)) {
+    # Create an empty dataframe
+    df_input <- tibble(!!!set_names(rep("", length(target_columns$action)), target_columns$action))
+  }
   conditions <- c(action=NA)
   output_list <- FilterDataByConditions(df_input, conditions)
-  output_list$action$codes <- ""
   return(output_list)
 }
 EditOutputData_allocation <- function(df_input, output_list){

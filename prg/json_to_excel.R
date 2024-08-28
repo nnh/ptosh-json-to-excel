@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2024.1.22
+#' @date 2024.8.28
 rm(list=ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -43,6 +43,7 @@ kInputFolderName <- "input"
 kOutputFolderName <- "output"
 kOutputPath <- here(kOutputFolderName)
 kOutputChecklistName <- "checklist.xlsx"
+kAlertTargetColnames <- c("normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to")
 # ------ main ------
 raw_json_files <- ExecReadJsonFiles()
 json_files <- raw_json_files

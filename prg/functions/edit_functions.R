@@ -2,7 +2,7 @@
 #'
 #' @file edit_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.20
+#' @date 2024.8.28
 # ------ constants ------
 kSheetItemsKeys <- list(id="id", jpname="jpname", alias_name="alias_name")
 kFieldItemsKeys <- list(id="id", sheet_id="sheet_id", name="name", label="label", option.id="option.id")
@@ -24,7 +24,8 @@ kInputList <- list(sheet_items="df_sheet_items",
                    option="df_option",
                    cdisc_sheet_config="list_cdisc_sheet_config",
                    flip_flops="df_flip_flops",
-                   allocation="df_allocation")
+                   allocation="df_allocation",
+                   alert="df_alert")
 # ------ functions ------
 EditInputDataList <- function(json_files){
   function_list <- list(sheet_items=GetDfSheetItems,
@@ -32,7 +33,8 @@ EditInputDataList <- function(json_files){
                         option=GetDfOptions,
                         cdisc_sheet_config=GetListCdiscSheetConfig,
                         flip_flops=GetDfFlipFlops,
-                        allocation=GetDfAllocations)
+                        allocation=GetDfAllocations,
+                        alert=GetDfAlert)
   if (!all(names(function_list) == names(kInputList))){
     return(NULL)
   }
@@ -49,6 +51,27 @@ EditInputDataList <- function(json_files){
     }
   }
   return(input_list)
+}
+GetDfAlert <- function(json_files){
+  alertCols <- c("name", "label", kAlertTargetColnames)
+  alert <- json_files %>% map_df( ~ {
+    field_items <- .$flattenJson$field_items
+    if (length(field_items) == 0) {
+      return(NULL)
+    }
+    res <- field_items %>% select(any_of(alertCols))
+    for (i in 1:length(kAlertTargetColnames)){
+      if (is.null(res[[kAlertTargetColnames[i]]])){
+        res[[kAlertTargetColnames[i]]] <- NA_real_
+      }
+      else{
+        res[[kAlertTargetColnames[i]]] <- res[[kAlertTargetColnames[i]]] %>% as.numeric()
+      }
+    }
+    res$sheet_id <- .$flattenJson$id
+    return(res)
+  })
+  return(alert)
 }
 GetDfFieldItems <- function(json_files){
   fieldItems <- json_files %>% map_df( ~ .$flattenJson$field_items)
