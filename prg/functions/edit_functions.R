@@ -55,10 +55,17 @@ EditInputDataList <- function(json_files){
 GetDfAlert <- function(json_files){
   alertCols <- c("name", "label", kAlertTargetColnames)
   alert <- json_files %>% map_df( ~ {
-    res <- .$flattenJson$field_items %>% select(any_of(alertCols))
+    field_items <- .$flattenJson$field_items
+    if (length(field_items) == 0) {
+      return(NULL)
+    }
+    res <- field_items %>% select(any_of(alertCols))
     for (i in 1:length(kAlertTargetColnames)){
       if (is.null(res[[kAlertTargetColnames[i]]])){
         res[[kAlertTargetColnames[i]]] <- NA_real_
+      }
+      else{
+        res[[kAlertTargetColnames[i]]] <- res[[kAlertTargetColnames[i]]] %>% as.numeric()
       }
     }
     res$sheet_id <- .$flattenJson$id

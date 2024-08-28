@@ -97,7 +97,6 @@ checkChecklist$visit <- sheetList |> CheckVisit()
 # alert #
 #########
 sheetList$alert$normal_range.less_than_or_equal_to <- sheetList$alert$normal_range.less_than_or_equal_to |> as.integer()
-sheetList$alert$normal_range.greater_than_or_equal_to <- sheetList$alert$normal_range.greater_than_or_equal_to |> as.integer()
 checkChecklist$alert <- sheetList |> CheckAlert()
 #########
 # title #

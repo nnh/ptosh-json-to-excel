@@ -154,7 +154,9 @@ EditOutputData <- function(target){
   return(output_list)
 }
 EditOutputData_alert <- function(df_input, output_list){
-  res <- df_input %>% filter(if_any(kAlertTargetColnames, ~ . != "")) %>% select(target_columns$alert)
+  res <- df_input %>%
+    filter(if_any(all_of(kAlertTargetColnames), ~ . != "")) %>%
+    select(target_columns$alert)
   output_list[["alert"]] <- res
   return(output_list)
 }

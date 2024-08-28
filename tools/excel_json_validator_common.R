@@ -235,7 +235,7 @@ GetAllocationFromJson <- function(jsonList) {
         return(c(references=""))
       }
       temp <- . |> map_chr( ~ {
-        temp <- . |> str_split(",") |> list_flatten()
+        temp <- . |> str_split(",") |> list_c()
         aliasName <- temp[1] |> str_remove("ref") |> str_extract("[a-zA-Z0-9]+") |> unlist()
         fieldName <- temp[2] |> str_extract("[0-9]+") %>% str_c("field", .)
         label <- aliasnameAndFieldIdAndLabel |> filter(alias_name == aliasName & fields == fieldName) %>% .[1, "fields.label"] |> unlist()
@@ -270,7 +270,7 @@ GetActionFromJson <- function() {
       field_item_id.label <- .$label
       alias_name <- .$aliasName
       res <- flip_flop |> map_df( ~ {
-        temp <- crossing(codes=flatten_chr(.$code), fields=flatten_chr(.$fields)) |> tibble()
+        temp <- crossing(codes=list_c(.$code), fields=list_c(.$fields)) |> tibble()
         temp$alias_name <- alias_name
         temp$id <- .$id
         temp$field_item_id <- .$field_item_id
@@ -497,7 +497,27 @@ GetAlertFromJson <- function() {
   df <- map2(fieldItems, names(fieldItems), ~ {
     fieldItem <- .x 
     aliasName <- .y
-    res <- fieldItem |> keep( ~ !is.null(.$normal_range$less_than_or_equal_to) | !is.null(.$normal_range$greater_than_or_equal_to))
+    res <- fieldItem |>
+      keep( ~ !is.null(.$normal_range$less_than_or_equal_to) | !is.null(.$normal_range$greater_than_or_equal_to))
+    if (length(res) > 0) {
+      for (i in 1:length(res)) {
+        temp <- res[[i]]
+        remove_flag <- T
+        if (!is.null(temp$normal_range$less_than_or_equal_to)) {
+          if (temp$normal_range$less_than_or_equal_to != "") {
+            remove_flag <- F
+          }
+        }
+        if (!is.null(temp$normal_range$greater_than_or_equal_to)) {
+          if (temp$normal_range$greater_than_or_equal_to != "") {
+            remove_flag <- F
+          }
+        }
+        if (remove_flag) {
+          res[[i]] <- NULL
+        }
+      }
+    }
     alert <- res |> map_df( ~ {
       temp_alert <- .
       normal_range <- temp_alert$normal_range
