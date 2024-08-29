@@ -10,6 +10,16 @@ library(here)
 source(here("tools", "excel_json_validator_common.R"), encoding="UTF-8")
 # ------ constants ------
 # ------ functions ------
+GetNormalRange <- function(field_item) {
+  normal_range <- field_item$normal_range
+  if (length(normal_range) == 0) {
+    return(NULL)
+  }
+  normal_rangeColnames <- names(normal_range) %>% str_c("normal_range.", .)
+  res <- normal_range |> map_dfc( ~ .)
+  colnames(res) <- normal_rangeColnames
+  return(res)
+}
 GetValidators <- function(field_item) {
   validators <- field_item$validators
   if (is.null(validators)) {
@@ -49,6 +59,10 @@ GetFieldItems <- function(json) {
     validators <- temp |> GetValidators()
     if (!is.null(validators)) {
       res <- res |> bind_cols(validators)
+    }
+    normal_range <- temp |> GetNormalRange()
+    if (!is.null(normal_range)) {
+      res <- res |> bind_cols(normal_range)
     }
     return(res)
   }) |> bind_rows()
