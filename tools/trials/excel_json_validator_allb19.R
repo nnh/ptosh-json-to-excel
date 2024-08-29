@@ -3,8 +3,9 @@
 #' @file excel_json_validator_allb19.R
 #' @author Mariko Ohtsuka
 #' @date 2024.8.29
-keep_objects <- c("jsonList", "sheetList")
-rm(list = setdiff(ls(), keep_objects))
+if (exists("keep_objects")) {
+  rm(list=setdiff(ls(), keep_objects))
+}
 # ------ libraries ------
 library(tidyverse, warn.conflicts=F)
 library(here, warn.conflicts=F)

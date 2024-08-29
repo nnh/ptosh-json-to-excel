@@ -2,9 +2,10 @@
 #' description
 #' @file excel_json_validator_gpower.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.28
-keep_objects <- c("jsonList", "sheetList")
-rm(list = setdiff(ls(), keep_objects))
+#' @date 2024.8.29
+if (exists("keep_objects")) {
+  rm(list=setdiff(ls(), keep_objects))
+}
 # ------ libraries ------
 library(tidyverse, warn.conflicts=F)
 library(here, warn.conflicts=F)
@@ -12,6 +13,17 @@ source(here("tools", "excel_json_validator_common.R"), encoding="UTF-8")
 # ------ constants ------
 # ------ functions ------
 # ------ main ------
+tempJsonList <- jsonList
+removeJsonList <- names(tempJsonList) %>% .[2:10]
+jsonList <- tempJsonList
+for (i in 1:length(removeJsonList)) {
+  jsonList[[removeJsonList[i]]] <- NULL
+}
+temp <- names(jsonList)
+temp[1] <- temp[1] |> str_replace("[0-9]+$", "xxx")
+names(jsonList) <- temp
+jsonList[[1]]$alias_name <- temp[1]
+
 fieldItems <- jsonList |> GetFieldItemsByJsonList()
 jpNameAndAliasName <- jsonList |>  GetNameAndAliasNameByJson()
 checkChecklist <- list()

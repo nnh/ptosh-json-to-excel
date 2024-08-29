@@ -1,14 +1,14 @@
-#' title
-#' description
+#' test script
+#' 
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
+#' @date 2024.8.29
 # ------ libraries ------
 library(tidyverse, warn.conflicts=F)
 library(here, warn.conflicts=F)
 library(openxlsx, warn.conflicts=F)
 library(jsonlite, warn.conflicts=F)
 # ------ constants ------
-kTestConstants <- NULL
 # ------ functions ------
 GetHomeDir <- function() {
   os <- Sys.info()["sysname"]
@@ -19,7 +19,26 @@ GetHomeDir <- function() {
   } else {
     stop("Unsupported OS")
   }
-  return (home_dir)
+  return(home_dir)
+}
+GetTargetFolder <- function(trialName) {
+  outputPath <- here("output")
+  outputDirs <- outputPath |> list.dirs(recursive=F, full.names=F)
+  targetDirs <- outputDirs |> str_extract_all(str_c("output_", "[0-9]+_", trialName)) |> keep( ~ length(.) > 0)
+  if (length(targetDirs) == 0) {
+    stop(str_c("No folders found for trial name: ", trialName))
+  }
+  df <- tibble(folderName=targetDirs)
+  df$dateTime <- df$folderName |> str_extract("[0-9]+") |> as.numeric()
+  latestFolder <- df |> filter(dateTime == max(dateTime, na.rm=T)) %>% .$folderName |> list_c()
+  print(str_c("target: ", latestFolder))
+  return(latestFolder)
+}
+GetJsonAndSheet <- function(trialName) {
+  targetFolder <- GetTargetFolder(trialName)
+  sheetList <- targetFolder |> ReadChecklist()
+  jsonList <- here(str_c("input_", trialName)) |> LoadJsonList()
+  return(list(sheetList=sheetList, jsonList=jsonList))
 }
 ReadChecklist <- function(inputFolder) {
   inputPath <- here("output", inputFolder, "list", "checklist.xlsx")
