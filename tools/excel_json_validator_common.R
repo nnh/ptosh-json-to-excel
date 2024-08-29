@@ -3,10 +3,10 @@
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
 # ------ libraries ------
-library(tidyverse)
-library(here)
-library(openxlsx)
-library(jsonlite)
+library(tidyverse, warn.conflicts=F)
+library(here, warn.conflicts=F)
+library(openxlsx, warn.conflicts=F)
+library(jsonlite, warn.conflicts=F)
 # ------ constants ------
 kTestConstants <- NULL
 # ------ functions ------

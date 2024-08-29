@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.28
+#' @date 2024.8.29
 rm(list=ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -24,7 +24,7 @@ InstallAndLoadPackage <- function(package_name){
   if (!requireNamespace(package_name, quietly=T)) {
     install.packages(package_name, dependencies=T)
   }
-  library(package_name, character.only=TRUE)
+  library(package_name, character.only=T, warn.conflicts=F)
 }
 # ------ libraries ------
 InstallAndLoadPackage("tidyverse")

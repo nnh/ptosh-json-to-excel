@@ -2,12 +2,12 @@
 #' description
 #' @file excel_json_validator_ALL-R23.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.26
+#' @date 2024.8.29
 keep_objects <- c("jsonList", "sheetList")
 rm(list = setdiff(ls(), keep_objects))
 # ------ libraries ------
-library(tidyverse)
-library(here)
+library(tidyverse, warn.conflicts=F)
+library(here, warn.conflicts=F)
 source(here("tools", "excel_json_validator_common.R"), encoding="UTF-8")
 # ------ constants ------
 # ------ functions ------

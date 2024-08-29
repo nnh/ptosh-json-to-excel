@@ -6,8 +6,8 @@
 keep_objects <- c("jsonList", "sheetList")
 rm(list = setdiff(ls(), keep_objects))
 # ------ libraries ------
-library(tidyverse)
-library(here)
+library(tidyverse, warn.conflicts=F)
+library(here, warn.conflicts=F)
 source(here("tools", "excel_json_validator_common.R"), encoding="UTF-8")
 # ------ constants ------
 # ------ functions ------

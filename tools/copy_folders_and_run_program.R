@@ -2,11 +2,11 @@
 #' テスト用インプットファイルでのプログラム実行
 #' @file copy_folders_and_run_program.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.20
+#' @date 2024.8.29
 rm(list=ls())
 # ------ libraries ------
-library(tidyverse)
-library(here)
+library(tidyverse, warn.conflicts=F)
+library(here, warn.conflicts=F)
 # ------ constants ------
 # ------ functions ------
 # ------ main ------
