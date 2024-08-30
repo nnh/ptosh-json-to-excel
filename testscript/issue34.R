@@ -161,6 +161,43 @@ GetOptions <- function(json) {
   res <- options |> ConvertToCharacter() |> as.data.frame()
   return(res)
 }
+GetFlipFlops <- function(json) {
+  field_items <- GetFieldItemsList(json)
+  if (is.null(field_items)) {
+    return(NULL)
+  }
+  flipFlops <- field_items |> map( ~ {
+    field_item <- .
+    flip_flops <- field_item$flip_flops
+    if (length(flip_flops) == 0) {
+      return(NULL)
+    }
+    flip_flop_list <- flip_flops |> map( ~ {
+      flip_flop <- .
+      res <- flip_flop |> discard( ~ is.list(.)) |> map_df( ~ .)
+      codes <- flip_flop$codes 
+      if (length(codes) > 0) {
+        temp_codes <- codes |> tibble()
+        res <- res |> bind_cols(temp_codes)
+      } else {
+        res$codes <- ""
+      }
+      fields <- flip_flop$fields
+      if (length(fields) > 0) {
+        temp_fields <- fields |> tibble()
+        res <- res |> bind_cols(temp_fields)
+      } else {
+        res$fields <- ""
+      }
+      res$codes <- length(codes)
+      return(res)
+    }) |> bind_rows()
+    return(flip_flop_list)
+  }) |> discard( ~ is.null(.))
+  return(flipFlops)
+}
+aaa <- jsonList |> map( ~ GetFlipFlops(.)) |> bind_rows() |> distinct()
+json <- jsonList[[1]]
 # ------ main ------
 jsonList <- here("input_gpower") |> LoadJsonList()
 sheetFiles <- here("output", "output_20240828161023_gpower") |> list.files(pattern=".xlsx", full.names=T)
