@@ -105,7 +105,7 @@ GetFieldItems <- function(json) {
     return(res)
   }) |> bind_rows()
   if (!any(colnames(fieldItems) == "option.name")) {
-    fieldItems$option_id <- ifelse(is.null(temp$option_id), "", as.character(temp$option_id))
+    fieldItems$option_id <- ""
   } else {
     fieldItems <- fieldItems |> select(-c("option_id"))
   }
@@ -114,8 +114,8 @@ GetFieldItems <- function(json) {
   return(res)
 }
 # ------ main ------
-jsonList <- here("input_gpower") |> LoadJsonList()
-sheetFiles <- here("output", "output_20240828161023_gpower") |> list.files(pattern=".xlsx", full.names=T)
+jsonList <- here("input_allb19") |> LoadJsonList()
+sheetFiles <- here("output", "output_20240828160448_allb19") |> list.files(pattern=".xlsx", full.names=T)
 sheetList <- sheetFiles |> 
   map( ~ {
     filepath <- .
