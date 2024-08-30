@@ -24,7 +24,7 @@ kFieldItemColnames <- c("jpname", "alias_name", "id", "sheet_id", "name", "label
       "validators.date.validate_date_after_or_equal_to",
       "validators.presence.validate_presence_id",
       "validators.presence")
-
+kOptionColnames <- c("jpname", "alias_name", "option_id", "option.id", "option.trial_id", "option.name", "option.source_id", "option.is_extensible", "option.odm_id", "option.uuid", "option.created_at", "option.updated_at", "option.controlled_terminology_id", "option.parity", "option.digest", "option.values_id", "option.values_name", "option.values_seq", "option.values_code", "option.values_is_usable", "option.values_option_id")
 # ------ functions ------
 ConvertToCharacter <- function(df) {
   df_char <- df %>%
@@ -62,12 +62,19 @@ GetValidators <- function(field_item) {
   })
   return(res)
 }
-GetFieldItems <- function(json) {
+GetFieldItemsList <- function(json) {
   field_items <- json$field_items
   if (is.null(field_items)) {
     return(NULL)
   }
   if (length(field_items) == 0) {
+    return(NULL)
+  }
+  return(field_items)
+}
+GetFieldItems <- function(json) {
+  field_items <- GetFieldItemsList(json)
+  if (is.null(field_items)) {
     return(NULL)
   }
   fieldItems <- field_items |> map( ~ {
@@ -113,6 +120,38 @@ GetFieldItems <- function(json) {
   res <- fieldItems |> select(all_of(targetColnames)) |> ConvertToCharacter() |> as.data.frame()
   return(res)
 }
+GetOption <- function(json) {
+  field_items <- GetFieldItemsList(json)
+  if (is.null(field_items)) {
+    return(NULL)
+  }
+  options <- field_items |> map( ~ {
+    field_item <- .
+    option <- field_item$option
+    if (is.null(option)) {
+      return(NULL)
+    }
+    option <- option |> discard( ~ is.list(.)) |> map_df( ~ ifelse(is.null(.), "", .))
+    colnames(option) <- colnames(option) %>% str_c("option.", .)
+    optionValues <- field_item$option$value |> map_df( ~ .)
+    colnames(optionValues) <- colnames(optionValues) %>% str_c("option.values_", .)
+    res <- option |> inner_join(optionValues, by=c("option.id"="option.values_option_id"))
+    res$jpname <- json$name
+    res$alias_name <- json$alias_name
+    res$option_id <- res$option.id
+    res$option.values_option_id <- res$option.id
+    return(res)
+  }) |> bind_rows() |> select(any_of(kOptionColnames)) |> distinct()
+  if (length(options) == 0) {
+    return(NULL)
+  }
+  res <- options |> ConvertToCharacter()
+  return(res)
+}
+colnames(options)
+colnames(sheetList$ae$Option)
+json <- jsonList[[1]]
+aaa <- getOption(json)
 # ------ main ------
 jsonList <- here("input_allb19") |> LoadJsonList()
 sheetFiles <- here("output", "output_20240828160448_allb19") |> list.files(pattern=".xlsx", full.names=T)
@@ -148,6 +187,14 @@ testFieldItems <- map2(jsonFieldItems, sheetList, ~ {
   }
   return(NULL)
 }) |> keep( ~ !is.null(.))
+
+jsonOptions <- jsonList |> map( ~ {
+  json <- .
+  options <- json |> GetOption()
+  return(res)
+}) |> keep( ~ !is.null(.))
+
+
 
 
 for (i in 1:3) {
