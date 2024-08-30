@@ -12,7 +12,8 @@ source(here("tools", "excel_json_validator_common.R"), encoding="UTF-8")
 kFieldItemColnames <- c("jpname", "alias_name", "id", "sheet_id", "name", "label", "description", "seq", "is_invisible",
       "default_value", "field_type", "link_type", "deviation", "term_code", "auto_calc_field", "level",
       "content", "argument_type", "reference_type", "reference_field", "formula_field", "type", "flip_flops",
-      "validators.presence.validate_presence_if", "validators.formula.validate_formula_if",
+      "validators.presence.validate_presence_if", 
+      "validators.formula.validate_formula_if",
       "validators.formula.validate_formula_message", 
       "validators.numericality.validate_numericality_less_than_or_equal_to", 
       "validators.numericality.validate_numericality_greater_than_or_equal_to", 
@@ -20,13 +21,16 @@ kFieldItemColnames <- c("jpname", "alias_name", "id", "sheet_id", "name", "label
       "normal_range.less_than_or_equal_to", 
       "option.name", 
       "normal_range.greater_than_or_equal_to",
+      "validators.date.validate_date_after_or_equal_to",
+      "validators.presence.validate_presence_id",
       "validators.presence")
 
 # ------ functions ------
 ConvertToCharacter <- function(df) {
   df_char <- df %>%
-    mutate(across(everything(), ~ as.character(.))) %>%
-    mutate(across(everything(), ~ replace_na(., "")))
+    mutate(across(everything(), ~ format(., scientific=F))) %>%
+    mutate(across(everything(), ~ trimws(.))) %>%
+    mutate(across(everything(), ~ str_replace(., "^NA$", "")))
   return(df_char)
 }
 
@@ -68,13 +72,16 @@ GetFieldItems <- function(json) {
     res <- temp |> discard( ~ is.list(.)) |> flatten_df()
     res$jpname <- json$name
     res$alias_name <- json$alias_name
-    res$term_code <- ""
-    res$auto_calc_field <- ""
-    res$content <- ""
-    res$argument_type <- ""
-    res$reference_type <- ""
-    res$reference_field <- ""
-    res$formula_field <- ""
+    res$link_type <- ifelse(is.null(temp$link_type), "", as.character(temp$link_type))
+    res$deviation <- ifelse(is.null(temp$deviation), "", as.character(temp$deviation))
+    res$term_code <- ifelse(is.null(temp$term_code), "", as.character(temp$term_code))
+    res$auto_calc_field <- ifelse(is.null(temp$auto_calc_field), "", as.character(temp$auto_calc_field))
+    res$level <- ifelse(is.null(temp$level), "", as.character(temp$level))
+    res$content <- ifelse(is.null(temp$content), "", as.character(temp$content))
+    res$argument_type <- ifelse(is.null(temp$argument_type), "", as.character(temp$argument_type))
+    res$reference_type <- ifelse(is.null(temp$reference_type), "", as.character(temp$reference_type))
+    res$reference_field <- ifelse(is.null(temp$reference_field), "", as.character(temp$reference_field))
+    res$formula_field <- ifelse(is.null(temp$formula_field), "", as.character(temp$formula_field))
     res$flip_flops <- ""
     res$validators.presence <- !is.null(temp$validators$presence)
     validators <- temp |> GetValidators()
@@ -123,13 +130,16 @@ testFieldItems <- map2(jsonFieldItems, sheetList, ~ {
 }) |> keep( ~ !is.null(.))
 
 
-for (i in 1:218) {
+for (i in 1:168) {
   if (!identical(testFieldItems[[1]]$json[i, ], testFieldItems[[1]]$sheet[i, ])) {
     break
   }
 }
 test3 <- testFieldItems[[1]]$json[i, ]
 test4 <- testFieldItems[[1]]$sheet[i, ]
+colnames(test3)
+colnames(test4)
+setdiff(colnames(test3), colnames(test4))
 str(test3)
 str(test4)
 for (j in 1:32) {
@@ -138,3 +148,7 @@ for (j in 1:32) {
   }
   
 }
+testFieldItems[[1]]$json[i, j]
+testFieldItems[[1]]$sheet[i, j]
+setdiff(colnames(testFieldItems[[1]]$sheet), colnames(testFieldItems[[1]]$json))
+colnames(testFieldItems[[1]]$sheet)[19]
