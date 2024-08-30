@@ -24,7 +24,15 @@ kFieldItemColnames <- c("jpname", "alias_name", "id", "sheet_id", "name", "label
       "validators.date.validate_date_after_or_equal_to",
       "validators.presence.validate_presence_id",
       "validators.presence")
-kOptionColnames <- c("jpname", "alias_name", "option_id", "option.id", "option.trial_id", "option.name", "option.source_id", "option.is_extensible", "option.odm_id", "option.uuid", "option.created_at", "option.updated_at", "option.controlled_terminology_id", "option.parity", "option.digest", "option.values_id", "option.values_name", "option.values_seq", "option.values_code", "option.values_is_usable", "option.values_option_id")
+kOptionColnames <- c("jpname", "alias_name", 
+                     "option_id", "option.id", "option.trial_id", "option.name", "option.source_id", 
+                     "option.is_extensible", "option.odm_id", "option.uuid", "option.created_at", 
+                     "option.updated_at", "option.controlled_terminology_id", "option.parity", 
+                     "option.digest", "option.values_id", "option.values_name", "option.values_seq", 
+                     "option.values_code", "option.values_is_usable", "option.values_option_id",
+                     "option.controlled_terminology_data.uuid",
+                     "option.controlled_terminology_data.cdisc_code", 
+                     "option.controlled_terminology_data.cdisc_name")
 # ------ functions ------
 ConvertToCharacter <- function(df) {
   df_char <- df %>%
@@ -120,7 +128,7 @@ GetFieldItems <- function(json) {
   res <- fieldItems |> select(all_of(targetColnames)) |> ConvertToCharacter() |> as.data.frame()
   return(res)
 }
-GetOption <- function(json) {
+GetOptions <- function(json) {
   field_items <- GetFieldItemsList(json)
   if (is.null(field_items)) {
     return(NULL)
@@ -133,6 +141,11 @@ GetOption <- function(json) {
     }
     option <- option |> discard( ~ is.list(.)) |> map_df( ~ ifelse(is.null(.), "", .))
     colnames(option) <- colnames(option) %>% str_c("option.", .)
+    if (!is.null(field_item$option$controlled_terminology_data)) {
+      controlled_terminology_data <- field_item$option$controlled_terminology_data |> map_df( ~ .)
+      colnames(controlled_terminology_data) <- colnames(controlled_terminology_data) %>% str_c("option.controlled_terminology_data.", .) 
+      option <- option |> bind_cols(controlled_terminology_data)
+    }
     optionValues <- field_item$option$value |> map_df( ~ .)
     colnames(optionValues) <- colnames(optionValues) %>% str_c("option.values_", .)
     res <- option |> inner_join(optionValues, by=c("option.id"="option.values_option_id"))
@@ -145,16 +158,12 @@ GetOption <- function(json) {
   if (length(options) == 0) {
     return(NULL)
   }
-  res <- options |> ConvertToCharacter()
+  res <- options |> ConvertToCharacter() |> as.data.frame()
   return(res)
 }
-colnames(options)
-colnames(sheetList$ae$Option)
-json <- jsonList[[1]]
-aaa <- getOption(json)
 # ------ main ------
-jsonList <- here("input_allb19") |> LoadJsonList()
-sheetFiles <- here("output", "output_20240828160448_allb19") |> list.files(pattern=".xlsx", full.names=T)
+jsonList <- here("input_gpower") |> LoadJsonList()
+sheetFiles <- here("output", "output_20240828161023_gpower") |> list.files(pattern=".xlsx", full.names=T)
 sheetList <- sheetFiles |> 
   map( ~ {
     filepath <- .
@@ -190,34 +199,43 @@ testFieldItems <- map2(jsonFieldItems, sheetList, ~ {
 
 jsonOptions <- jsonList |> map( ~ {
   json <- .
-  options <- json |> GetOption()
-  return(res)
+  options <- json |> GetOptions()
+  return(options)
+}) |> keep( ~ !is.null(.))
+
+sheetListOption <- sheetList %>% map( ~ .$Option) |> keep( ~ !is.null(.))
+testOptions <- map2(jsonOptions, sheetListOption, ~ {
+  testJson <- .x
+  testSheet <-.y
+  sortJsonColnames <- colnames(testJson) |> sort()
+  sortSheetColnames <- colnames(testSheet) |> sort()
+  if (!is.null(testJson)) {
+    testJson <- testJson |> select(all_of(sortJsonColnames))
+  } 
+  if (!is.null(testSheet)) {
+    testSheet <- testSheet |> select(all_of(sortSheetColnames))
+  }
+  if (!identical(testJson, testSheet)) {
+    return(list(json=.x, sheet=.y))
+  }
+  return(NULL)
 }) |> keep( ~ !is.null(.))
 
 
 
 
-for (i in 1:3) {
-  if (!identical(testFieldItems[[1]]$json[i, ], testFieldItems[[1]]$sheet[i, ])) {
+for (i in 1:1281) {
+  if (!identical(testOptions[[1]]$json[i, ], testOptions[[1]]$sheet[i, ])) {
     break
   }
 }
-test3 <- testFieldItems[[1]]$json[i, ]
-test4 <- testFieldItems[[1]]$sheet[i, ]
-colnames(test3)
-colnames(test4)
-setdiff(colnames(test3), colnames(test4))
-setdiff(colnames(test4), colnames(test3))
-str(test3)
-str(test4)
 for (j in 1:22) {
-  if (!identical(testFieldItems[[1]]$json[i, j], testFieldItems[[1]]$sheet[i, j])) {
+  if (!identical(testOptions[[1]]$json[i, j], testOptions[[1]]$sheet[i, j])) {
     break
   }
   
 }
-testFieldItems[[1]]$json[i, j]
-testFieldItems[[1]]$sheet[i, j]
-setdiff(colnames(testFieldItems[[1]]$sheet), colnames(testFieldItems[[1]]$json))
-setdiff(colnames(testFieldItems[[1]]$json), colnames(testFieldItems[[1]]$sheet))
-colnames(testFieldItems[[1]]$sheet)[19]
+colnames(testOptions[[1]]$json)
+colnames(testOptions[[1]]$sheet)
+testOptions[[1]]$json[i, j]
+testOptions[[1]]$sheet[i, j]
