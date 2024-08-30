@@ -19,7 +19,7 @@ kFieldItemColnames <- c("jpname", "alias_name", "id", "sheet_id", "name", "label
       "validators.numericality.validate_numericality_greater_than_or_equal_to", 
       "validators.date.validate_date_before_or_equal_to", 
       "normal_range.less_than_or_equal_to", 
-      "option.name", 
+      "option.name", "option_id", 
       "normal_range.greater_than_or_equal_to",
       "validators.date.validate_date_after_or_equal_to",
       "validators.presence.validate_presence_id",
@@ -67,11 +67,16 @@ GetFieldItems <- function(json) {
   if (is.null(field_items)) {
     return(NULL)
   }
+  if (length(field_items) == 0) {
+    return(NULL)
+  }
   fieldItems <- field_items |> map( ~ {
     temp <- .
     res <- temp |> discard( ~ is.list(.)) |> flatten_df()
     res$jpname <- json$name
     res$alias_name <- json$alias_name
+    res$default_value <- ifelse(is.null(temp$default_value), "", as.character(temp$default_value))
+    res$field_type <- ifelse(is.null(temp$field_type), "", as.character(temp$field_type))
     res$link_type <- ifelse(is.null(temp$link_type), "", as.character(temp$link_type))
     res$deviation <- ifelse(is.null(temp$deviation), "", as.character(temp$deviation))
     res$term_code <- ifelse(is.null(temp$term_code), "", as.character(temp$term_code))
@@ -99,6 +104,11 @@ GetFieldItems <- function(json) {
     res$option.name <- temp$option$name
     return(res)
   }) |> bind_rows()
+  if (!any(colnames(fieldItems) == "option.name")) {
+    fieldItems$option_id <- ifelse(is.null(temp$option_id), "", as.character(temp$option_id))
+  } else {
+    fieldItems <- fieldItems |> select(-c("option_id"))
+  }
   targetColnames <- intersect(kFieldItemColnames, colnames(fieldItems))
   res <- fieldItems |> select(all_of(targetColnames)) |> ConvertToCharacter() |> as.data.frame()
   return(res)
@@ -123,14 +133,24 @@ jsonFieldItems <- jsonList |> map( ~ {
   return(res)
 })
 testFieldItems <- map2(jsonFieldItems, sheetList, ~ {
-  if (!identical(.x, .y$Field_Items)) {
+  testJson <- .x
+  testSheet <-.y$Field_Items
+  sortJsonColnames <- colnames(testJson) |> sort()
+  sortSheetColnames <- colnames(testSheet) |> sort()
+  if (!is.null(testJson)) {
+    testJson <- testJson |> select(all_of(sortJsonColnames))
+  } 
+  if (!is.null(testSheet)) {
+    testSheet <- testSheet |> select(all_of(sortSheetColnames))
+  }
+  if (!identical(testJson, testSheet)) {
     return(list(json=.x, sheet=.y$Field_Items))
   }
   return(NULL)
 }) |> keep( ~ !is.null(.))
 
 
-for (i in 1:168) {
+for (i in 1:3) {
   if (!identical(testFieldItems[[1]]$json[i, ], testFieldItems[[1]]$sheet[i, ])) {
     break
   }
@@ -140,9 +160,10 @@ test4 <- testFieldItems[[1]]$sheet[i, ]
 colnames(test3)
 colnames(test4)
 setdiff(colnames(test3), colnames(test4))
+setdiff(colnames(test4), colnames(test3))
 str(test3)
 str(test4)
-for (j in 1:32) {
+for (j in 1:22) {
   if (!identical(testFieldItems[[1]]$json[i, j], testFieldItems[[1]]$sheet[i, j])) {
     break
   }
@@ -151,4 +172,5 @@ for (j in 1:32) {
 testFieldItems[[1]]$json[i, j]
 testFieldItems[[1]]$sheet[i, j]
 setdiff(colnames(testFieldItems[[1]]$sheet), colnames(testFieldItems[[1]]$json))
+setdiff(colnames(testFieldItems[[1]]$json), colnames(testFieldItems[[1]]$sheet))
 colnames(testFieldItems[[1]]$sheet)[19]
