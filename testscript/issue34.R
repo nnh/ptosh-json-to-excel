@@ -33,6 +33,7 @@ kOptionColnames <- c("jpname", "alias_name",
                      "option.controlled_terminology_data.uuid",
                      "option.controlled_terminology_data.cdisc_code", 
                      "option.controlled_terminology_data.cdisc_name")
+kFlipFlapColnames <- c("jpname", "alias_name", "id", "field_item_id", "codes", "fields", "created_at", "updated_at")
 # ------ functions ------
 ConvertToCharacter <- function(df) {
   df_char <- df %>%
@@ -194,7 +195,16 @@ GetFlipFlops <- function(json) {
     }) |> bind_rows()
     return(flip_flop_list)
   }) |> discard( ~ is.null(.))
-  return(flipFlops)
+  if (length(flipFlops) > 0) {
+    for (i in 1:length(flipFlops)) {
+      flipFlops[[i]]$jpname <- json$name
+      flipFlops[[i]]$alias_name <- json$alias_name
+    }
+    res <- flipFlops |> bind_rows()
+  } else {
+    res <- NULL
+  }
+  return(res)
 }
 aaa <- jsonList |> map( ~ GetFlipFlops(.)) |> bind_rows() |> distinct()
 json <- jsonList[[1]]
@@ -258,21 +268,17 @@ testOptions <- map2(jsonOptions, sheetListOption, ~ {
   return(NULL)
 }) |> keep( ~ !is.null(.))
 
+jsonFlipFlaps <- jsonList |> map( ~ {
+  json <- .
+  flipFlops <- json |> GetFlipFlops()
+  return(flipFlops)
+}) |> keep( ~ !is.null(.))
 
-
-
-for (i in 1:1281) {
-  if (!identical(testOptions[[1]]$json[i, ], testOptions[[1]]$sheet[i, ])) {
-    break
+sheetListFlip_Flops <- sheetList |> map( ~ {
+  temp <- .$Flip_Flops
+  res <- temp |> filter(!if_all(everything(), ~ . == ""))
+  if (nrow(res) == 0) {
+    return(NULL)
   }
-}
-for (j in 1:22) {
-  if (!identical(testOptions[[1]]$json[i, j], testOptions[[1]]$sheet[i, j])) {
-    break
-  }
-  
-}
-colnames(testOptions[[1]]$json)
-colnames(testOptions[[1]]$sheet)
-testOptions[[1]]$json[i, j]
-testOptions[[1]]$sheet[i, j]
+  return(res)
+}) |> keep( ~ !is.null(.))
