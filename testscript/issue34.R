@@ -34,6 +34,7 @@ kOptionColnames <- c("jpname", "alias_name",
                      "option.controlled_terminology_data.cdisc_code", 
                      "option.controlled_terminology_data.cdisc_name")
 kFlipFlapColnames <- c("jpname", "alias_name", "id", "field_item_id", "codes", "fields", "created_at", "updated_at")
+kCdiscSheetConfigs <- c("jpname", "alias_name", "id", "sheet_id", "prefix", "label", "table.field", "table.field.value")
 # ------ functions ------
 ConvertToCharacter <- function(df) {
   df_char <- df %>%
@@ -206,8 +207,20 @@ GetFlipFlops <- function(json) {
   }
   return(res)
 }
-aaa <- jsonList |> map( ~ GetFlipFlops(.)) |> bind_rows() |> distinct()
-json <- jsonList[[1]]
+
+GetCdiscSheetConfigs <- function(json) {
+  cdiscSheetConfigs <- json$cdisc_sheet_configs |> map_df( ~ {
+    cdisc_sheet_config <- .
+    df <- . |> discard( ~ is.list(.)) |> map_df( ~ .)
+    table <- .$table |> enframe(name = "table.field", value = "table.field.value")
+    res <- df |> merge(table, by=NULL)
+    return(res)
+  })
+  cdiscSheetConfigs$jpname <- json$name
+  cdiscSheetConfigs$alias_name <- json$alias_name
+  res <- cdiscSheetConfigs |> select(all_of(kCdiscSheetConfigs)) |> ConvertToCharacter() 
+  return(res)
+}
 # ------ main ------
 jsonList <- here("input_gpower") |> LoadJsonList()
 sheetFiles <- here("output", "output_20240828161023_gpower") |> list.files(pattern=".xlsx", full.names=T)
@@ -282,3 +295,14 @@ sheetListFlip_Flops <- sheetList |> map( ~ {
   }
   return(res)
 }) |> keep( ~ !is.null(.))
+
+jsonCdiscSheetConfigsPivot <- jsonList |> map( ~ {
+  json <- .
+  cdiscSheetConfigs <- json |> GetCdiscSheetConfigs()
+  return(cdiscSheetConfigs)
+}) |> keep( ~ !is.null(.))
+
+sheetListCdiscSheetConfigsPivots <- sheetList %>% map( ~ .$Cdisc_Sheet_Configs_Pivot) |> keep( ~ !is.null(.))
+# "Cdisc_Sheet_Configs"は比較の対象外とする
+
+test <- sheetList |> map( ~ names(.))
