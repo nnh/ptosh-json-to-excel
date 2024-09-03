@@ -8,7 +8,7 @@ library(tidyverse)
 library(here)
 source(here("tools", "excel_json_validator_common.R"), encoding="UTF-8")
 # ------ constants ------
-kFieldItemColnames <- c("jpname", "alias_name", "id", "sheet_id", "name", "label", "description", "seq", "is_invisible",
+kField_ItemsColnames <- c("jpname", "alias_name", "id", "sheet_id", "name", "label", "description", "seq", "is_invisible",
                         "default_value", "field_type", "link_type", "deviation", "term_code", "auto_calc_field", "level",
                         "content", "argument_type", "reference_type", "reference_field", "formula_field", "type", "flip_flops",
                         "validators.presence.validate_presence_if", 
@@ -32,7 +32,7 @@ kOptionColnames <- c("jpname", "alias_name",
                      "option.controlled_terminology_data.uuid",
                      "option.controlled_terminology_data.cdisc_code", 
                      "option.controlled_terminology_data.cdisc_name")
-kFlipFlapColnames <- c("jpname", "alias_name", "id", "field_item_id", "codes", "fields", "created_at", "updated_at")
+kFlip_FlopsColnames <- c("jpname", "alias_name", "id", "field_item_id", "codes", "fields", "created_at", "updated_at")
 kCdiscSheetConfigs <- c("jpname", "alias_name", "id", "sheet_id", "prefix", "label", "table.field", "table.field.value")
 # ------ functions ------
 GetSheetList <- function(forderName) {
@@ -84,7 +84,7 @@ GetValidators <- function(field_item) {
   })
   return(res)
 }
-GetFieldItemsList <- function(json) {
+GetField_ItemsList <- function(json) {
   field_items <- json$field_items
   if (is.null(field_items)) {
     return(NULL)
@@ -94,12 +94,12 @@ GetFieldItemsList <- function(json) {
   }
   return(field_items)
 }
-GetFieldItems <- function(json) {
-  field_items <- GetFieldItemsList(json)
+GetField_Items <- function(json) {
+  field_items <- GetField_ItemsList(json)
   if (is.null(field_items)) {
     return(NULL)
   }
-  fieldItems <- field_items |> map( ~ {
+  Field_Items <- field_items |> map( ~ {
     temp <- .
     res <- temp |> discard( ~ is.list(.)) |> flatten_df()
     res$jpname <- json$name
@@ -133,17 +133,17 @@ GetFieldItems <- function(json) {
     res$option.name <- temp$option$name
     return(res)
   }) |> bind_rows()
-  if (!any(colnames(fieldItems) == "option.name")) {
-    fieldItems$option_id <- ""
+  if (!any(colnames(Field_Items) == "option.name")) {
+    Field_Items$option_id <- ""
   } else {
-    fieldItems <- fieldItems |> select(-c("option_id"))
+    Field_Items <- Field_Items |> select(-c("option_id"))
   }
-  targetColnames <- intersect(kFieldItemColnames, colnames(fieldItems))
-  res <- fieldItems |> select(all_of(targetColnames)) |> ConvertToCharacter() |> as.data.frame()
+  targetColnames <- intersect(kField_ItemsColnames, colnames(Field_Items))
+  res <- Field_Items |> select(all_of(targetColnames)) |> ConvertToCharacter() |> as.data.frame()
   return(res)
 }
-GetOptions <- function(json) {
-  field_items <- GetFieldItemsList(json)
+GetOption <- function(json) {
+  field_items <- GetField_ItemsList(json)
   if (is.null(field_items)) {
     return(NULL)
   }
@@ -175,8 +175,8 @@ GetOptions <- function(json) {
   res <- options |> ConvertToCharacter() |> as.data.frame()
   return(res)
 }
-GetFlipFlops <- function(json) {
-  field_items <- GetFieldItemsList(json)
+GetFlip_Flops <- function(json) {
+  field_items <- GetField_ItemsList(json)
   if (is.null(field_items)) {
     return(NULL)
   }

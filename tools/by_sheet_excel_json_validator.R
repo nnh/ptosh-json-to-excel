@@ -7,7 +7,14 @@
 library(here)
 source(here("tools", "by_sheet_excel_json_validator_common.R"), encoding="UTF-8")
 # ------ constants ------
-ignoreCheckFieldItems <- F
+kOkText <- "test_ok"
+ignoreCheckFlag <- list(
+  Field_Items=T,
+  Option=T,
+  Flip_Flops=F,
+  Cdisc_Sheet_Configs=T,
+  Cdisc_Sheet_Configs_Pivot=T
+)
 # ------ functions ------
 GetJsonItemsForTest <- function(jsonList) {
   jsonItems <- jsonList |> map( ~ {
@@ -54,28 +61,43 @@ CompareJsonAndSheet <- function(jsonList, sheetList) {
   if (length(sheetList) != targetCount) {
     stop("Error: The lengths of the provided vectors do not match.")
   }
-  if (ignoreCheckFieldItems) {
-    print("skip:fieldItems")
-  } else {
-    fieldItems <- list()
+  for (i in 1:length(ignoreCheckFlag)) {
+    flagName <- names(ignoreCheckFlag)[[i]]
+    checkFlag <- ignoreCheckFlag[[i]]
+    assign(str_c("check_", flagName), list())
+    if (checkFlag) {
+      print(str_c("skip:", flagName))
+    }
   }
   for (i in 1:targetCount) {
     json <- jsonList[[i]]
     sheet <- sheetList[[i]]
-    if (!ignoreCheckFieldItems) {
-      fieldItems[[i]] <- TestFieldItems(json, sheet)
+    targetSheets <- sheet |> names() |> map( ~ {
+      if (isTRUE(ignoreCheckFlag[[.]])) {
+        return(NULL)
+      } else {
+        return(.)
+      }
+    }) |> compact()
+    for (j in 1:length(targetSheets)) {
+      temp <- TestItems(json, sheet, targetSheets[[j]])
+      targetListName <- str_c("check_", targetSheets[[j]])
+      tempList <- targetListName |> get()
+      tempList[[i]] <- temp
+      assign(targetListName, tempList)
     }
-    
   }
-  res <- list(
-    fieldItems=fieldItems
-  )
+  res <- list()
+  for (i in 1:length(ignoreCheckFlag)) {
+    flagName <- names(ignoreCheckFlag)[[i]]
+    res[[flagName]] <- get(str_c("check_", flagName))
+  }
   return(res)
 }
 
-TestFieldItems <- function(json, sheet) {
-  testJson <- json |> GetFieldItems()
-  testSheet <- sheet$Field_Items
+TestItems <- function(json, sheet, target) {
+  testJson <- json |> get(str_c("Get", target))()
+  testSheet <- sheet[[target]]
   if (!is.null(testJson)) {
     sortJsonColnames <- colnames(testJson) |> sort()
     testJson <- testJson |> select(all_of(sortJsonColnames))
@@ -87,25 +109,8 @@ TestFieldItems <- function(json, sheet) {
   if (!identical(testJson, testSheet)) {
     return(list(json=json, sheet=sheet))
   }
-  return(NULL)
-} 
-testOptions <- map2(jsonOptions, sheetListOption, ~ {
-  testJson <- .x
-  testSheet <-.y
-  sortJsonColnames <- colnames(testJson) |> sort()
-  sortSheetColnames <- colnames(testSheet) |> sort()
-  if (!is.null(testJson)) {
-    testJson <- testJson |> select(all_of(sortJsonColnames))
-  } 
-  if (!is.null(testSheet)) {
-    testSheet <- testSheet |> select(all_of(sortSheetColnames))
-  }
-  if (!identical(testJson, testSheet)) {
-    return(list(json=.x, sheet=.y))
-  }
-  return(NULL)
-}) |> keep( ~ !is.null(.))
-
+  return(kOkText)
+}
 
 # ------ main ------
-CompareJsonAndSheet(jsonList, sheetList)
+aaa <- CompareJsonAndSheet(jsonList, sheetList)
