@@ -138,14 +138,17 @@ GetDfFlipFlops <- function(json_files){
   return(df_flip_flops)
 }
 GetDfAllocations <- function(json_files){
+  kAllocatees <- "allocatees"
   res <- json_files %>% map_df( ~ {
     json_file <- .
     flatten_json <- json_file$flattenJson
     if (is.null(flatten_json$allocation)){
       return(NULL)
     }
-    groups <- flatten_json$allocation$groups %>%
-      rename_with(~ paste0(kGroups, ".", .), everything())
+    allocatees <- flatten_json$allocation$groups$allocatees %>% list_c() %>% enframe(name=NULL, value=kAllocatees)
+    groups <- flatten_json$allocation$groups %>% select(-all_of(kAllocatees))
+    groups <- groups %>% merge(allocatees, by=NULL)
+    colnames(groups) <- colnames(groups) %>% str_c("groups.", .)
     others <- flatten_json$allocation %>% RemoveListElements(c(kGroups)) %>% data.frame()
     allocation <- groups %>% cbind(others) %>% select(any_of(kNamesAndSheetIdAndId), everything())
     return(allocation)
