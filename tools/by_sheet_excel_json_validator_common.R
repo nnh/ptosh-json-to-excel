@@ -33,7 +33,7 @@ kOptionColnames <- c("jpname", "alias_name",
                      "option.controlled_terminology_data.cdisc_code", 
                      "option.controlled_terminology_data.cdisc_name")
 kFlip_FlopsColnames <- c("jpname", "alias_name", "id", "field_item_id", "codes", "fields", "created_at", "updated_at")
-kCdiscSheetConfigs <- c("jpname", "alias_name", "id", "sheet_id", "prefix", "label", "table.field", "table.field.value")
+kCdisc_Sheet_Configs_PivotColnames <- c("jpname", "alias_name", "id", "sheet_id", "prefix", "label", "table.field", "table.field.value")
 # ------ functions ------
 GetSheetList <- function(forderName) {
   sheetFiles <- here("output", forderName) |> list.files(pattern=".xlsx", full.names=T)
@@ -220,7 +220,7 @@ GetFlip_Flops <- function(json) {
   return(res)
 }
 
-GetCdiscSheetConfigs <- function(json) {
+GetCdisc_Sheet_Configs_Pivot <- function(json) {
   cdiscSheetConfigs <- json$cdisc_sheet_configs |> map_df( ~ {
     cdisc_sheet_config <- .
     df <- . |> discard( ~ is.list(.)) |> map_df( ~ .)
@@ -230,7 +230,7 @@ GetCdiscSheetConfigs <- function(json) {
   })
   cdiscSheetConfigs$jpname <- json$name
   cdiscSheetConfigs$alias_name <- json$alias_name
-  res <- cdiscSheetConfigs |> select(all_of(kCdiscSheetConfigs)) |> ConvertToCharacter() 
+  res <- cdiscSheetConfigs |> select(all_of(kCdisc_Sheet_Configs_PivotColnames)) |> ConvertToCharacter() 
   return(res)
 }
 

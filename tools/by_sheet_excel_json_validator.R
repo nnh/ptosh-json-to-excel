@@ -9,11 +9,11 @@ source(here("tools", "by_sheet_excel_json_validator_common.R"), encoding="UTF-8"
 # ------ constants ------
 kOkText <- "test_ok"
 ignoreCheckFlag <- list(
-  Field_Items=F,
-  Option=F,
+  Field_Items=T,
+  Option=T,
   Flip_Flops=T,
   Cdisc_Sheet_Configs=T,
-  Cdisc_Sheet_Configs_Pivot=T
+  Cdisc_Sheet_Configs_Pivot=F
 )
 # ------ functions ------
 GetJsonItemsForTest <- function(jsonList) {
@@ -111,6 +111,4 @@ TestItems <- function(json, sheet, target) {
   }
   return(kOkText)
 }
-
 # ------ main ------
-aaa <- CompareJsonAndSheet(jsonList, sheetList)
