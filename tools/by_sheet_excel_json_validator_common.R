@@ -195,18 +195,17 @@ GetFlip_Flops <- function(json) {
       codes <- flip_flop$codes 
       if (length(codes) > 0) {
         temp_codes <- codes |> tibble()
-        res <- res |> bind_cols(temp_codes)
+        res <- res |> merge(temp_codes, by=NULL)
       } else {
         res$codes <- ""
       }
       fields <- flip_flop$fields
       if (length(fields) > 0) {
         temp_fields <- fields |> tibble()
-        res <- res |> bind_cols(temp_fields)
+        res <- res |> merge(temp_fields, by=NULL)
       } else {
         res$fields <- ""
       }
-      res$codes <- length(codes)
       return(res)
     }) |> bind_rows()
     return(flip_flop_list)
@@ -216,7 +215,7 @@ GetFlip_Flops <- function(json) {
       flipFlops[[i]]$jpname <- json$name
       flipFlops[[i]]$alias_name <- json$alias_name
     }
-    res <- flipFlops |> bind_rows()
+    res <- flipFlops |> bind_rows() |>  select(all_of(kFlip_FlopsColnames)) |> ConvertToCharacter()
   } else {
     res <- NULL
   }

@@ -23,4 +23,3 @@ for (i in 1:length(kTargetTrials)) {
 }
 
 
-aaa <- bev$json |> map( ~ .$allocation) |> discard( ~ is.null(.))
