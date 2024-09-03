@@ -12,7 +12,15 @@ ignoreCheckFlag <- list(
   Option=F,
   Flip_Flops=F,
   Cdisc_Sheet_Configs=T,
-  Cdisc_Sheet_Configs_Pivot=F
+  Cdisc_Sheet_Configs_Pivot=F,
+  Allocation=F
 )
+kTargetTrials <- c("tran")
+#kTargetTrials <- c("gpower", "allb19", "allr23", "bev")
 # ------ main ------
-"gpower" |> ExecCompareBySheet()
+for (i in 1:length(kTargetTrials)) {
+  kTargetTrials[[i]] |> ExecCompareBySheet()
+}
+
+
+aaa <- bev$json |> map( ~ .$allocation) |> discard( ~ is.null(.))

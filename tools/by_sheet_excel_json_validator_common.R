@@ -34,9 +34,12 @@ kOptionColnames <- c("jpname", "alias_name",
                      "option.controlled_terminology_data.cdisc_name")
 kFlip_FlopsColnames <- c("jpname", "alias_name", "id", "field_item_id", "codes", "fields", "created_at", "updated_at")
 kCdisc_Sheet_Configs_PivotColnames <- c("jpname", "alias_name", "id", "sheet_id", "prefix", "label", "table.field", "table.field.value")
+kAllocationColnames <- c("jpname", "alias_name", "sheet_id", "id", "groups.if", "groups.code", "groups.label", 
+                         "groups.message", "groups.allocatees", "is_zelen", "zelen_imbalance", "is_double_blinded", "double_blind_emails", "allocation_method", 
+                         "uuid", "created_at", "updated_at")
 # ------ functions ------
-GetSheetList <- function(forderName) {
-  sheetFiles <- here("output", forderName) |> list.files(pattern=".xlsx", full.names=T)
+GetSheetList <- function(folderName) {
+  sheetFiles <- here("output", folderName) |> list.files(pattern=".xlsx", full.names=T)
   sheetList <- sheetFiles |> 
     map( ~ {
       filepath <- .
@@ -234,4 +237,25 @@ GetCdisc_Sheet_Configs_Pivot <- function(json) {
   return(res)
 }
 
+GetAllocation <- function(json) {
+  allocation <- json$allocation
+  df <- allocation |> discard( ~ is.list(.)) |> map_df( ~ .)
+  groups <- allocation$groups |> map( ~ {
+    group <- .
+    df <- group |> discard( ~ is.list(.)) |> map_df( ~ .)
+    allocatees <- group$allocatees |> enframe(name=NULL, value="allocatees")
+    if (nrow(allocatees) > 0) {
+      res <- df |> merge(allocatees, by=NULL)
+    } else {
+      res <- df
+    }
+    colnames(res) <- colnames(res) %>% str_c("groups.", .)
+    return(res)
+  }) |> bind_rows()
+  res <- df |> merge(groups, by=NULL)
+  res$jpname <- json$name
+  res$alias_name <- json$alias_name
+  res <- res |> select(all_of(kAllocationColnames)) |> ConvertToCharacter() 
+  return(res)
+}
 # ------ main ------
