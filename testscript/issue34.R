@@ -2,16 +2,17 @@
 #' description
 #' @file issue34.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.29
+#' @date 2024.9.3
 rm(list=ls())
 # ------ libraries ------
 source(here("tools", "by_sheet_excel_json_validator.R"), encoding="UTF-8")
+# ------ constants ------
+ignoreCheckFlag <- list(
+  Field_Items=F,
+  Option=F,
+  Flip_Flops=F,
+  Cdisc_Sheet_Configs=T,
+  Cdisc_Sheet_Configs_Pivot=F
+)
 # ------ main ------
-jsonList <- here("input_gpower") |> LoadJsonList()
-sheetList <-"output_20240828161023_gpower" |> GetSheetList()
-#jsonItems <- jsonList |> GetJsonItemsForTest()
-#sheetItems <- sheetList |> GetSheetListItemsForTest()
-
-aaa <- CompareJsonAndSheet(jsonList, sheetList)
-
-
+"gpower" |> ExecCompareBySheet()

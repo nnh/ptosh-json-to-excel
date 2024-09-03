@@ -2,59 +2,25 @@
 #' 
 #' @file by_sheet_excel_json_validator.R
 #' @author Mariko Ohtsuka
-#' @date 2024.9.2
+#' @date 2024.9.3
 # ------ libraries ------
 library(here)
 source(here("tools", "by_sheet_excel_json_validator_common.R"), encoding="UTF-8")
 # ------ constants ------
 kOkText <- "test_ok"
-ignoreCheckFlag <- list(
-  Field_Items=T,
-  Option=T,
-  Flip_Flops=T,
-  Cdisc_Sheet_Configs=T,
-  Cdisc_Sheet_Configs_Pivot=F
-)
 # ------ functions ------
-GetJsonItemsForTest <- function(jsonList) {
-  jsonItems <- jsonList |> map( ~ {
-    json <- .
-    field_items <- json |> GetFieldItems()
-    options <- json |> GetOptions()
-    flipFlops <- json |> GetFlipFlops()
-    cdiscSheetConfigs <- json |> GetCdiscSheetConfigs()
-    res <- list(
-      field_items=field_items,
-      options=options,
-      flipFlops=flipFlops,
-      cdiscSheetConfigs=cdiscSheetConfigs)
-    return(res)
-  })
-  return(jsonItems)
+ExecCompareBySheet <- function(trialName) {
+  assign(trialName, GetInputData(trialName), envir=.GlobalEnv)
+  assign(str_c("check_", trialName), CompareJsonAndSheet(get(trialName)$json, get(trialName)$sheet), envir=.GlobalEnv)
 }
-GetSheetListItemsForTestFlipFlops <- function(sheet) {
-  res <- sheet$Flip_Flops |> filter(!if_all(everything(), ~ . == ""))
-  if (nrow(res) == 0) {
-    return(NULL)
-  }
+GetInputData <- function(trialName) {
+  jsonList <- here(str_c("input_", trialName)) |> LoadJsonList()
+  sheetList <- trialName |> GetTargetFolder() |> GetSheetList()
+  res <- list(
+    json=jsonList,
+    sheet=sheetList
+  )
   return(res)
-}
-GetSheetListItemsForTest <- function(sheetList) {
-  sheetListItems <- sheetList |> map( ~ {
-    sheet <- .
-    field_items <- sheet$Field_Items
-    options <- sheet$Option
-    flipFlops <- sheet |> GetSheetListItemsForTestFlipFlops()
-    cdiscSheetConfigs <- sheet$Cdisc_Sheet_Configs_Pivot
-    res <- list(
-      field_items=field_items,
-      options=options,
-      flipFlops=flipFlops,
-      cdiscSheetConfigs=cdiscSheetConfigs
-    )
-    return(res)
-  })
-  return(sheetListItems)  
 }
 CompareJsonAndSheet <- function(jsonList, sheetList) {
   targetCount <- jsonList |> length()
