@@ -9,9 +9,9 @@ source(here("tools", "by_sheet_excel_json_validator_common.R"), encoding="UTF-8"
 # ------ constants ------
 kOkText <- "test_ok"
 ignoreCheckFlag <- list(
-  Field_Items=T,
-  Option=T,
-  Flip_Flops=F,
+  Field_Items=F,
+  Option=F,
+  Flip_Flops=T,
   Cdisc_Sheet_Configs=T,
   Cdisc_Sheet_Configs_Pivot=T
 )
@@ -100,11 +100,11 @@ TestItems <- function(json, sheet, target) {
   testSheet <- sheet[[target]]
   if (!is.null(testJson)) {
     sortJsonColnames <- colnames(testJson) |> sort()
-    testJson <- testJson |> select(all_of(sortJsonColnames))
+    testJson <- testJson |> select(all_of(sortJsonColnames)) |> ConvertToCharacter()
   } 
   if (!is.null(testSheet)) {
     sortSheetColnames <- colnames(testSheet) |> sort()
-    testSheet <- testSheet |> select(all_of(sortSheetColnames))
+    testSheet <- testSheet |> select(all_of(sortSheetColnames)) |> ConvertToCharacter()
   }
   if (!identical(testJson, testSheet)) {
     return(list(json=json, sheet=sheet))
