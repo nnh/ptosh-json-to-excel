@@ -163,6 +163,9 @@ EditOutputData_alert <- function(df_input, output_list){
 EditOutputData_sheet_items <- function(df_input, output_list){
   return(NULL)
 }
+EditOutputData_cdisc_sheet_config_pivot <- function(df_input, output_list){
+  return(NULL)
+}
 EditOutputData_field_items <- function(df_input, output_list){
   conditions <- c(
     visit='label == "Visit Number"',

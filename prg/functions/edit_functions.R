@@ -23,6 +23,7 @@ kInputList <- list(sheet_items="df_sheet_items",
                    field_items="df_field_items",
                    option="df_option",
                    cdisc_sheet_config="list_cdisc_sheet_config",
+                   cdisc_sheet_config_pivot="df_cdisc_sheet_config_pivot",
                    flip_flops="df_flip_flops",
                    allocation="df_allocation",
                    alert="df_alert")
@@ -32,6 +33,7 @@ EditInputDataList <- function(json_files){
                         field_items=GetDfFieldItems,
                         option=GetDfOptions,
                         cdisc_sheet_config=GetListCdiscSheetConfig,
+                        cdisc_sheet_config_pivot=GetCdiscSheetConfigPivot,
                         flip_flops=GetDfFlipFlops,
                         allocation=GetDfAllocations,
                         alert=GetDfAlert)
@@ -51,6 +53,23 @@ EditInputDataList <- function(json_files){
     }
   }
   return(input_list)
+}
+GetCdiscSheetConfigPivot <- function(json_files) {
+  cdiscSheetConfigs <- json_files %>% map( ~ {
+    cdiscSheetConfig <- .$rawJson$cdisc_sheet_configs
+    if (length(cdiscSheetConfig) == 0) {
+      return(NULL)
+    }
+    res <- cdiscSheetConfig %>% map_df( ~ {
+      temp <- .
+      df_cdiscSheetConfig <- temp %>% discard( ~ is.list(.)) %>% map_df( ~ .)
+      df_table <- temp$table |> enframe(name = "table.field", value = "table.field.value")
+      res <- df_cdiscSheetConfig |> merge(df_table, by=NULL)
+      return(res)
+    })
+    return(res)
+  }) %>% discard( ~ is.null(.)) %>% bind_rows()
+  return(cdiscSheetConfigs)
 }
 GetDfAlert <- function(json_files){
   alertCols <- c("name", "label", kAlertTargetColnames)
@@ -261,27 +280,13 @@ EditCdiscSheetConfigsBySheet <- function(alias_name){
   res <- cdisc_sheet_config %>% select(-c("uuid", "created_at", "updated_at")) %>% select(all_of(kNamesAndSheetIdAndId), everything())
   return(res)
 }
-EditCdiscSheetConfigsPivotBySheet <- function(cdisc_sheet_config){
-  kTable <- "table."
-  kTableField <- kTable %>% str_c(kFieldText)
-  kTableFieldValue <- kTableField %>% str_c(".value")
-  if (is.null(cdisc_sheet_config)){
+EditCdiscSheetConfigsPivotBySheet <- function(id){
+  cdiscSheetConfigsPivot <- FilterDfByID(kInputList$cdisc_sheet_config_pivot, id)
+  if (nrow(cdiscSheetConfigsPivot) == 0) {
     return(NULL)
   }
-  cdisc_sheet_config_pivot <- data.frame()
-  for (i in 1:nrow(cdisc_sheet_config)){
-    df_base <- cdisc_sheet_config[i, ] %>% select(!starts_with(kTable))
-    df_table <- cdisc_sheet_config[i, ] %>% select(starts_with(kTable))
-    df_temp <- data.frame()
-    for (j in 1:ncol(df_table)){
-      df_temp[j, kTableField] <- colnames(df_table)[j]
-      df_temp[j, kTableFieldValue] <- df_table[1, j]
-    }
-    rownames(df_base) <- NULL
-    cdisc_sheet_config_pivot <- df_base %>% cbind(df_temp) %>%
-      bind_rows(cdisc_sheet_config_pivot, .)
-  }
-  return(cdisc_sheet_config_pivot)
+  res <- cdiscSheetConfigsPivot %>% select(-c("uuid", "created_at", "updated_at")) %>% select(all_of(kNamesAndSheetIdAndId), everything())
+  return(res)
 }
 EditAllocationBySheet <- function(id){
   allocation <- FilterDfByID(kInputList$allocation, id)
@@ -297,7 +302,6 @@ EditFlipFlopsBySheet <- function(id){
     return(NULL)
   }
   res <- flip_flops %>% select(any_of(c(kNames, "id", "field_item_id", "codes", "fields", "created_at", "updated_at")))
-  res$codes <- ""
   return(res)
 }
 FilterDfByID <- function(target_name, target_id){
@@ -325,7 +329,7 @@ ExecEditOutputData <- function(id, jpname, alias_name){
   options <- EditOptionsBySheet(id)
   field_items <- EditFieldItemsBySheet(id) %>% SelectFieldItemsBySheet(options)
   cdisc_sheet_config <- EditCdiscSheetConfigsBySheet(alias_name)
-  cdisc_sheet_config_pivot <- EditCdiscSheetConfigsPivotBySheet(cdisc_sheet_config)
+  cdisc_sheet_config_pivot <- EditCdiscSheetConfigsPivotBySheet(id)
   allocation <- EditAllocationBySheet(id)
   flip_flops <- EditFlipFlopsBySheet(id)
   res <- list(

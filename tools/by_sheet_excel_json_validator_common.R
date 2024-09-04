@@ -179,9 +179,10 @@ GetOption <- function(json) {
   return(res)
 }
 GetFlip_Flops <- function(json) {
+  dummyDf <- tibble(!!!setNames(rep("", length(kFlip_FlopsColnames)), kFlip_FlopsColnames)) |> as.data.frame()
   field_items <- GetField_ItemsList(json)
   if (is.null(field_items)) {
-    return(NULL)
+    return(dummyDf)
   }
   flipFlops <- field_items |> map( ~ {
     field_item <- .
@@ -217,7 +218,7 @@ GetFlip_Flops <- function(json) {
     }
     res <- flipFlops |> bind_rows() |>  select(all_of(kFlip_FlopsColnames)) |> ConvertToCharacter()
   } else {
-    res <- NULL
+    res <- dummyDf
   }
   return(res)
 }
@@ -225,8 +226,9 @@ GetFlip_Flops <- function(json) {
 GetCdisc_Sheet_Configs_Pivot <- function(json) {
   cdiscSheetConfigs <- json$cdisc_sheet_configs |> map_df( ~ {
     cdisc_sheet_config <- .
-    df <- . |> discard( ~ is.list(.)) |> map_df( ~ .)
-    table <- .$table |> enframe(name = "table.field", value = "table.field.value")
+    df <- cdisc_sheet_config |> discard( ~ is.list(.)) |> map_df( ~ .)
+    temp_table <- cdisc_sheet_config$table |> map_vec( ~ ifelse(is.null(.), "", .))
+    table <- temp_table |> enframe(name = "table.field", value = "table.field.value")
     res <- df |> merge(table, by=NULL)
     return(res)
   })

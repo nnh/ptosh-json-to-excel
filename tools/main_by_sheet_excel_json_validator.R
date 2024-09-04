@@ -13,10 +13,9 @@ ignoreCheckFlag <- list(
   Option=T,
   Flip_Flops=T,
   Cdisc_Sheet_Configs=T,
-  Cdisc_Sheet_Configs_Pivot=T,
-  Allocation=F
+  Cdisc_Sheet_Configs_Pivot=F,
+  Allocation=T
 )
-#kTargetTrials <- c("allb19")
 kTargetTrials <- c("tran", "gpower", "allb19", "allr23", "bev")
 # ------ main ------
 for (i in 1:length(kTargetTrials)) {
