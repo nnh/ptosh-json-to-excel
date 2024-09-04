@@ -242,11 +242,11 @@ GetAllocation <- function(json) {
   groups <- allocation$groups |> map( ~ {
     group <- .
     df <- group |> discard( ~ is.list(.)) |> map_df( ~ .)
-    allocatees <- group$allocatees |> enframe(name=NULL, value="allocatees")
+    allocatees <- group$allocatees |> enframe(name=NULL, value="allocatees") |> ConvertToCharacter()
     if (nrow(allocatees) > 0) {
       res <- df |> merge(allocatees, by=NULL)
     } else {
-      res <- df
+      res <- df |> merge(tibble("allocatees"=""), by=NULL)
     }
     colnames(res) <- colnames(res) %>% str_c("groups.", .)
     return(res)

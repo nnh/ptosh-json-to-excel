@@ -45,12 +45,14 @@ CompareJsonAndSheet <- function(jsonList, sheetList) {
         return(.)
       }
     }) |> compact()
-    for (j in 1:length(targetSheets)) {
-      temp <- TestItems(json, sheet, targetSheets[[j]])
-      targetListName <- str_c("check_", targetSheets[[j]])
-      tempList <- targetListName |> get()
-      tempList[[i]] <- temp
-      assign(targetListName, tempList)
+    if (length(targetSheets) > 0) {
+      for (j in 1:length(targetSheets)) {
+        temp <- TestItems(json, sheet, targetSheets[[j]])
+        targetListName <- str_c("check_", targetSheets[[j]])
+        tempList <- targetListName |> get()
+        tempList[[i]] <- temp
+        assign(targetListName, tempList)
+      }
     }
   }
   res <- list()

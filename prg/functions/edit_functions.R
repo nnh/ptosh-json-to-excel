@@ -2,7 +2,7 @@
 #'
 #' @file edit_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.28
+#' @date 2024.9.4
 # ------ constants ------
 kSheetItemsKeys <- list(id="id", jpname="jpname", alias_name="alias_name")
 kFieldItemsKeys <- list(id="id", sheet_id="sheet_id", name="name", label="label", option.id="option.id")
@@ -138,6 +138,7 @@ GetDfFlipFlops <- function(json_files){
   return(df_flip_flops)
 }
 GetDfAllocations <- function(json_files){
+  kAllocateesKey <- "code"
   kAllocatees <- "allocatees"
   res <- json_files %>% map_df( ~ {
     json_file <- .
@@ -145,12 +146,24 @@ GetDfAllocations <- function(json_files){
     if (is.null(flatten_json$allocation)){
       return(NULL)
     }
-    allocatees <- flatten_json$allocation$groups$allocatees %>% list_c() %>% enframe(name=NULL, value=kAllocatees)
+    temp_allocatees <- list(code=flatten_json$allocation$groups$code, allocatees=flatten_json$allocation$groups$allocatees)
+    allocatees <- NULL
+    for (i in 1:length(temp_allocatees$code)) {
+      code <- temp_allocatees$code[i]
+      if (length(temp_allocatees$allocatees[[i]]) > 0) {
+        temp <- temp_allocatees$allocatees[[i]] %>% enframe(name=NULL, value=kAllocatees)
+      } else {
+        temp <- tibble(kAllocatees=NA)
+      }
+      temp_df <- code %>% merge(temp, by=NULL)
+      colnames(temp_df) <- c(kAllocateesKey, kAllocatees)
+      allocatees <- allocatees %>% bind_rows(temp_df)
+    }
     groups <- flatten_json$allocation$groups %>% select(-all_of(kAllocatees))
-    groups <- groups %>% merge(allocatees, by=NULL)
-    colnames(groups) <- colnames(groups) %>% str_c("groups.", .)
+    groupsAndAllocatees <- groups %>% inner_join(allocatees, by=kAllocateesKey)
+    colnames(groupsAndAllocatees) <- colnames(groupsAndAllocatees) %>% str_c("groups.", .)
     others <- flatten_json$allocation %>% RemoveListElements(c(kGroups)) %>% data.frame()
-    allocation <- groups %>% cbind(others) %>% select(any_of(kNamesAndSheetIdAndId), everything())
+    allocation <- groupsAndAllocatees %>% cbind(others) %>% select(any_of(kNamesAndSheetIdAndId), everything())
     return(allocation)
   })
   return(res)
@@ -276,7 +289,6 @@ EditAllocationBySheet <- function(id){
     return(NULL)
   }
   allocation <- allocation %>% select(all_of(kNames), everything())
-  allocation$groups.allocatees <- ""
   return(allocation)
 }
 EditFlipFlopsBySheet <- function(id){
