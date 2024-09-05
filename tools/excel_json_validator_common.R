@@ -2,7 +2,7 @@
 #' 
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.29
+#' @date 2024.9.5
 # ------ libraries ------
 library(tidyverse, warn.conflicts=F)
 library(here, warn.conflicts=F)
@@ -221,14 +221,13 @@ GetItemFromJson <- function(sheetList, jsonList) {
 # allocation
 CheckAllocation <- function(sheetList, jsonList) {
   sheet <- sheetList[["allocation"]]
-  sheet$references <- ifelse(is.na(sheet$references), "", sheet$references)
   json <- GetAllocationFromJson(jsonList)
   return(CheckTarget(sheet, json))
 }
 GetAllocationFromJson <- function(jsonList) {
   allocationColnames <- c("jpname", "alias_name", "is_zelen", "zelen_imbalance", "is_double_blinded", 
-                          "double_blind_emails", "allocation_method", "groups.code", "groups.label", 
-                          "groups.if", "references", "groups.message")
+                          "double_blind_emails", "allocation_method", "groups.if", "groups.code", "groups.label", 
+                          "groups.message")
   allocationList <- jsonList |> 
     keep(~ .$alias_name |> str_detect("(?i)^allocation([0-9]+)?$"))
   if (length(allocationList) == 0) {
