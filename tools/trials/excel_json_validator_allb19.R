@@ -2,12 +2,13 @@
 #' description
 #' @file excel_json_validator_allb19.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.27
-keep_objects <- c("jsonList", "sheetList")
-rm(list = setdiff(ls(), keep_objects))
+#' @date 2024.8.29
+if (exists("keep_objects")) {
+  rm(list=setdiff(ls(), keep_objects))
+}
 # ------ libraries ------
-library(tidyverse)
-library(here)
+library(tidyverse, warn.conflicts=F)
+library(here, warn.conflicts=F)
 source(here("tools", "excel_json_validator_common.R"), encoding="UTF-8")
 # ------ constants ------
 # ------ functions ------

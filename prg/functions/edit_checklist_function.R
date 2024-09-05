@@ -19,7 +19,7 @@ GetTargetColumns <- function(input_list){
   res$master <- c(kNamesAndNameAndLabel, "link_type")
   res$alert <- c(kNamesAndNameAndLabel, kAlertTargetColnames)
   res$action <- c(kNames, "id", "field_item_id", "field_item_id.name", "field_item_id.label", "codes", "fields", "fields.label")
-  res$allocation <- c(kNames, "is_zelen", "zelen_imbalance", "is_double_blinded", "double_blind_emails", "allocation_method", "groups.code", "groups.label", "groups.if", "references", "groups.message")
+  res$allocation <- c(kNames, "is_zelen", "zelen_imbalance", "is_double_blinded", "double_blind_emails", "allocation_method", "groups.if", "groups.code", "groups.label", "groups.message")
   res$presence <- kNamesAndNameAndLabel
   res$display <- kNamesAndNameAndLabel
   res$comment <- c(kNamesAndNameAndLabel, "content")
@@ -129,6 +129,7 @@ EditAllocation <- function(allocation){
   }
   res <- allocation %>% ReplaceReferenceText("groups.if", "references")
   res <- res %>% EditOutputColumns(target_columns$allocation)
+  res <- res %>% distinct()
   return(res)
 }
 EditOutputFieldItemsSum <- function(df_field_items){
@@ -161,6 +162,9 @@ EditOutputData_alert <- function(df_input, output_list){
   return(output_list)
 }
 EditOutputData_sheet_items <- function(df_input, output_list){
+  return(NULL)
+}
+EditOutputData_cdisc_sheet_config_pivot <- function(df_input, output_list){
   return(NULL)
 }
 EditOutputData_field_items <- function(df_input, output_list){
