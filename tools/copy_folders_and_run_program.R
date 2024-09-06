@@ -2,7 +2,7 @@
 #' テスト用インプットファイルでのプログラム実行
 #' @file copy_folders_and_run_program.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.29
+#' @date 2024.9.6
 rm(list=ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts=F)
@@ -37,9 +37,17 @@ for (i in 1:length(targetFiles)) {
   file.copy(targetFiles[i], inputDirPath)
 }
 source(here("prg", "json_to_excel.R"), encoding="UTF-8")
-outputDirBef <- read.table(here("temp", "outputDirBef"), sep=",") %>% .[, 1, drop=T]
+if (file.size(here("temp", "outputDirBef")) > 0) {
+  outputDirBef <- read.table(here("temp", "outputDirBef"), sep = ",") %>% .[, 1, drop=T]
+} else {
+  outputDirBef <- NULL
+}
 outputDirAft <- here("output") |> list.dirs(recursive=F)
-newDirPath <- setdiff(outputDirAft, outputDirBef)
+if (!is.null(outputDirBef)) {
+  newDirPath <- setdiff(outputDirAft, outputDirBef)
+} else {
+  newDirPath <- outputDirAft
+}
 newDir <- newDirPath |> dirname()
 targetTrialName <- read.table(here("temp", "targetTrialName"), sep=",") %>% .[1, 1, drop=T]
 newDirRename <- newDirPath |> basename() |> str_c(targetTrialName)
@@ -65,9 +73,17 @@ for (i in 1:length(targetFiles)) {
   file.copy(targetFiles[i], inputDirPath)
 }
 source(here("prg", "json_to_excel.R"), encoding="UTF-8")
-outputDirBef <- read.table(here("temp", "outputDirBef"), sep=",") %>% .[, 1, drop=T]
+if (file.size(here("temp", "outputDirBef")) > 0) {
+  outputDirBef <- read.table(here("temp", "outputDirBef"), sep = ",") %>% .[, 1, drop=T]
+} else {
+  outputDirBef <- NULL
+}
 outputDirAft <- here("output") |> list.dirs(recursive=F)
-newDirPath <- setdiff(outputDirAft, outputDirBef)
+if (!is.null(outputDirBef)) {
+  newDirPath <- setdiff(outputDirAft, outputDirBef)
+} else {
+  newDirPath <- outputDirAft
+}
 newDir <- newDirPath |> dirname()
 targetTrialName <- read.table(here("temp", "targetTrialName"), sep=",") %>% .[1, 1, drop=T]
 newDirRename <- newDirPath |> basename() |> str_c(targetTrialName)
@@ -92,9 +108,17 @@ for (i in 1:length(targetFiles)) {
   file.copy(targetFiles[i], inputDirPath)
 }
 source(here("prg", "json_to_excel.R"), encoding="UTF-8")
-outputDirBef <- read.table(here("temp", "outputDirBef"), sep=",") %>% .[, 1, drop=T]
+if (file.size(here("temp", "outputDirBef")) > 0) {
+  outputDirBef <- read.table(here("temp", "outputDirBef"), sep = ",") %>% .[, 1, drop=T]
+} else {
+  outputDirBef <- NULL
+}
 outputDirAft <- here("output") |> list.dirs(recursive=F)
-newDirPath <- setdiff(outputDirAft, outputDirBef)
+if (!is.null(outputDirBef)) {
+  newDirPath <- setdiff(outputDirAft, outputDirBef)
+} else {
+  newDirPath <- outputDirAft
+}
 newDir <- newDirPath |> dirname()
 targetTrialName <- read.table(here("temp", "targetTrialName"), sep=",") %>% .[1, 1, drop=T]
 newDirRename <- newDirPath |> basename() |> str_c(targetTrialName)
@@ -119,9 +143,17 @@ for (i in 1:length(targetFiles)) {
   file.copy(targetFiles[i], inputDirPath)
 }
 source(here("prg", "json_to_excel.R"), encoding="UTF-8")
-outputDirBef <- read.table(here("temp", "outputDirBef"), sep=",") %>% .[, 1, drop=T]
+if (file.size(here("temp", "outputDirBef")) > 0) {
+  outputDirBef <- read.table(here("temp", "outputDirBef"), sep = ",") %>% .[, 1, drop=T]
+} else {
+  outputDirBef <- NULL
+}
 outputDirAft <- here("output") |> list.dirs(recursive=F)
-newDirPath <- setdiff(outputDirAft, outputDirBef)
+if (!is.null(outputDirBef)) {
+  newDirPath <- setdiff(outputDirAft, outputDirBef)
+} else {
+  newDirPath <- outputDirAft
+}
 newDir <- newDirPath |> dirname()
 targetTrialName <- read.table(here("temp", "targetTrialName"), sep=",") %>% .[1, 1, drop=T]
 newDirRename <- newDirPath |> basename() |> str_c(targetTrialName)
@@ -147,9 +179,17 @@ for (i in 1:length(targetFiles)) {
   file.copy(targetFiles[i], inputDirPath)
 }
 source(here("prg", "json_to_excel.R"), encoding="UTF-8")
-outputDirBef <- read.table(here("temp", "outputDirBef"), sep=",") %>% .[, 1, drop=T]
+if (file.size(here("temp", "outputDirBef")) > 0) {
+  outputDirBef <- read.table(here("temp", "outputDirBef"), sep = ",") %>% .[, 1, drop=T]
+} else {
+  outputDirBef <- NULL
+}
 outputDirAft <- here("output") |> list.dirs(recursive=F)
-newDirPath <- setdiff(outputDirAft, outputDirBef)
+if (!is.null(outputDirBef)) {
+  newDirPath <- setdiff(outputDirAft, outputDirBef)
+} else {
+  newDirPath <- outputDirAft
+}
 newDir <- newDirPath |> dirname()
 targetTrialName <- read.table(here("temp", "targetTrialName"), sep=",") %>% .[1, 1, drop=T]
 newDirRename <- newDirPath |> basename() |> str_c(targetTrialName)

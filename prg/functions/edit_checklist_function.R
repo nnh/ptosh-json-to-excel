@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.28
+#' @date 2024.9.5
 # ------ constants ------
 kReferenceSearchColname <- "input_text"
 kReferenceJoinColname <- "input_text_2"
@@ -19,7 +19,7 @@ GetTargetColumns <- function(input_list){
   res$master <- c(kNamesAndNameAndLabel, "link_type")
   res$alert <- c(kNamesAndNameAndLabel, kAlertTargetColnames)
   res$action <- c(kNames, "id", "field_item_id", "field_item_id.name", "field_item_id.label", "codes", "fields", "fields.label")
-  res$allocation <- c(kNames, "is_zelen", "zelen_imbalance", "is_double_blinded", "double_blind_emails", "allocation_method", "groups.if", "groups.code", "groups.label", "groups.message")
+  res$allocation <- c(kNames, "is_zelen", "zelen_imbalance", "is_double_blinded", "double_blind_emails", "allocation_method", "groups.if", "groups.if_references", "groups.code", "groups.label", "groups.message", "formula_field", "formula_field_references")
   res$presence <- kNamesAndNameAndLabel
   res$display <- kNamesAndNameAndLabel
   res$comment <- c(kNamesAndNameAndLabel, "content")
@@ -127,9 +127,10 @@ EditAllocation <- function(allocation){
     colnames(empty_df) <- target_columns$allocation
     return(empty_df)
   }
-  res <- allocation %>% ReplaceReferenceText("groups.if", "references")
-  res <- res %>% EditOutputColumns(target_columns$allocation)
-  res <- res %>% distinct()
+  res <- allocation %>% ReplaceReferenceText("groups.if", "groups.if_references")
+  allocationFormulaField <- GetAllocationFormulaField(json_files)
+  res <- res %>% left_join(allocationFormulaField, by="sheet_id")
+  res <- res %>% EditOutputColumns(target_columns$allocation) |> distinct()
   return(res)
 }
 EditOutputFieldItemsSum <- function(df_field_items){
@@ -297,4 +298,63 @@ GetTargetJsonForChecklist <- function(raw_json_files) {
   sorted_indices <- res %>% names() %>% order()
   res <- res[sorted_indices]  
   return(res)
+}
+GetAllocationFormulaField <- function(json_files) {
+  kCondStr1 <- "ref\\("
+  kCondStr2 <- "\\)"
+  kConditionStr <- str_c(kCondStr1, "'\\S+\\s?\\d+", kCondStr2)
+  allocationFormulaField <- json_files %>% map( ~ {
+    json <- .$rawJson
+    if (is.null(json$allocation)) {
+      return(NULL)
+    }
+    fieldItems <- json$field_items
+    if (is.null(fieldItems)) {
+      return(NULL)
+    }
+    formulaFields <- fieldItems %>% map( ~ {
+      if (.$type != "FieldItem::Allocation") {
+        return(NULL)
+      }
+      res <- tibble(sheet_id=.$sheet_id, formula_field=.$formula_field)
+      return(res)
+    }) |> discard( ~ is.null(.)) |> bind_rows()
+    return(formulaFields)
+  }) |> discard( ~ is.null(.)) |> bind_rows()
+  formulaFieldList <- allocationFormulaField$formula_field %>% map( ~ {
+    inputText <- .
+    target <- inputText %>% str_extract_all(kConditionStr)
+    checkTarget <- target %>% list_c() %>% length()
+    if (checkTarget == 0) {
+      return(inputText)
+    }
+    replaceStrList <- target %>% map( ~ {
+      temp <- .
+      sheetAndFieldList <- temp %>% str_remove(kCondStr1) %>% str_remove(kCondStr2) %>% str_remove_all("\\s") %>% str_remove_all("'") %>% str_split(",")
+      replaceStr <- sheetAndFieldList %>% map( ~ {
+        sheet <- .[1]
+        field <- .[2]
+        temp <- df_reference %>% filter(alias_name == sheet & field_id == field)
+        if (nrow(temp) != 1) {
+          return("")
+        }
+        return(temp[1, "output_text", drop=T])
+      })
+      return(replaceStr)      
+    })
+    res <- inputText
+    for (i in 1:length(target)) {
+      temp <- target[[i]]
+      for (j in 1:length(temp)) {
+        cond1 <- temp[j] %>% str_replace("\\(", "\\\\(") %>% str_replace("\\)", "\\\\)")
+        cond2 <- list_c(replaceStrList[[i]][j])
+        res <- res %>% str_replace(cond1, cond2)
+      }
+    }
+    return(res)
+  })
+  allocationFormulaField$formula_field_references <- formulaFieldList
+  allocationFormulaFieldText <- allocationFormulaField %>% group_by(sheet_id) %>%
+    summarise(formula_field = paste(formula_field, collapse=", "), formula_field_references = paste(formula_field_references, collapse=", "))
+  return(allocationFormulaFieldText)
 }
