@@ -10,7 +10,7 @@ library(here, warn.conflicts=F)
 source(here("tools", "excel_json_validator_common.R"), encoding="UTF-8")
 # ------ constants ------
 keep_objects <- c("keep_objects", "jsonList", "sheetList", "trialName", "kTrialNames")
-kTrialNames <- c("gpower" ,"bev", "allb19", "tran", "allr23")
+kTrialNames <- c("gpower" ,"bev", "allb19", "tran", "allr23", "blin_b_all")
 # ------ functions ------
 # ------ main ------
 for (i in 1:length(kTrialNames)) {

@@ -2,7 +2,7 @@
 #' description
 #' @file main_by_sheet_excel_json_validator.R
 #' @author Mariko Ohtsuka
-#' @date 2024.9.3
+#' @date 2024.9.6
 rm(list=ls())
 # ------ libraries ------
 library(here)
@@ -16,7 +16,7 @@ ignoreCheckFlag <- list(
   Cdisc_Sheet_Configs_Pivot=F,
   Allocation=F
 )
-kTargetTrials <- c("tran", "gpower", "allb19", "allr23", "bev")
+kTargetTrials <- c("tran", "gpower", "allb19", "allr23", "bev", "blin_b_all")
 # ------ main ------
 for (i in 1:length(kTargetTrials)) {
   kTargetTrials[[i]] |> ExecCompareBySheet()

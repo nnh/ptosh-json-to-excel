@@ -246,6 +246,35 @@ EditOutputDataList <- function(input_list){
   }
   return(output_list)
 }
+CreateVisitIdentityCheckDf <- function(target) {
+  target$id <- NULL
+  target$alias_name <- NULL
+  target$uuid <- NULL
+  target$digest <- NULL
+  target$seq <- NULL
+  target$created_at <- NULL
+  target$updated_at <- NULL
+  target$lock_version <- NULL
+  for (i in 1:length(target$field_items)) {
+    target$field_items[[i]]$id <- NULL
+    target$field_items[[i]]$sheet_id <- NULL
+    if (length(target$field_items[[i]]$flip_flops) > 0) {
+      for (j in 1:length(target$field_items[[i]]$flip_flops)) {
+        target$field_items[[i]]$flip_flops[[j]]$id <- NULL
+        target$field_items[[i]]$flip_flops[[j]]$field_item_id <- NULL
+      }
+    }
+  }
+  for (i in 1:length(target$cdisc_sheet_configs)) {
+    target$cdisc_sheet_configs[[i]]$id <- NULL
+    target$cdisc_sheet_configs[[i]]$sheet_id <- NULL
+    target$cdisc_sheet_configs[[i]]$created_at <- NULL
+    target$cdisc_sheet_configs[[i]]$updated_at <- NULL
+    target$cdisc_sheet_configs[[i]]$uuid <- NULL
+  }
+  target$visit <- NULL
+  return(target)
+}
 GetTargetJsonForChecklist <- function(raw_json_files) {
   rawJsons <- raw_json_files %>% map( ~ .$rawJson)
   visitJsons <- rawJsons %>% map( ~ {
@@ -268,11 +297,26 @@ GetTargetJsonForChecklist <- function(raw_json_files) {
   if (length(targetFileNameHead) == 0) {
     return(raw_json_files)
   }
+  targetFileNameHead <- targetFileNameHead |> map( ~ {
+    targetNameHead <- .
+    filtered_list <- rawJsons[grep(str_c("^", targetNameHead, "_"), names(rawJsons))] %>% map( ~ CreateVisitIdentityCheckDf(.))
+    names(filtered_list) <- NULL
+    for (i in 2:length(filtered_list)) {
+      if (!identical(filtered_list[i - 1], filtered_list[i])) {
+        print(str_c(targetNameHead, "xxxはvisitまとめ対象外です"))
+        return(NULL)
+      }
+    }
+    return(targetNameHead)
+  }) |> discard( ~ is.null(.))
+  if (length(targetFileNameHead) == 0) {
+    return(raw_json_files)
+  }
   targetVisitRawJson <- targetFileNameHead %>% map( ~ {
     targetHead <- .
     for (i in 1:length(visitJsonsNames)) {
       if (str_detect(visitJsonsNames[[i]], str_c("^", targetHead, "_[0-9]+$"))) {
-        target <- raw_json_files[[i]]
+        target <- raw_json_files[[visitJsonsNames[[i]]]]
         newAliasname <- str_c(targetHead, "_xxx")
         target$rawJson$alias_name <- newAliasname
         target$flattenJson$alias_name <- newAliasname
