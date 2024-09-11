@@ -161,12 +161,14 @@ sheet$Flip_Flops <- NULL
 
 # fieldItems
 jsonIeFieldItems <- json$field_items |> map( ~ discard(., is.list)) |> map_df( ~ .)
-jsonIeValidators <- json$field_items |> map( ~ list(id=.$id, validators=.$validators, validators.presence=T)) |> discard( ~ is.null(.$validators))
+jsonIeValidators <- json$field_items |> map( ~ list(id=.$id, validators=.$validators)) |> discard( ~ is.null(.$validators))
 jsonIeValidators <- jsonIeValidators |> map( ~ {
   if (length(.$validators) == 0) {
     target <- .
     target$validators <- NULL
-    return(as.data.frame(target))
+    res <- as.data.frame(target)
+    res$validators.presence <- F
+    return(res)
   }
   target <- .
   df_date <- .$validators$date |> data.frame()
@@ -174,6 +176,8 @@ jsonIeValidators <- jsonIeValidators |> map( ~ {
   df_presence <- .$validators$presence |> data.frame()
   res <- NULL
   if (length(df_date) > 0) {
+    tempColnamees <- df_date |> colnames() %>% str_c("validators.date.", .)
+    colnames(df_date) <- tempColnamees
     if (is.null(res)) {
       res <- df_date
     } else {
@@ -181,6 +185,8 @@ jsonIeValidators <- jsonIeValidators |> map( ~ {
     }
   }
   if (length(df_formula) > 0) {
+    tempColnamees <- df_formula |> colnames() %>% str_c("validators.formula.", .)
+    colnames(df_formula) <- tempColnamees
     if (is.null(res)) {
       res <- df_formula
     } else {
@@ -188,17 +194,61 @@ jsonIeValidators <- jsonIeValidators |> map( ~ {
     }
   }
   if (length(df_presence) > 0) {
+    tempColnamees <- df_presence |> colnames() %>% str_c("validators.presence.", .)
+    colnames(df_presence) <- tempColnamees
     if (is.null(res)) {
       res <- df_presence
     } else {
       res <- res |> merge(df_presence, by=NULL)
     }
+  } else {
   }
+  res$validators.presence <- !is.null(.$validators$presence)
   res$id <- target$id
-  res$validators.presence <- target$validators.presence
   return(res)
 }) |> bind_rows()
-
+jsonIeFieldItems <- jsonIeFieldItems |> left_join(jsonIeValidators, by="id")
+jsonOptionName <- json$field_items |> map( ~ list(id=.$id, option=.$option)) |> discard( ~ is.null(.$option))
+jsonOptionName <- jsonOptionName |> map_df( ~ list(id=.$id, option.name=.$option$name))
+jsonIeFieldItems <- jsonIeFieldItems |> left_join(jsonOptionName, by="id")
+jsonIeFieldItems$jpname <- "選択除外基準確認"
+jsonIeFieldItems$alias_name <-"ie_100"
+jsonIeFieldItems$argument_type <- ""
+jsonIeFieldItems$auto_calc_field <- ""
+jsonIeFieldItems$flip_flops <- ""
+jsonIeFieldItems$formula_field <- ""
+jsonIeFieldItems$reference_field <- ""
+jsonIeFieldItems$reference_type <- ""
+jsonIeFieldItems$term_code <- ""
+jsonIeFieldItems$option_id <- NULL
+jsonIeFieldItems$validators.presence <- ifelse(is.na(jsonIeFieldItems$validators.presence), F, jsonIeFieldItems$validators.presence)
 sheetIeFieldItems <- sheet$Field_Items
-colnames(jsonIeFieldItems)
-colnames(sheetIeFieldItems)
+identical(nrow(jsonIeFieldItems), nrow(sheetIeFieldItems))
+identical(ncol(jsonIeFieldItems), ncol(sheetIeFieldItems))
+jsonIeFieldItems <- jsonIeFieldItems |> select(colnames(sheetIeFieldItems)) |> ConvertToCharacter() |> as.data.frame()
+jsonIeFieldItems[52, 17] <- jsonIeFieldItems[52, 17] |> str_replace_all("\\n\\n", "\n")
+identical(jsonIeFieldItems, sheetIeFieldItems)
+for (i in 1:nrow(jsonIeFieldItems)) {
+  if (!identical(jsonIeFieldItems[i, ], sheetIeFieldItems[i, ])) {
+    stop()
+    break
+  }
+}
+for (j in 1:ncol(jsonIeFieldItems)) {
+  if (!identical(jsonIeFieldItems[i, j], sheetIeFieldItems[i, j])) {
+    stop()
+    break
+  }
+}
+colnames(jsonIeFieldItems)[j]
+jsonIeFieldItems[i, j]
+sheetIeFieldItems[i, j]
+
+test <- json$field_items |> map( ~ {
+  if (.$name == "field3") {
+    return(.)
+  } else {
+    return(NULL)
+  }
+}) |> discard( ~ is.null(.))
+
