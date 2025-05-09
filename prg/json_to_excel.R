@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.29
+#' @date 2025.5.8
 rm(list=ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -22,7 +22,7 @@ rm(list=ls())
 #' @export
 InstallAndLoadPackage <- function(package_name){
   if (!requireNamespace(package_name, quietly=T)) {
-    install.packages(package_name, dependencies=T)
+    install.packages(package_name, dependencies=T, type = "binary")
   }
   library(package_name, character.only=T, warn.conflicts=F)
 }
