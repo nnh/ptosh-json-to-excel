@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2024.9.5
+#' @date 2025.5.9
 # ------ constants ------
 kReferenceSearchColname <- "input_text"
 kReferenceJoinColname <- "input_text_2"
@@ -272,7 +272,7 @@ GetTargetJsonForChecklist <- function(raw_json_files) {
     targetHead <- .
     for (i in 1:length(visitJsonsNames)) {
       if (str_detect(visitJsonsNames[[i]], str_c("^", targetHead, "_[0-9]+$"))) {
-        target <- raw_json_files[[i]]
+        target <- raw_json_files[[visitJsonsNames[[i]]]]
         newAliasname <- str_c(targetHead, "_xxx")
         target$rawJson$alias_name <- newAliasname
         target$flattenJson$alias_name <- newAliasname
