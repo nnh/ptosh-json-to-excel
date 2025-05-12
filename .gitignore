@@ -9,7 +9,8 @@
 /input_*/*.json
 /input_*/
 /output/*
-/input/
+!/input/.gitkeep
+!/output/.gitkeep
 !/temp/dummy
 /forTest_input_*/*
 *.Rproj
