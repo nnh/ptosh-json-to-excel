@@ -12,6 +12,7 @@
 !/output/dummy
 !/input/dummy
 !/temp/dummy
+/forTest_input_*/*
 *.Rproj
 # History files
 .Rhistory

@@ -36,9 +36,9 @@ RemoveListElements <- function(list_to_modify, elements_to_remove) {
 #' RemoveNestedLists(input)
 #'
 #' @export
-RemoveNestedLists <- function(input_list){
+RemoveNestedLists <- function(input_list) {
   # Filter elements that are not lists within the input_list
-  filtered_list <- input_list %>% purrr::discard( ~ is.list(.))
+  filtered_list <- input_list %>% purrr::discard(~ is.list(.))
   return(filtered_list)
 }
 #' Create an output folder if it does not exist.
@@ -58,11 +58,13 @@ RemoveNestedLists <- function(input_list){
 #'
 #' @import AddSlashIfMissing
 #' @export
-CreateOutputFolder <- function(output_folder_name, output_path=NULL) {
-  if (is.null(output_path)){
+CreateOutputFolder <- function(output_folder_name, output_path = NULL) {
+  if (is.null(output_path)) {
     output_path <- here(output_folder_name)
   } else {
-    output_path <- output_path %>% AddSlashIfMissing() %>% str_c(output_folder_name)
+    output_path <- output_path %>%
+      AddSlashIfMissing() %>%
+      str_c(output_folder_name)
   }
   if (!dir.exists(output_path)) {
     dir.create(output_path)
@@ -101,16 +103,25 @@ AddSlashIfMissing <- function(input_string) {
 #' @import here
 #' @import ReadJsonFiles
 #' @export
-ExecReadJsonFiles <- function(){
+ExecReadJsonFiles <- function() {
   # Get a list of JSON filenames in the specified folder
-  json_filenames <- list.files(here(kInputFolderName), pattern="*.json", full.names=F)
+  targetTrialFolder <- list.dirs(here(kInputFolderName), full.names = T, recursive = F)
+  if (length(targetTrialFolder) != 1) {
+    stop("inputフォルダの中に試験名略称のフォルダを一つだけ格納して再実行してください。")
+    return(NULL)
+  }
+  json_filenames <- list.files(targetTrialFolder, pattern = "*.json", full.names = F)
   # Check if any JSON files were found
-  if (length(json_filenames) == 0){
+  if (length(json_filenames) == 0) {
     stop("No JSON files found.")
     return(NULL)
   }
-  json_files <- ReadJsonFiles(json_filenames, kInputFolderName)
-  return(json_files)
+  json_files <- ReadJsonFiles(json_filenames, targetTrialFolder)
+  trialName <- targetTrialFolder %>% basename()
+  res <- list()
+  res$json_files <- json_files
+  res$trialName <- trialName
+  return(res)
 }
 #' Replace Text Function
 #'
@@ -125,17 +136,17 @@ ExecReadJsonFiles <- function(){
 #' ReplaceText("Some Text")
 #'
 #' @export
-ReplaceText <- function(x){
-  if (is.null(x)){
+ReplaceText <- function(x) {
+  if (is.null(x)) {
     return(NA)
   }
   return(x)
 }
 setFontStyle <- function() {
-    style <- createStyle(
-    fontName = "Meiryo",     
-    fontSize = 11,           
-    fontColour = "#000000"   
-  )  
+  style <- createStyle(
+    fontName = "Meiryo",
+    fontSize = 11,
+    fontColour = "#000000"
+  )
   return(style)
 }

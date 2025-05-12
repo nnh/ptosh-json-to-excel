@@ -3,7 +3,7 @@
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
 #' @date 2025.5.8
-rm(list=ls())
+rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
 #'
@@ -20,11 +20,11 @@ rm(list=ls())
 #' InstallAndLoadPackage("tidyverse")
 #'
 #' @export
-InstallAndLoadPackage <- function(package_name){
-  if (!requireNamespace(package_name, quietly=T)) {
-    install.packages(package_name, dependencies=T, type = "binary")
+InstallAndLoadPackage <- function(package_name) {
+  if (!requireNamespace(package_name, quietly = T)) {
+    install.packages(package_name, dependencies = T, type = "binary")
   }
-  library(package_name, character.only=T, warn.conflicts=F)
+  library(package_name, character.only = T, warn.conflicts = F)
 }
 # ------ libraries ------
 InstallAndLoadPackage("tidyverse")
@@ -34,38 +34,47 @@ InstallAndLoadPackage("openxlsx")
 InstallAndLoadPackage("rlang")
 InstallAndLoadPackage("future")
 plan(multisession)
-source(here("prg", "functions", "common_functions.R"), encoding="UTF-8")
-source(here("prg", "functions", "edit_functions.R"), encoding="UTF-8")
-source(here("prg", "functions", "io_functions.R"), encoding="UTF-8")
-source(here("prg", "functions", "edit_checklist_function.R"), encoding="UTF-8")
+source(here("prg", "functions", "common_functions.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_functions.R"), encoding = "UTF-8")
+source(here("prg", "functions", "io_functions.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8")
 # ------ constants ------
 kInputFolderName <- "input"
 kOutputFolderName <- "output"
 kOutputPath <- here(kOutputFolderName)
-kOutputChecklistName <- "checklist.xlsx"
 kAlertTargetColnames <- c("normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to")
 # ------ main ------
-raw_json_files <- ExecReadJsonFiles()
+temp <- ExecReadJsonFiles()
+trialName <- temp$trialName
+raw_json_files <- temp$json_files
 json_files <- raw_json_files
 input_list <- EditInputDataList(json_files)
 # json to excel
-df_dummyNames <- data.frame(matrix(ncol=length(kNames), nrow=0))
+df_dummyNames <- data.frame(matrix(ncol = length(kNames), nrow = 0))
 colnames(df_dummyNames) <- kNames
 output_list <- pmap(
-  list(id=input_list[[kInputList$sheet_items]][[kSheetItemsKeys$id]],
-       jpname=input_list[[kInputList$sheet_items]][[kSheetItemsKeys$jpname]],
-       alias_name=input_list[[kInputList$sheet_items]][[kSheetItemsKeys$alias_name]]), ExecEditOutputData)
+  list(
+    id = input_list[[kInputList$sheet_items]][[kSheetItemsKeys$id]],
+    jpname = input_list[[kInputList$sheet_items]][[kSheetItemsKeys$jpname]],
+    alias_name = input_list[[kInputList$sheet_items]][[kSheetItemsKeys$alias_name]]
+  ), ExecEditOutputData
+)
 names(output_list) <- input_list[[kInputList$sheet_items]][[kSheetItemsKeys$alias_name]]
 # create output folder.
-output_folder_name <- Sys.time() %>% format("%Y%m%d%H%M%S") %>% str_c("output_", .)
+output_folder_name <- Sys.time() %>%
+  format("%Y%m%d%H%M%S") %>%
+  str_c("output_", .)
 output_folder_path <- CreateOutputFolder(output_folder_name, kOutputPath)
 cat(str_c("フォルダ", output_folder_path, "を作成しました\n"))
 # write excel.
-for (i in 1:length(output_list)){
+for (i in 1:length(output_list)) {
   WriteExcel(output_list[[i]], names(output_list)[i], output_folder_path)
 }
 # checklist
-#json_files <- GetTargetJsonForChecklist(raw_json_files)
+output_file_ymd <- Sys.time() %>%
+  format("%Y%m%d")
+kOutputChecklistName <- str_c(trialName, " eCRF Spec ", output_file_ymd, ".xlsx")
+# json_files <- GetTargetJsonForChecklist(raw_json_files)
 json_files <- raw_json_files
 input_list <- EditInputDataList(json_files)
 target_columns <- GetTargetColumns(input_list)
