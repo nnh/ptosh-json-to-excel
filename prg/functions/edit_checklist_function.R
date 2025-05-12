@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.9
+#' @date 2025.5.12
 # ------ constants ------
 kReferenceSearchColname <- "input_text"
 kReferenceJoinColname <- "input_text_2"
@@ -252,13 +252,41 @@ FilterDataByCondition <- function(df_input, condition_str) {
   result <- df_filter %>% EditOutputColumns(target_col)
   return(result)
 }
+CreatedummyDf <- function(target_columns) {
+  df <- data.frame(matrix(ncol = length(target_columns), nrow = 0))
+  colnames(df) <- target_columns
+  return(df)
+}
+MergeNumberAndAlert <- function(df_number, df_alert) {
+  if (is.null(df_number) && is.null(df_alert)) {
+    return(NULL)
+  }
+  if (is.null(df_number)) {
+    df_number <- CreatedummyDf(target_columns$number)
+  }
+  if (is.null(df_alert)) {
+    df_alert <- CreatedummyDf(target_columns$alert)
+  }
+  df_alert <- df_alert %>% select(-c("jpname", "label"))
+  inner_join_data <- inner_join(df_number, df_alert, by = c("alias_name", "name"))
+  anti_join_left_data <- anti_join(df_number, df_alert, by = c("alias_name", "name"))
+  anti_join_right_data <- anti_join(df_alert, df_number, by = c("alias_name", "name"))
+  res <- bind_rows(inner_join_data, anti_join_left_data, anti_join_right_data) %>% arrange(alias_name, name)
+  return(res)
+}
 EditOutputDataList <- function(input_list) {
   target_names <- names(kInputList)
   res <- target_names %>%
     map(~ EditOutputData(.)) %>%
     discard(is.null) %>%
     list_flatten()
-  # numberとalertを統合する
+  # Combine number and alert to create limitation
+  df_number <- res$number
+  df_alert <- res$alert
+  df_limitation <- MergeNumberAndAlert(df_number, df_alert)
+  res$number <- NULL
+  res$alert <- NULL
+
   output_list <- list()
   df_sheet_items <- input_list[[kInputList$sheet_items]] %>% rename(!!kFieldItemsKeys$sheet_id := id)
   name <- df_sheet_items %>%
@@ -270,6 +298,9 @@ EditOutputDataList <- function(input_list) {
   output_list <- temp_output_list[names(target_columns)] %>% keep(~ !is.null(.))
   if (!is.null(output_list$action)) {
     output_list$action <- output_list$action %>% distinct()
+  }
+  if (!is.null(df_limitation)) {
+    output_list$limitation <- df_limitation
   }
   return(output_list)
 }
