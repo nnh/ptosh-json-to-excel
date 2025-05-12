@@ -9,8 +9,7 @@
 /input_*/*.json
 /input_*/
 /output/*
-!/output/dummy
-!/input/dummy
+/input/
 !/temp/dummy
 /forTest_input_*/*
 *.Rproj

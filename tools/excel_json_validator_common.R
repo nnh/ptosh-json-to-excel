@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2024.9.5
+#' @date 2025.5.12
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -25,7 +25,7 @@ GetTargetFolder <- function(trialName) {
   outputPath <- here("output")
   outputDirs <- outputPath |> list.dirs(recursive = F, full.names = F)
   targetDirs <- outputDirs |>
-    str_extract_all(str_c("output_", "[0-9]+_", trialName)) |>
+    str_extract_all(str_c("output_", "[0-9]+", trialName)) |>
     keep(~ length(.) > 0)
   if (length(targetDirs) == 0) {
     stop(str_c("No folders found for trial name: ", trialName))
@@ -43,12 +43,17 @@ GetTargetFolder <- function(trialName) {
 }
 GetJsonAndSheet <- function(trialName) {
   targetFolder <- GetTargetFolder(trialName)
-  sheetList <- targetFolder |> ReadChecklist()
-  jsonList <- here(str_c("input_", trialName)) |> LoadJsonList()
+  sheetList <- targetFolder |> ReadChecklist(trialName)
+  jsonList <- here(str_c("forTest_input_", trialName)) |> LoadJsonList()
   return(list(sheetList = sheetList, jsonList = jsonList))
 }
-ReadChecklist <- function(inputFolder) {
-  inputPath <- here("output", inputFolder, "list", "checklist.xlsx")
+ReadChecklist <- function(inputFolder, trialName) {
+  checklistFile <- here("output", inputFolder, "list") |>
+    list.files(pattern = str_c(trialName, " eCRF Spec [0-9]{8}\\.xlsx$"), full.names = T)
+  if (length(checklistFile) == 0) {
+    stop("No checklist file found.")
+  }
+  inputPath <- checklistFile[1]
   sheetNames <- inputPath |> getSheetNames()
   sheets <- sheetNames |> map(~ read.xlsx(inputPath, ., na.strings = NULL))
   names(sheets) <- sheetNames
