@@ -21,7 +21,7 @@ GetNormalRanges <- function(fieldItem) {
             }
             lessThan <- .x$normal_range$less_than_or_equal_to
             greaterThan <- .x$normal_range$greater_than_or_equal_to
-            return(list(less_than = lessThan, greater_than = greaterThan, id = .x$id, sheet_id = .x$sheet_id, name = .x$name))
+            return(list(default_value = .x$default_value, less_than = lessThan, greater_than = greaterThan, id = .x$id, sheet_id = .x$sheet_id, name = .x$name, label = .x$label))
         }) %>%
         keep(~ !(is.atomic(.x) && is.na(.x)))
     return(normalRanges)
@@ -35,7 +35,7 @@ GetValidators <- function(fieldItem) {
             if (length(.x$validator) == 0) {
                 return(NA)
             }
-            return(list(validator = .x$validator, id = .x$id, sheet_id = .x$sheet_id, name = .x$name))
+            return(list(validator = .x$validator, id = .x$id, sheet_id = .x$sheet_id, name = .x$name, label = .x$label))
         }) %>%
         keep(~ !(is.atomic(.x) && is.na(.x)))
     return(validators)
@@ -51,7 +51,7 @@ GetValidatorNumericality <- function(validators) {
             }
             lessThan <- .x$validator$numericality$validate_numericality_less_than_or_equal_to
             greaterThan <- .x$validator$numericality$validate_numericality_greater_than_or_equal_to
-            return(list(less_than = lessThan, grater_than = greaterThan, id = .x$id, sheet_id = .x$sheet_id, name = .x$name))
+            return(list(less_than = lessThan, greater_than = greaterThan, id = .x$id, sheet_id = .x$sheet_id, name = .x$name, label = .x$label))
         }) %>%
         keep(~ !(is.atomic(.x) && is.na(.x)))
     if (length(res) == 0) {
@@ -63,21 +63,18 @@ GetNormalRangeAndValidators <- function(fieldItems) {
     normalRanges <- fieldItems %>% map(~ GetNormalRanges(.x))
     df_normalRanges <- data.frame()
     for (i in 1:length(normalRanges)) {
-        aliasName <- (names(normalRanges)[i])
         df <- normalRanges[[i]] %>% bind_rows()
-        df$alias_name <- aliasName
         df_normalRanges <- df_normalRanges %>% bind_rows(df)
     }
+    colnames(df_normalRanges) %>% print()
     validators <- fieldItems %>% map(~ GetValidators(.x))
     validatorsNumericality <- validators %>% map(~ GetValidatorNumericality(.x))
     df_validators <- data.frame()
     for (i in 1:length(validatorsNumericality)) {
-        aliasName <- (names(validatorsNumericality)[i])
         if (length(validatorsNumericality[[i]]) == 1 && is.na(validatorsNumericality[[i]])) {
             next
         }
         df <- validatorsNumericality[[i]] %>% bind_rows()
-        df$alias_name <- aliasName
         df_validators <- df_validators %>% bind_rows(df)
     }
     return(list(df_normalRanges = df_normalRanges, df_validators = df_validators))
@@ -95,12 +92,23 @@ GetNormalRangeAndValidatorsByTrial <- function(fortestDir) {
                 read_json()
         }
     )
-    alias_names <- jsons %>% map_chr(~ .x$alias_name)
+    jpnameAndAliasname <- jsons %>% map_df(~ list(sheet_id = .x$id, jpname = .x$name, alias_name = .x$alias_name))
     fieldItems <- jsons %>% map(~ .x$field_items)
-    names(fieldItems) <- alias_names
     res <- GetNormalRangeAndValidators(fieldItems)
-    write_csv(res$df_normalRanges, file.path(trialDir, "normal_ranges.csv"))
-    write_csv(res$df_validators, file.path(trialDir, "validators.csv"))
+    if (nrow(res$df_normalRanges) == 0) {
+        normalRanges <- res$df_normalRanges
+    } else {
+        normalRanges <- res$df_normalRanges %>%
+            left_join(jpnameAndAliasname, by = c("sheet_id" = "sheet_id"))
+    }
+    if (nrow(res$df_validators) == 0) {
+        validators <- res$df_validators
+    } else {
+        validators <- res$df_validators %>%
+            left_join(jpnameAndAliasname, by = c("sheet_id" = "sheet_id"))
+    }
+    write_csv(normalRanges, file.path(trialDir, "normal_ranges.csv"))
+    write_csv(validators, file.path(trialDir, "validators.csv"))
 }
 # main
 outputPath <- GetDownloadsPath()
