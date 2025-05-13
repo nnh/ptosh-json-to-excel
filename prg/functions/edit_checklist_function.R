@@ -267,10 +267,10 @@ MergeNumberAndAlert <- function(df_number, df_alert) {
   if (is.null(df_alert)) {
     df_alert <- CreatedummyDf(target_columns$alert)
   }
+  anti_join_right_data <- anti_join(df_alert, df_number, by = c("alias_name", "name"))
   df_alert <- df_alert %>% select(-c("jpname", "label"))
   inner_join_data <- inner_join(df_number, df_alert, by = c("alias_name", "name"))
   anti_join_left_data <- anti_join(df_number, df_alert, by = c("alias_name", "name"))
-  anti_join_right_data <- anti_join(df_alert, df_number, by = c("alias_name", "name"))
   res <- bind_rows(inner_join_data, anti_join_left_data, anti_join_right_data) %>% arrange(alias_name, name)
   return(res)
 }
