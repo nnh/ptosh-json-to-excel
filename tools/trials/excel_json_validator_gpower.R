@@ -104,3 +104,7 @@ checkChecklist$title <- sheetList |> CheckTitle()
 # assigned #
 ############
 checkChecklist$assigned <- sheetList |> CheckAssigned()
+##############
+# limitation #
+##############
+checkChecklist$limitation <- CheckLimitation(sheetList, jsonList)
