@@ -451,46 +451,6 @@ GetDisplayFromJson <- function() {
   res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label"))
   return(res)
 }
-# number
-CheckNumber <- function(sheetList) {
-  sheet <- sheetList[["number"]]
-  sheet$default_value <- sheet$default_value |> as.character()
-  json <- GetNumberFromJson()
-  json$default_value <- json$default_value |> as.character()
-  return(CheckTarget(sheet, json))
-}
-GetNumberFromJson <- function() {
-  df <- map2(fieldItems, names(fieldItems), ~ {
-    fieldItem <- .x
-    aliasName <- .y
-    res <- fieldItem |>
-      map(~ {
-        lessThan <- .$validators$numericality$validate_numericality_less_than_or_equal_to
-        greaterThan <- .$validators$numericality$validate_numericality_greater_than_or_equal_to
-        if (is.null(lessThan)) {
-          lessThan <- ""
-        }
-        if (is.null(greaterThan)) {
-          greaterThan <- ""
-        }
-        if (lessThan == "" &
-          greaterThan == "") {
-          return(NULL)
-        }
-        defaultValue <- ifelse(is.null(.$default_value), NA, .$default_value)
-        res <- list(
-          alias_name = aliasName, name = .$name, label = .$label, default_value = defaultValue,
-          validators.numericality.validate_numericality_less_than_or_equal_to = lessThan,
-          validators.numericality.validate_numericality_greater_than_or_equal_to = greaterThan
-        )
-        return(res)
-      }) |>
-      keep(~ !is.null(.))
-  }) |> keep(~ length(.) > 0)
-  df_number <- df |> map_df(~.)
-  res <- GetItemsSelectColnames(df_number, c("jpname", "alias_name", "name", "label", "default_value", "validators.numericality.validate_numericality_less_than_or_equal_to", "validators.numericality.validate_numericality_greater_than_or_equal_to"))
-  return(res)
-}
 # name
 CheckName <- function(sheetList, jsonList) {
   sheet <- sheetList[["name"]]
@@ -631,56 +591,6 @@ GetVisitFromJson <- function() {
     return(visit)
   }) |> bind_rows()
   res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "default_value"))
-  return(res)
-}
-# alert
-CheckAlert <- function(sheetList) {
-  sheet <- sheetList[["alert"]]
-  json <- GetAlertFromJson()
-  return(CheckTarget(sheet, json))
-}
-GetAlertFromJson <- function() {
-  df <- map2(fieldItems, names(fieldItems), ~ {
-    fieldItem <- .x
-    aliasName <- .y
-    res <- fieldItem |>
-      keep(~ !is.null(.$normal_range$less_than_or_equal_to) | !is.null(.$normal_range$greater_than_or_equal_to))
-    if (length(res) > 0) {
-      for (i in 1:length(res)) {
-        temp <- res[[i]]
-        remove_flag <- T
-        if (!is.null(temp$normal_range$less_than_or_equal_to)) {
-          if (temp$normal_range$less_than_or_equal_to != "") {
-            remove_flag <- F
-          }
-        }
-        if (!is.null(temp$normal_range$greater_than_or_equal_to)) {
-          if (temp$normal_range$greater_than_or_equal_to != "") {
-            remove_flag <- F
-          }
-        }
-        if (remove_flag) {
-          res[[i]] <- NULL
-        }
-      }
-    }
-    alert <- res |> map_df(~ {
-      temp_alert <- .
-      normal_range <- temp_alert$normal_range
-      less_than <- ifelse(!is.null(normal_range$less_than_or_equal_to), normal_range$less_than_or_equal_to, NA_real_)
-      greater_than <- ifelse(!is.null(normal_range$greater_than_or_equal_to), normal_range$greater_than_or_equal_to, NA_real_)
-      res <- list(
-        name = .$name,
-        label = .$label,
-        normal_range.less_than_or_equal_to = less_than,
-        normal_range.greater_than_or_equal_to = greater_than
-      )
-      return(res)
-    })
-    alert$alias_name <- aliasName
-    return(alert)
-  }) |> bind_rows()
-  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to"))
   return(res)
 }
 # title

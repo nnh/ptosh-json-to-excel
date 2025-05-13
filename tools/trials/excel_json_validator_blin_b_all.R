@@ -2,7 +2,7 @@
 #' description
 #' @file excel_json_validator_blin_b_all.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.9
+#' @date 2025.5.13
 if (exists("keep_objects")) {
   rm(list = setdiff(ls(), keep_objects))
 }
@@ -59,11 +59,6 @@ checkChecklist$action <- sheetList |> CheckAction()
 # display #
 ###########
 checkChecklist$display <- sheetList |> CheckDisplay()
-##########
-# number #
-##########
-sheetList[["number"]]$validators.numericality.validate_numericality_less_than_or_equal_to <- ifelse(is.na(sheetList[["number"]]$validators.numericality.validate_numericality_less_than_or_equal_to), "", sheetList[["number"]]$validators.numericality.validate_numericality_less_than_or_equal_to)
-checkChecklist$number <- sheetList |> CheckNumber()
 ########
 # name #
 ########
@@ -96,15 +91,6 @@ checkChecklist$master <- sheetList |> CheckMaster()
 # visit #
 #########
 checkChecklist$visit <- sheetList |> CheckVisit()
-#########
-# alert #
-#########
-alertSheet <- sheetList[["alert"]]
-alertJson <- GetAlertFromJson()
-alertSheet$normal_range.greater_than_or_equal_to <- ifelse(is.na(alertSheet$normal_range.greater_than_or_equal_to), "", alertSheet$normal_range.greater_than_or_equal_to)
-alertJson$normal_range.greater_than_or_equal_to <- ifelse(is.na(alertJson$normal_range.greater_than_or_equal_to), "", alertJson$normal_range.greater_than_or_equal_to)
-alertJson$normal_range.less_than_or_equal_to <- as.numeric(alertJson$normal_range.less_than_or_equal_to)
-checkChecklist$alert <- CheckTarget(alertSheet, alertJson)
 #########
 # title #
 #########

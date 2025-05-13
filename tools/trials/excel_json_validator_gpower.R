@@ -2,7 +2,7 @@
 #' description
 #' @file excel_json_validator_gpower.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.9
+#' @date 2025.5.13
 if (exists("keep_objects")) {
   rm(list = setdiff(ls(), keep_objects))
 }
@@ -68,15 +68,6 @@ checkChecklist$action <- sheetList |> CheckAction()
 # display #
 ###########
 checkChecklist$display <- sheetList |> CheckDisplay()
-##########
-# number #
-##########
-sheetList$number$validators.numericality.validate_numericality_less_than_or_equal_to <- ifelse(
-  is.na(sheetList$number$validators.numericality.validate_numericality_less_than_or_equal_to),
-  "",
-  sheetList$number$validators.numericality.validate_numericality_less_than_or_equal_to
-)
-checkChecklist$number <- sheetList |> CheckNumber()
 ########
 # name #
 ########
@@ -105,11 +96,6 @@ checkChecklist$master <- sheetList |> CheckMaster()
 # visit #
 #########
 checkChecklist$visit <- sheetList |> CheckVisit()
-#########
-# alert #
-#########
-sheetList$alert$normal_range.less_than_or_equal_to <- sheetList$alert$normal_range.less_than_or_equal_to |> as.integer()
-checkChecklist$alert <- sheetList |> CheckAlert()
 #########
 # title #
 #########

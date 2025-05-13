@@ -2,7 +2,7 @@
 #' description
 #' @file excel_json_validator_allb19.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.29
+#' @date 2025.5.13
 if (exists("keep_objects")) {
   rm(list=setdiff(ls(), keep_objects))
 }
@@ -131,10 +131,6 @@ checkChecklist$action <- sheetList |> CheckAction()
 # display #
 ###########
 checkChecklist$display <- sheetList |> CheckDisplay()
-##########
-# number #
-##########
-checkChecklist$number <- sheetList |> CheckNumber()
 ########
 # name #
 ########
@@ -163,10 +159,6 @@ checkChecklist$master <- sheetList |> CheckMaster()
 # visit #
 #########
 checkChecklist$visit <- sheetList |> CheckVisit()
-#########
-# alert #
-#########
-checkChecklist$alert <- sheetList |> CheckAlert()
 #########
 # title #
 #########
