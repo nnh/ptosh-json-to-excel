@@ -444,3 +444,5 @@ GetAllocationFormulaField <- function(json_files) {
     summarise(formula_field = paste(formula_field, collapse = ", "), formula_field_references = paste(formula_field_references, collapse = ", "))
   return(allocationFormulaFieldText)
 }
+# rename columns from English to Japanese
+source(here("prg", "functions", "edit_checklist_convert_column_name.R"), encoding = "UTF-8")

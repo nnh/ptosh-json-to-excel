@@ -1,0 +1,145 @@
+renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
+    stopifnot(is.data.frame(df))
+    stopifnot(is.character(nameMap), !is.null(names(nameMap)))
+
+    names(df) <- ifelse(
+        names(df) %in% names(nameMap),
+        nameMap[names(df)],
+        names(df) # 対応がない列はそのまま
+    )
+    return(df)
+}
+convertSheetColumnsToJapanese <- function(output_checklist) {
+    sheetNames <- names(output_checklist)
+    engToJpnColumnMappings <- list(
+        name = c(
+            name = "シート名",
+            alias_name = "シート名英数字別名",
+            images_count = "画像登録欄の数"
+        ),
+        item = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            name = "フィールドID",
+            label = "ラベル",
+            option.name = "オプション名",
+            default_value = "デフォルト値",
+            validators.presence.validate_presence_if = "バリデータ.必須がON.条件",
+            presence_if_references = "条件の参照先情報",
+            validators.formula.validate_formula_if = "バリデータ.論理式.論理式",
+            formula_if_references = "論理式の参照先情報",
+            validators.formula.validate_formula_message = "バリデータ.論理式.エラーメッセージ",
+            validators.date.validate_date_after_or_equal_to = "バリデータ.日付.最小値",
+            references_after = "最小値の参照先情報",
+            validators.date.validate_date_before_or_equal_to = "バリデータ.日付.最大値",
+            references_before = "最大値の参照先情報"
+        ),
+        option = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            option.name = "オプション名",
+            option.values_name = "ラベル",
+            option.values_seq = "-",
+            option.values_code = "コード",
+            option.values_is_usable = "表示"
+        ),
+        visit = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            name = "フィールドID",
+            default_value = "デフォルト値"
+        ),
+        master = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            name = "フィールドID",
+            label = "ラベル",
+            link_type = "保存先のマスタ"
+        ),
+        action = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            id = "-",
+            field_item_id = "-",
+            field_item_id.name = "開閉のトリガーになるフィールドID",
+            field_item_id.label = "開閉のトリガーになるラベル",
+            codes = "開閉のトリガーになるコード",
+            fields = "開閉するフィールドID",
+            fields.label = "開閉するラベル"
+        ),
+        allocation = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            is_zelen = "Zelenの施設内バランス化",
+            zelen_imbalance = "施設間の差",
+            is_double_blinded = "二重盲検",
+            double_blind_emails = "割付責任者メールアドレス",
+            allocation_method = "割付方法",
+            groups.code = "割付グループ.コード",
+            groups.label = "割付グループ.ラベル",
+            formula_field = "調整因子フィールド.式",
+            groups.if = "割付グループ.論理式",
+            groups.if_references = "割付グループ.論理式の参照先情報",
+            groups.message = "割付グループ.エラーメッセージ"
+        ),
+        comment = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            name = "フィールドID",
+            label = "ラベル",
+            content = "フリーコメント"
+        ),
+        explanation = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            name = "フィールドID",
+            label = "ラベル",
+            description = "説明"
+        ),
+        display = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            name = "フィールドID",
+            label = "ラベル"
+        ),
+        presence = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            name = "フィールドID",
+            label = "ラベル"
+        ),
+        title = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            name = "フィールドID",
+            label = "ラベル",
+            level = "見出し"
+        ),
+        assigned = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            name = "フィールドID",
+            label = "ラベル",
+            default_value = "デフォルト値"
+        ),
+        limitation = c(
+            jpname = "シート名",
+            alias_name = "シート名英数字別名",
+            name = "フィールドID",
+            label = "ラベル",
+            default_value = "デフォルト値",
+            validators.numericality.validate_numericality_less_than_or_equal_to = "バリデータ.数値.最小値",
+            validators.numericality.validate_numericality_greater_than_or_equal_to = "バリデータ.数値.最大値",
+            normal_range.less_than_or_equal_to = "アラート条件.未満の場合",
+            normal_range.greater_than_or_equal_to = "アラート条件.超える場合"
+        )
+    )
+    res <- list()
+    for (sheetName in sheetNames) {
+        if (sheetName %in% names(engToJpnColumnMappings)) {
+            df <- renameColumnsFromEnglishToJapanese(output_checklist[[sheetName]], engToJpnColumnMappings[[sheetName]])
+            res[[sheetName]] <- df
+        }
+    }
+    return(res)
+}
