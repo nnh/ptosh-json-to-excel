@@ -4,7 +4,9 @@
 #' @author Mariko Ohtsuka
 #' @date 2025.5.14
 CheckLimitation <- function(sheetList, jsonList) {
-    sheet <- sheetList[["limitation"]]
+    sheetName <- "limitation"
+    sheet <- sheetList[[sheetName]] |>
+        rename(!!!engToJpnColumnMappings[[sheetName]])
     outputNormalRanges <- sheet %>% select(jpname, alias_name, name, label, default_value, normal_range.less_than_or_equal_to, normal_range.greater_than_or_equal_to)
     outputValidators <- sheet %>% select(
         jpname, alias_name, name, label, default_value, validators.numericality.validate_numericality_less_than_or_equal_to,

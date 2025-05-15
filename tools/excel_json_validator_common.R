@@ -2,13 +2,15 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.12
+#' @date 2025.5.15
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
 library(openxlsx, warn.conflicts = F)
 library(jsonlite, warn.conflicts = F)
+source(here("prg", "functions", "edit_checklist_convert_column_name.R"), encoding = "UTF-8")
 # ------ constants ------
+engToJpnColumnMappings <- GetEngToJpnColumnMappings()
 # ------ functions ------
 GetHomeDir <- function() {
   os <- Sys.info()["sysname"]
@@ -226,13 +228,16 @@ GetItemFromJson <- function(sheetList, jsonList) {
     }
   }
   names(list_items) <- nameAndAliasname |> map_chr(~ .$alias_name)
-  output_items <- sheetList$item |>
+  sheetName <- "item"
+  temp <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
+  output_items <- temp |>
     rename(
-      validate_formula_message = validators.formula.validate_formula_message,
-      validate_formula_if = validators.formula.validate_formula_if,
-      validate_date_after_or_equal_to = validators.date.validate_date_after_or_equal_to,
-      validate_date_before_or_equal_to = validators.date.validate_date_before_or_equal_to,
-      validate_presence_if = validators.presence.validate_presence_if
+      validate_formula_message = "validators.formula.validate_formula_message",
+      validate_formula_if = "validators.formula.validate_formula_if",
+      validate_date_after_or_equal_to = "validators.date.validate_date_after_or_equal_to",
+      validate_date_before_or_equal_to = "validators.date.validate_date_before_or_equal_to",
+      validate_presence_if = "validators.presence.validate_presence_if"
     )
   itemCols <- output_items |> colnames()
   df_items <- list_items |> flatten_df()
@@ -250,7 +255,9 @@ GetItemFromJson <- function(sheetList, jsonList) {
 }
 # allocation
 CheckAllocation <- function(sheetList, jsonList) {
-  sheet <- sheetList[["allocation"]]
+  sheetName <- "allocation"
+  sheet <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- GetAllocationFromJson(jsonList)
   sheet$groups.if_references <- ifelse(is.na(sheet$groups.if_references), "", sheet$groups.if_references)
   sheet$formula_field_references <- sheet$formula_field_references |> str_remove_all(" ")
@@ -377,7 +384,9 @@ GetAllocationFromJson <- function(jsonList) {
 }
 # action
 CheckAction <- function(sheetList) {
-  sheet <- sheetList[["action"]]
+  sheetName <- "action"
+  sheet <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- GetActionFromJson()
   return(CheckTarget(sheet, json))
 }
@@ -422,7 +431,9 @@ GetActionFromJson <- function() {
 }
 # display
 CheckDisplay <- function(sheetList) {
-  sheet <- sheetList[["display"]]
+  sheetName <- "display"
+  sheet <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- GetDisplayFromJson()
   return(CheckTarget(sheet, json))
 }
@@ -453,7 +464,9 @@ GetDisplayFromJson <- function() {
 }
 # name
 CheckName <- function(sheetList, jsonList) {
-  sheet <- sheetList[["name"]]
+  sheetName <- "name"
+  sheet <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- jsonList |>
     map_df(~ list(name = .$name, alias_name = .$alias_name, images_count = .$images_count)) |>
     as.data.frame()
@@ -462,7 +475,9 @@ CheckName <- function(sheetList, jsonList) {
 }
 # options
 CheckOption <- function(sheetList) {
-  sheet <- sheetList[["option"]]
+  sheetName <- "option"
+  sheet <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- GetOptionFromJson()
   return(CheckTarget(sheet, json))
 }
@@ -498,7 +513,9 @@ GetOptionFromJson <- function() {
 }
 # content
 CheckContent <- function(sheetList) {
-  sheet <- sheetList[["comment"]]
+  sheetName <- "comment"
+  sheet <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- GetContentFromJson()
   return(CheckTarget(sheet, json))
 }
@@ -519,7 +536,9 @@ GetContentFromJson <- function() {
 }
 # explanation
 CheckExplanation <- function(sheetList) {
-  sheet <- sheetList[["explanation"]]
+  sheetName <- "explanation"
+  sheet <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- GetExplanationFromJson()
   return(CheckTarget(sheet, json))
 }
@@ -539,7 +558,9 @@ GetExplanationFromJson <- function() {
 }
 # presence
 CheckPresence <- function(sheetList) {
-  sheet <- sheetList[["presence"]]
+  sheetName <- "presence"
+  sheet <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- GetPresenceFromJson()
   return(CheckTarget(sheet, json))
 }
@@ -557,7 +578,9 @@ GetPresenceFromJson <- function() {
 }
 # master
 CheckMaster <- function(sheetList) {
-  sheet <- sheetList[["master"]]
+  sheetName <- "master"
+  sheet <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- GetMasterFromJson()
   return(CheckTarget(sheet, json))
 }
@@ -577,7 +600,9 @@ GetMasterFromJson <- function() {
 }
 # visit
 CheckVisit <- function(sheetList) {
-  sheet <- sheetList[["visit"]]
+  sheetName <- "visit"
+  sheet <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- GetVisitFromJson()
   return(CheckTarget(sheet, json))
 }
@@ -595,7 +620,9 @@ GetVisitFromJson <- function() {
 }
 # title
 CheckTitle <- function(sheetList) {
-  sheet <- sheetList[["title"]]
+  sheetName <- "title"
+  sheet <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- GetTitleFromJson()
   return(CheckTarget(sheet, json))
 }
@@ -614,7 +641,9 @@ GetTitleFromJson <- function() {
 }
 # assigned
 CheckAssigned <- function(sheetList) {
-  sheet <- sheetList[["assigned"]]
+  sheetName <- "assigned"
+  sheet <- sheetList[[sheetName]] |>
+    rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- GetAssignedFromJson()
   return(CheckTarget(sheet, json))
 }

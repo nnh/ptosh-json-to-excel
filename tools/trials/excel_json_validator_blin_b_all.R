@@ -2,7 +2,7 @@
 #' description
 #' @file excel_json_validator_blin_b_all.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.13
+#' @date 2025.5.15
 if (exists("keep_objects")) {
   rm(list = setdiff(ls(), keep_objects))
 }
@@ -42,7 +42,9 @@ checkChecklist$item <- CheckTarget(df_item_sheet, df_item_json)
 ##############
 # allocation #
 ##############
-allocation_sheet <- sheetList[["allocation"]]
+sheetName <- "allocation"
+allocation_sheet <- sheetList[[sheetName]] |>
+  rename(!!!engToJpnColumnMappings[[sheetName]])
 allocation_json <- GetAllocationFromJson(jsonList)
 allocation_sheet$groups.if_references <- ifelse(is.na(allocation_sheet$groups.if_references), "", allocation_sheet$groups.if_references)
 allocation_sheet$formula_field_references <- allocation_sheet$formula_field_references |> str_remove_all(" ")
@@ -52,8 +54,8 @@ checkChecklist$allocation <- CheckTarget(allocation_sheet, allocation_json)
 ##########
 # action #
 ##########
-sheetList$action$id <- sheetList$action$id |> as.integer()
-sheetList$action$field_item_id <- sheetList$action$field_item_id |> as.integer()
+sheetList$action$`-` <- sheetList$action$`-` |> as.integer()
+sheetList$action$`--` <- sheetList$action$`--` |> as.integer()
 checkChecklist$action <- sheetList |> CheckAction()
 ###########
 # display #
@@ -70,7 +72,9 @@ checkChecklist$option <- sheetList |> CheckOption()
 ###########
 # comment #
 ###########
-commentSheet <- sheetList[["comment"]]
+sheetName <- "comment"
+commentSheet <- sheetList[[sheetName]] |>
+  rename(!!!engToJpnColumnMappings[[sheetName]])
 commentJson <- GetContentFromJson()
 commentJson[12, "content"] <- commentJson[12, "content"] %>% CleanTextForComment()
 commentSheet[12, "content"] <- commentSheet[12, "content"] %>% CleanTextForComment()

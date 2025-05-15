@@ -9,8 +9,7 @@ renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     )
     return(df)
 }
-convertSheetColumnsToJapanese <- function(output_checklist) {
-    sheetNames <- names(output_checklist)
+GetEngToJpnColumnMappings <- function() {
     engToJpnColumnMappings <- list(
         name = c(
             name = "シート名",
@@ -60,7 +59,7 @@ convertSheetColumnsToJapanese <- function(output_checklist) {
             jpname = "シート名",
             alias_name = "シート名英数字別名",
             id = "-",
-            field_item_id = "-",
+            field_item_id = "--",
             field_item_id.name = "開閉のトリガーになるフィールドID",
             field_item_id.label = "開閉のトリガーになるラベル",
             codes = "開閉のトリガーになるコード",
@@ -134,6 +133,11 @@ convertSheetColumnsToJapanese <- function(output_checklist) {
             normal_range.greater_than_or_equal_to = "アラート条件.超える場合"
         )
     )
+    return(engToJpnColumnMappings)
+}
+convertSheetColumnsToJapanese <- function(output_checklist) {
+    sheetNames <- names(output_checklist)
+    engToJpnColumnMappings <- GetEngToJpnColumnMappings()
     res <- list()
     for (sheetName in sheetNames) {
         if (sheetName %in% names(engToJpnColumnMappings)) {
