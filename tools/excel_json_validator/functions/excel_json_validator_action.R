@@ -7,7 +7,11 @@ CheckAction <- function(sheetList) {
     sheetName <- "action"
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
+    sheet$id <- sheet$id |> as.integer()
+    sheet$field_item_id <- sheet$field_item_id |> as.integer()
     json <- GetActionFromJson()
+    json$id <- json$id |> as.integer()
+    json$field_item_id <- json$field_item_id |> as.integer()
     return(CheckTarget(sheet, json))
 }
 GetActionFromJson <- function() {

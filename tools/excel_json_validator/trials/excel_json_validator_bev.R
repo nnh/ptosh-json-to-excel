@@ -43,10 +43,7 @@ checkChecklist$allocation <- sheetList |> CheckAllocation(jsonList)
 ##########
 # action #
 ##########
-temp_action <- sheetList
-temp_action$action$`-` <- temp_action$action$`-` |> as.integer()
-temp_action$action$`--` <- temp_action$action$`--` |> as.integer()
-checkChecklist$action <- temp_action |> CheckAction()
+checkChecklist$action <- sheetList |> CheckAction()
 ###########
 # display #
 ###########

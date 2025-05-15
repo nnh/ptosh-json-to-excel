@@ -54,8 +54,6 @@ checkChecklist$allocation <- CheckTarget(allocation_sheet, allocation_json)
 ##########
 # action #
 ##########
-sheetList$action$`-` <- sheetList$action$`-` |> as.integer()
-sheetList$action$`--` <- sheetList$action$`--` |> as.integer()
 checkChecklist$action <- sheetList |> CheckAction()
 ###########
 # display #
