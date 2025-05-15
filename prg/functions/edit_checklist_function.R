@@ -274,18 +274,31 @@ MergeNumberAndAlert <- function(df_number, df_alert) {
   res <- bind_rows(inner_join_data, anti_join_left_data, anti_join_right_data) %>% arrange(alias_name, name)
   return(res)
 }
+FilterPresenceRecords <- function(df_presence) {
+  excluded_values <- input_list$df_cdisc_sheet_config_pivot %>%
+    filter(
+      (prefix == "IE" & table.field.value == "ORRES") |
+        (table.field.value == "STAT")
+    )
+  df_filtered <- anti_join(df_presence, excluded_values, by = c("alias_name", "name" = "table.field"))
+  return(df_filtered)
+}
 EditOutputDataList <- function(input_list) {
   target_names <- names(kInputList)
   res <- target_names %>%
     map(~ EditOutputData(.)) %>%
     discard(is.null) %>%
     list_flatten()
+
   # Combine number and alert to create limitation
   df_number <- res$number
   df_alert <- res$alert
   df_limitation <- MergeNumberAndAlert(df_number, df_alert)
   res$number <- NULL
   res$alert <- NULL
+  # Filter presence records
+  df_presence <- res$presence
+  res$presence <- FilterPresenceRecords(df_presence)
 
   output_list <- list()
   df_sheet_items <- input_list[[kInputList$sheet_items]] %>% rename(!!kFieldItemsKeys$sheet_id := id)
