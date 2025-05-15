@@ -30,14 +30,17 @@ GetOutputFiles <- function(outputPath) {
 CheckPresence <- function(inputFile, outputFile) {
     error_flag <- FALSE
     if (nrow(inputFile) == 0) {
-        print("No items to check")
         if (nrow(outputFile) != 0) {
-            error_flag <- TRUE
-            print("Output file is not empty")
-            return(error_flag)
+            if (outputFile$シート名 != "" | outputFile$シート名英数字別名 != "" | outputFile$フィールドID != "" | outputFile$ラベル != "") {
+                error_flag <- TRUE
+                print("Output file is not empty")
+                return(error_flag)
+            } else {
+                print("No items to check")
+                return(error_flag)
+            }
         }
-    }
-    if (nrow(inputFile) != nrow(outputFile)) {
+    } else if (nrow(inputFile) != nrow(outputFile)) {
         error_flag <- TRUE
         print("Number of rows in input and output files do not match")
         return(error_flag)
