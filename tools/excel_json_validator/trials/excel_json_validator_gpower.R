@@ -9,7 +9,7 @@ if (exists("keep_objects")) {
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
-source(here("tools", "excel_json_validator_common.R"), encoding = "UTF-8")
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
 # ------ constants ------
 # ------ functions ------
 # ------ main ------

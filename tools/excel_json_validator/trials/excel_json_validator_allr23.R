@@ -1,15 +1,15 @@
 #' title
 #' description
-#' @file excel_json_validator_tran.R
+#' @file excel_json_validator_ALL-R23.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
+#' @date 2025.5.13
 if (exists("keep_objects")) {
   rm(list = setdiff(ls(), keep_objects))
 }
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
-source(here("tools", "excel_json_validator_common.R"), encoding = "UTF-8")
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
 # ------ constants ------
 # ------ functions ------
 # ------ main ------
@@ -20,7 +20,19 @@ checkChecklist <- list()
 # item sheet #
 ##############
 jsonSheetItemList <- GetItemFromJson(sheetList, jsonList)
-df_item_json <- jsonSheetItemList$json |>
+df_item <- jsonSheetItemList$json
+df_item$presence_if_references <- ifelse(df_item$validate_presence_if |> str_detect("ref\\('registration', 3\\)"),
+  "(registration,field3,性別)",
+  df_item$presence_if_references
+)
+df_item$formula_if_references <- ifelse(df_item$validate_formula_if |> str_detect("ref\\('registration', 3\\)"),
+  "(registration,field3,性別)",
+  df_item$formula_if_references
+)
+df_item[177, 8] <- ifelse(df_item[177, 8] == "(registration,field3,性別)", "(radiotherapy_500,field46,本研究登録後から再発/観察終了までに放射線療法を実施しましたか)(registration,field3,性別)", NA)
+df_item[176, 10] <- ifelse(df_item[176, 10] == "(registration,field3,性別)", "(radiotherapy_500,field46,本研究登録後から再発/観察終了までに放射線療法を実施しましたか)(registration,field3,性別)", NA)
+df_item[177, 10] <- ifelse(df_item[177, 10] == "(registration,field3,性別)", "(radiotherapy_500,field46,本研究登録後から再発/観察終了までに放射線療法を実施しましたか)(registration,field3,性別)", NA)
+df_item_json <- df_item |>
   as.data.frame() %>%
   mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
 df_item_sheet <- jsonSheetItemList$sheet |>
@@ -34,14 +46,7 @@ checkChecklist$allocation <- sheetList |> CheckAllocation(jsonList)
 ##########
 # action #
 ##########
-sheetList$action$`-` <- sheetList$action$`-` |> as.integer()
-sheetList$action$`--` <- sheetList$action$`--` |> as.integer()
-sheetName <- "action"
-sheet <- sheetList[[sheetName]] |>
-  rename(!!!engToJpnColumnMappings[[sheetName]])
-sheetAction <- sheet |> arrange(id, field_item_id, codes)
-jsonAction <- GetActionFromJson() |> arrange(id, field_item_id, codes)
-checkChecklist$action <- CheckTarget(sheetAction, jsonAction)
+checkChecklist$action <- sheetList |> CheckAction()
 ###########
 # display #
 ###########

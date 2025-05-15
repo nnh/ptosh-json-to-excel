@@ -666,5 +666,5 @@ CleanTextForComment <- function(text) {
     gsub("\u3000", "", .) # 全角スペース削除
 }
 # limitation
-source(here("tools", "excel_json_validator_limitation.R"), encoding = "UTF-8")
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_limitation.R"), encoding = "UTF-8")
 # ------ main ------
