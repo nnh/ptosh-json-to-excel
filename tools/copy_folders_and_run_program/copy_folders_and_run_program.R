@@ -2,7 +2,7 @@
 #' テスト用インプットファイルでのプログラム実行
 #' @file copy_folders_and_run_program.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.9
+#' @date 2025.5.15
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -24,7 +24,7 @@ targetPath |> write.table(here("temp", "targetPath"), sep = ",", col.names = F, 
 # ****************************************
 # テストファイルが増えたらここからコピー
 # ****************************************
-source(here("tools", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
+source(here("tools", "copy_folders_and_run_program", "functions", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
 targetRow <- 1 # <- ここの番号を変える
 copyFoldersAndRunProgramMain(targetRow)
 # ****************************************
@@ -33,31 +33,31 @@ copyFoldersAndRunProgramMain(targetRow)
 # ****************************************
 # ファイル2
 # ****************************************
-source(here("tools", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
+source(here("tools", "copy_folders_and_run_program", "functions", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
 targetRow <- 2 # <- ここの番号を変える
 copyFoldersAndRunProgramMain(targetRow)
 # ****************************************
 # ファイル3
 # ****************************************
-source(here("tools", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
+source(here("tools", "copy_folders_and_run_program", "functions", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
 targetRow <- 3 # <- ここの番号を変える
 copyFoldersAndRunProgramMain(targetRow)
 # ****************************************
 # ファイル4
 # ****************************************
-source(here("tools", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
+source(here("tools", "copy_folders_and_run_program", "functions", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
 targetRow <- 4 # <- ここの番号を変える
 copyFoldersAndRunProgramMain(targetRow)
 # ****************************************
 # ファイル5
 # ****************************************
-source(here("tools", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
+source(here("tools", "copy_folders_and_run_program", "functions", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
 targetRow <- 5 # <- ここの番号を変える
 copyFoldersAndRunProgramMain(targetRow)
 # ****************************************
 # ファイル6
 # ****************************************
-source(here("tools", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
+source(here("tools", "copy_folders_and_run_program", "functions", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
 targetRow <- 6 # <- ここの番号を変える
 copyFoldersAndRunProgramMain(targetRow)
 
