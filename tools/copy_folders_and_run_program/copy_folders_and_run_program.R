@@ -57,9 +57,9 @@ copyFoldersAndRunProgramMain(targetRow)
 # ****************************************
 # ファイル6
 # ****************************************
-source(here("tools", "copy_folders_and_run_program", "functions", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
-targetRow <- 6 # <- ここの番号を変える
-copyFoldersAndRunProgramMain(targetRow)
+#source(here("tools", "copy_folders_and_run_program", "functions", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
+#targetRow <- 6 # <- ここの番号を変える
+#copyFoldersAndRunProgramMain(targetRow)
 # ****************************************
 # ファイル7
 # ****************************************

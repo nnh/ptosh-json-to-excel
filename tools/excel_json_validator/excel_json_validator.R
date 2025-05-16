@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
+#' @date 2025.5.16
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -10,7 +10,7 @@ library(here, warn.conflicts = F)
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
 # ------ constants ------
 keep_objects <- c("keep_objects", "jsonList", "sheetList", "trialName", "kTrialNames")
-kTrialNames <- c("gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
+kTrialNames <- c("TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
 # ------ functions ------
 # ------ main ------
 for (i in 1:length(kTrialNames)) {

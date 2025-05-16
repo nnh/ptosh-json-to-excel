@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_limitation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.14
+#' @date 2025.5.16
 CheckLimitation <- function(sheetList, jsonList) {
     sheetName <- "limitation"
     sheet <- sheetList[[sheetName]] |>
@@ -98,9 +98,21 @@ CheckNormalRanges <- function(inputNormalRanges, outputNormalRanges) {
                 }
             }
         }
-        if (inputRow$less_than != outputRow$normal_range.less_than_or_equal_to) {
-            error_f <- TRUE
-            print(paste("!error! : Less than or equal to values do not match at row", row))
+        if (is.na(outputRow$normal_range.less_than_or_equal_to)) {
+            if (!is.na(inputRow$less_than)) {
+                error_f <- TRUE
+                print(paste("!error! : Less than values do not match at row", row))
+            }
+        } else if (outputRow$normal_range.less_than_or_equal_to == "") {
+            if (!is.na(inputRow$less_than) && inputRow$less_than != "") {
+                error_f <- TRUE
+                print(paste("!error! : Less than values do not match at row", row))
+            }
+        } else {
+            if (inputRow$less_than != outputRow$normal_range.less_than_or_equal_to) {
+                error_f <- TRUE
+                print(paste("!error! : Less than or equal to values do not match at row", row))
+            }
         }
         if (is.na(outputRow$normal_range.greater_than_or_equal_to)) {
             if (!is.na(inputRow$greater_than)) {

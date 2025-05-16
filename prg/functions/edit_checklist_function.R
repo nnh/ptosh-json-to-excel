@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.12
+#' @date 2025.5.16
 # ------ constants ------
 kReferenceSearchColname <- "input_text"
 kReferenceJoinColname <- "input_text_2"
@@ -140,10 +140,14 @@ ReplaceReferenceText <- function(df_target, input_colname, output_colname) {
   res <- df_target %>% left_join(output_target, by = c(kSheetItemsKeys$alias_name, input_colname))
   return(res)
 }
+CreateEmptyAllocation <- function() {
+  empty_df <- data.frame(matrix(ncol = length(target_columns$allocation), nrow = 0))
+  colnames(empty_df) <- target_columns$allocation
+  return(empty_df)
+}
 EditAllocation <- function(allocation) {
   if (nrow(allocation) == 0) {
-    empty_df <- data.frame(matrix(ncol = length(target_columns$allocation), nrow = 0))
-    colnames(empty_df) <- target_columns$allocation
+    empty_df <- CreateEmptyAllocation()
     return(empty_df)
   }
   res <- allocation %>% ReplaceReferenceText("groups.if", "groups.if_references")
@@ -410,6 +414,9 @@ GetAllocationFormulaField <- function(json_files) {
     }) |>
     discard(~ is.null(.)) |>
     bind_rows()
+  if (nrow(allocationFormulaField) == 0) {
+    allocationFormulaField <- data.frame(sheet_id = numeric(0), formula_field = character(0), formula_field_references = character(0))
+  }
   formulaFieldList <- allocationFormulaField$formula_field %>% map(~ {
     inputText <- .
     target <- inputText %>% str_extract_all(kConditionStr)
