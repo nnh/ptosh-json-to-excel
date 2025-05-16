@@ -1,3 +1,9 @@
+#' edit_checklist_convert_column_name
+#' Convert column names from English to Japanese
+#'
+#' @file edit_checklist_convert_column_name.R
+#' @author Mariko Ohtsuka
+#' @date 2025.5.16
 renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     stopifnot(is.data.frame(df))
     stopifnot(is.character(nameMap), !is.null(names(nameMap)))
@@ -77,6 +83,7 @@ GetEngToJpnColumnMappings <- function() {
             groups.code = "割付グループ.コード",
             groups.label = "割付グループ.ラベル",
             formula_field = "調整因子フィールド.式",
+            formula_field_reference = "調整因子フィールド.式の参照先情報",
             groups.if = "割付グループ.論理式",
             groups.if_references = "割付グループ.論理式の参照先情報",
             groups.message = "割付グループ.エラーメッセージ"
