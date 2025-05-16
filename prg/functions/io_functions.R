@@ -25,26 +25,3 @@ ReadJsonFiles <- function(json_filenames, targetTrialFolder) {
   names(json_files) <- json_filenames %>% str_remove(., ".json")
   return(json_files)
 }
-
-WriteExcel <- function(output_list, filename, output_path) {
-  future({
-    wb <- createWorkbook()
-    for (i in 1:length(output_list)) {
-      df_output <- output_list[[i]]
-      sheet_name <- names(output_list)[i]
-      addWorksheet(wb = wb, sheet = sheet_name)
-      writeDataTable(
-        wb = wb, sheet = sheet_name, x = df_output,
-        startRow = 1, startCol = 1, colNames = T, rowNames = F, withFilter = T,
-        tableStyle = kTableStyle, keepNA = F
-      )
-      setColWidths(wb = wb, sheet = sheet_name, cols = 1:ncol(df_output), widths = "auto")
-      fontStyle <- setFontStyle()
-      addStyle(wb = wb, sheet = sheet_name, style = fontStyle, rows = 1:(nrow(df_output) + 1), cols = 1:ncol(df_output), gridExpand = TRUE)
-      # Reset the width of the ID column.
-      id_index <- which(colnames(df_output) == "id")
-      removeColWidths(wb = wb, sheet = sheet_name, cols = id_index)
-    }
-    saveWorkbook(wb = wb, file = str_c(output_path, "/", filename, ".xlsx"), overwrite = T)
-  })
-}
