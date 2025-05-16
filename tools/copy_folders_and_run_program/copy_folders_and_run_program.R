@@ -2,7 +2,7 @@
 #' テスト用インプットファイルでのプログラム実行
 #' @file copy_folders_and_run_program.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
+#' @date 2025.5.16
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -11,10 +11,10 @@ library(here, warn.conflicts = F)
 # ------ functions ------
 # ------ main ------
 targetPath <- here() |>
-  list.dirs() |>
+  list.dirs(recursive = FALSE, full.names = TRUE) |>
   str_extract("^.*/forTest_input_.+$") |>
   na.omit()
-if (length(targetPath) != 6) {
+if (length(targetPath) != 7) {
   stop("テストファイルが増えてるので↓のソースを修正")
 }
 targetPath |> write.table(here("temp", "targetPath"), sep = ",", col.names = F, row.names = F)
@@ -59,6 +59,12 @@ copyFoldersAndRunProgramMain(targetRow)
 # ****************************************
 source(here("tools", "copy_folders_and_run_program", "functions", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
 targetRow <- 6 # <- ここの番号を変える
+copyFoldersAndRunProgramMain(targetRow)
+# ****************************************
+# ファイル7
+# ****************************************
+source(here("tools", "copy_folders_and_run_program", "functions", "copy_folders_and_run_functions.R"), encoding = "UTF-8")
+targetRow <- 7 # <- ここの番号を変える
 copyFoldersAndRunProgramMain(targetRow)
 
 
