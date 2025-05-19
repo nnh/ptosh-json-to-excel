@@ -54,6 +54,7 @@ kInputFolderName <- "input"
 kOutputFolderName <- "output"
 kOutputPath <- here(kOutputFolderName)
 kAlertTargetColnames <- c("normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to")
+kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
 kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
 # ------ main ------
