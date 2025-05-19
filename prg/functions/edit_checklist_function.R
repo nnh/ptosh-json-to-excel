@@ -256,11 +256,7 @@ FilterDataByCondition <- function(df_input, condition_str) {
   result <- df_filter %>% EditOutputColumns(target_col)
   return(result)
 }
-CreatedummyDf <- function(target_columns) {
-  df <- data.frame(matrix(ncol = length(target_columns), nrow = 0))
-  colnames(df) <- target_columns
-  return(df)
-}
+
 MergeNumberAndAlert <- function(df_number, df_alert) {
   if (is.null(df_number) && is.null(df_alert)) {
     return(NULL)

@@ -2,7 +2,7 @@
 #'
 #' @file io_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2024.1.15
+#' @date 2025.5.19
 # ------ constants ------
 kTableStyle <- "TableStyleMedium2"
 # ------ functions ------
@@ -19,8 +19,9 @@ kTableStyle <- "TableStyleMedium2"
 ReadJsonFiles <- function(json_filenames, targetTrialFolder) {
   json_files <- json_filenames %>% map(~ {
     rawJson <- file.path(targetTrialFolder, .) %>% read_json()
-    flattenJson <- file.path(targetTrialFolder, .) %>% fromJSON(flatten = T)
-    return(list(rawJson = rawJson, flattenJson = flattenJson))
+    # flattenJson <- file.path(targetTrialFolder, .) %>% fromJSON(flatten = T)
+    # return(list(rawJson = rawJson, flattenJson = flattenJson))
+    return(list(rawJson = rawJson))
   })
   names(json_files) <- json_filenames %>% str_remove(., ".json")
   return(json_files)
