@@ -1,10 +1,10 @@
-GetAction <- function(json_file) {
-    target <- json_file$field_items %>%
+GetAction <- function(field_items) {
+    target <- field_items %>%
         keep(~ !is.null(.x$flip_flops) && length(.x$flip_flops) > 0)
     if (length(target) == 0) {
         return(NULL)
     }
-    field_items_name_label <- json_file$field_items %>%
+    field_items_name_label <- field_items %>%
         map_df(~ tibble(name = .x$name, fields.label = .x$label))
     action <- target %>% map_df(~ {
         field_items <- .x
@@ -27,8 +27,5 @@ GetAction <- function(json_file) {
     })
     res <- action %>%
         left_join(field_items_name_label, by = c("fields" = "name"))
-    res$jpname <- json_file$name
-    res$alias_name <- json_file$alias_name
-    res <- res %>% select(kEngColumnNames$action)
     return(res)
 }

@@ -1,5 +1,5 @@
-GetDisplay <- function(json_file) {
-    target <- json_file$field_items %>%
+GetDisplay <- function(field_items) {
+    target <- field_items %>%
         keep(~ {
             if (is.null(.x$type)) {
                 return(FALSE)
@@ -14,7 +14,5 @@ GetDisplay <- function(json_file) {
     if (length(target) == 0) {
         return(NULL)
     }
-    res$jpname <- json_file$name
-    res$alias_name <- json_file$alias_name
-    res <- res %>% select(kEngColumnNames$display)
+    return(target)
 }

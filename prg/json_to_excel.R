@@ -37,10 +37,16 @@ source(here("prg", "functions", "edit_functions.R"), encoding = "UTF-8")
 source(here("prg", "functions", "io_functions.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_item.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_allocation.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_action.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_display.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_option.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_comment.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_presence.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_visit.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_title.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_assigned.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_limitation.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_checklist_convert_column_name.R"), encoding = "UTF-8")
 
 # ------ constants ------
@@ -55,63 +61,95 @@ temp <- ExecReadJsonFiles()
 trialName <- temp$trialName
 json_files <- temp$json_files
 rm(temp)
-GetAllocation <- function(json_file) {
-  allocation <- json_file$allocation
-  allocation <- allocation %>% map(~ {
-    if (is.null(.x)) {
-      return(NA)
-    } else {
-      return(.x)
-    }
-  })
-  return(allocation)
-}
-GetExplanation <- function(json_file) {
-  target <- json_file$field_items %>%
-    map(~ {
-      if (is.null(.x$description) || .x$description == "") {
-        return(NULL)
-      }
-      return(tibble::tibble(
-        name = .x$name %||% NA,
-        label = .x$label %||% NA,
-        description = .x$description
-          %||% NA
-      ))
-    }) %>%
-    bind_rows()
-  if (nrow(target) == 0) {
-    return(NULL)
-  }
-  target$jpname <- json_file$name
-  target$alias_name <- json_file$alias_name
-  res <- target %>%
-    select(kEngColumnNames$explanation) %>%
-    mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
-  return(res)
-}
-
 CreatedummyDf <- function(target_columns) {
   df <- data.frame(matrix(ncol = length(target_columns), nrow = 0))
   colnames(df) <- target_columns
   return(df)
 }
-
-
-test <- json_files %>% map(~ {
-  json_file <- .$rawJson
-  item <- json_file %>% GetItem()
-  allocation <- json_file %>% GetAllocation()
-  action <- json_file %>% GetAction()
-  display <- json_file %>% GetDisplay()
-  options <- json_file %>% GetOptions()
-  comment <- json_file %>% GetComment()
-  explanation <- json_file %>% GetExplanation()
-})
-for (i in seq_along(json_files)) {
-  json_file <- json_files[[i]]$rawJson
-  item_list <- json_file %>% GetItem()
+JoinJpnameAndAliasName <- function(df, json_file) {
+  df$jpname <- json_file$name
+  df$alias_name <- json_file$alias_name
+  return(df)
 }
+SelectColumns <- function(df, target_columns) {
+  df <- df %>%
+    select(all_of(target_columns))
+  return(df)
+}
+JoinJpnameAndAliasNameAndSelectColumns <- function(df_name, json_file) {
+  df <- get(df_name, envir = parent.frame())
+  if (is.null(df) || nrow(df) == 0) {
+    # res <- CreatedummyDf(kEngColumnNames[[df_name]])
+    # return(res)
+    return(NULL)
+  }
+  df <- JoinJpnameAndAliasName(df, json_file)
+  df <- SelectColumns(df, kEngColumnNames[[df_name]])
+  return(df)
+}
+GetJsonFile <- function(json_file) {
+  json_file <- json_file$rawJson
+  return(json_file)
+}
+GetFieldItems <- function(json_file) {
+  return(json_file$field_items)
+}
+
+kTargetSheetNames <- c("allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation")
+field_list <- json_files %>%
+  map(~ {
+    json_file <- GetJsonFile(.)
+    field_items <- json_file %>% GetFieldItems()
+    fields <- field_items %>%
+      map(~ {
+        res <- tibble::tibble(
+          name = .x$name,
+          field_number = .x$name %>% str_extract("\\d+"),
+          label = .x$label
+        )
+        return(res)
+      }) %>%
+      bind_rows()
+    fields$jpname <- json_file$name
+    fields$alias_name <- json_file$alias_name
+    return(fields)
+  }) %>%
+  bind_rows()
+sheet_data_list <- json_files %>% map(~ {
+  json_file <- GetJsonFile(.)
+  field_items <- json_file %>% GetFieldItems()
+  item <- field_items %>%
+    GetTargetByType("FieldItem::Article") %>%
+    EditItem()
+  allocation <- json_file %>% GetAllocation()
+  action <- field_items %>% GetAction()
+  display <- field_items %>% GetDisplay()
+  option <- field_items %>% GetOptions()
+  comment <- field_items %>% GetComment("content")
+  explanation <- field_items %>% GetComment("description")
+  presence <- field_items %>% GetPresence()
+  master <- field_items %>% GetComment("link_type")
+  visit <- field_items %>% GetVisit()
+  title <- field_items %>%
+    GetTargetByType("FieldItem::Heading") %>%
+    EditTitle()
+  assigned <- field_items %>%
+    GetTargetByType("FieldItem::Assigned") %>%
+    EditAssigned()
+  name <- tibble(name = json_file$name, alias_name = json_file$alias_name, images_count = json_file$images_count)
+  limitation <- field_items %>%
+    GetLimitation() %>%
+    EditLimitation()
+  res <- kTargetSheetNames %>% map(~ JoinJpnameAndAliasNameAndSelectColumns(.x, json_file))
+  names(res) <- kTargetSheetNames
+  return(res)
+})
+
+sheet_data_combine <- kTargetSheetNames %>%
+  map(~ map(sheet_data_list, pluck, .x) %>%
+    compact() %>%
+    bind_rows()) %>%
+  set_names(kTargetSheetNames)
 
 
 # input_list <- EditInputDataList(json_files)

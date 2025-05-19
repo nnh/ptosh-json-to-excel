@@ -1,26 +1,35 @@
-GetItem <- function(json_file) {
-    keep_elements <- c(
-        "name",
-        "label",
-        "option",
-        "default_value",
-        "validators"
-    )
-    target_field_items <- json_file$field_items %>%
-        keep(~ !is.null(.x$type) && .x$type == "FieldItem::Article") %>%
-        map(function(x) {
-            item <- set_names(map(keep_elements, ~ x[[.x]]), keep_elements)
-            item$option.name <- x$option$name
-            item$validators.presence.validate_presence_if <- x$validators$presence$validate_presence_if
-            item$validators.formula.validate_formula_if <- x$validators$formula$.validate_formula_if
-            item$date.validate_date_after_or_equal_to <- x$validators$date$.validate_date_after_or_equal_to
-            item$date.validate_date_before_or_equal_to <- x$validators$date$.validate_date_before_or_equal_to
-            item$option <- NULL
-            item$validators <- NULL
-            return(item)
+GetTargetByType <- function(field_items, type) {
+    target <- field_items %>%
+        keep(~ {
+            if (is.null(.x$type)) {
+                return(FALSE)
+            } else if (.x$type == type) {
+                return(TRUE)
+            } else {
+                return(FALSE)
+            }
         })
-    res_field_items <- bind_rows(target_field_items)
-    res$jpname <- json_file$name
-    res$alias_name <- json_file$alias_name
-    return(res_field_items)
+    if (length(target) == 0) {
+        return(NULL)
+    }
+    return(target)
+}
+EditItem <- function(field_items) {
+    target <- field_items %>% map_df(~ {
+        res <- tibble::tibble(
+            name = .x$name,
+            label = .x$label,
+            option.name = .x$option$name,
+            default_value = .x$default_value,
+            validators.presence.validate_presence_if = .x$validators$presence$validate_presence_if,
+            validators.formula.validate_formula_if = .x$validators$formula$validate_formula_if,
+            #            formula_if_references = .x$formula_if_references,
+            validators.formula.validate_formula_message = .x$validators$formula$validate_formula_message,
+            validators.date.validate_date_after_or_equal_to = .x$validators$date$validate_date_after_or_equal_to,
+            #            references_after = .x$references_after,
+            validators.date.validate_date_before_or_equal_to = .x$validators$date$validate_date_before_or_equal_to,
+            #            references_before = .x$references_before
+        )
+        return(res)
+    })
 }

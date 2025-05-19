@@ -1,23 +1,18 @@
-GetComment <- function(json_file) {
-    target <- json_file$field_items %>%
+GetComment <- function(field_items, condition_column) {
+    target <- field_items %>%
         map(~ {
-            if (is.null(.x$content) || .x$content == "") {
+            if (is.null(.x[[condition_column]]) || .x[[condition_column]] == "") {
                 return(NULL)
             }
             return(tibble::tibble(
                 name = .x$name %||% NA,
                 label = .x$label %||% NA,
-                content = .x$content %||% NA
+                !!condition_column := .x[[condition_column]] %||% NA
             ))
         }) %>%
         bind_rows()
     if (nrow(target) == 0) {
         return(NULL)
     }
-    target$jpname <- json_file$name
-    target$alias_name <- json_file$alias_name
-    res <- target %>%
-        select(kEngColumnNames$comment) %>%
-        mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
-    return(res)
+    return(target)
 }
