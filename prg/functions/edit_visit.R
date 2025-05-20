@@ -12,5 +12,13 @@ GetVisit <- function(field_items) {
     if (length(target) == 0) {
         return(NULL)
     }
-    return(target)
+    res <- target %>%
+        map_df(~ {
+            res <- tibble::tibble(
+                name = .x$name,
+                default_value = .x$default_value %||% NA,
+            )
+            return(res)
+        })
+    return(res)
 }
