@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.19
+#' @date 2025.5.20
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -57,6 +57,7 @@ kAlertTargetColnames <- c("normal_range.less_than_or_equal_to", "normal_range.gr
 kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
 kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
+kTargetSheetNames <- c("item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 trialName <- temp$trialName
@@ -80,8 +81,6 @@ SelectColumns <- function(df, target_columns) {
 JoinJpnameAndAliasNameAndSelectColumns <- function(df_name, json_file) {
   df <- get(df_name, envir = parent.frame())
   if (is.null(df) || nrow(df) == 0) {
-    # res <- CreatedummyDf(kEngColumnNames[[df_name]])
-    # return(res)
     return(NULL)
   }
   df <- JoinJpnameAndAliasName(df, json_file)
@@ -96,7 +95,6 @@ GetFieldItems <- function(json_file) {
   return(json_file$field_items)
 }
 
-kTargetSheetNames <- c("allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation")
 field_list <- json_files %>%
   map(~ {
     json_file <- GetJsonFile(.)
@@ -105,7 +103,7 @@ field_list <- json_files %>%
       map(~ {
         res <- tibble::tibble(
           name = .x$name,
-          field_number = .x$name %>% str_extract("\\d+"),
+          field_number = .x$name %>% str_extract("\\d+") %>% as.numeric(),
           label = .x$label
         )
         return(res)
@@ -121,7 +119,7 @@ sheet_data_list <- json_files %>% map(~ {
   field_items <- json_file %>% GetFieldItems()
   item <- field_items %>%
     GetTargetByType("FieldItem::Article") %>%
-    EditItem()
+    EditItem(json_file$alias_name)
   allocation <- json_file %>% GetAllocation()
   action <- field_items %>% GetAction()
   display <- field_items %>% GetDisplay()
@@ -143,21 +141,27 @@ sheet_data_list <- json_files %>% map(~ {
     EditLimitation()
   res <- kTargetSheetNames %>% map(~ JoinJpnameAndAliasNameAndSelectColumns(.x, json_file))
   names(res) <- kTargetSheetNames
+  res$name <- name
   return(res)
 })
 
-sheet_data_combine <- kTargetSheetNames %>%
+targetSheetNames <- kTargetSheetNames %>% append("name", .)
+sheet_data_combine <- targetSheetNames %>%
   map(~ map(sheet_data_list, pluck, .x) %>%
     compact() %>%
     bind_rows()) %>%
-  set_names(kTargetSheetNames)
-
-
-# input_list <- EditInputDataList(json_files)
-# target_columns <- GetTargetColumns(input_list)
-# df_reference <- GetSheetnameAndFieldForReference(json_files)
-# temp_output_checklist <- EditOutputDataList(input_list)
-# output_checklist <- convertSheetColumnsToJapanese(temp_output_checklist)
+  set_names(targetSheetNames)
+# 0行0列のデータフレームを補完
+for (nm in names(sheet_data_combine)) {
+  df <- sheet_data_combine[[nm]]
+  if (is.data.frame(df) && nrow(df) == 0 && ncol(df) == 0) {
+    if (!is.null(kEngColumnNames[[nm]])) {
+      sheet_data_combine[[nm]] <- data.frame(matrix(ncol = length(kEngColumnNames[[nm]]), nrow = 0)) %>%
+        setNames(kEngColumnNames[[nm]])
+    }
+  }
+}
+output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
 # create output folder.
 output_folder_name <- Sys.time() %>%
   format("%Y%m%d%H%M%S") %>%

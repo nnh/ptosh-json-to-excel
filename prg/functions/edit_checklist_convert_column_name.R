@@ -3,18 +3,17 @@
 #'
 #' @file edit_checklist_convert_column_name.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.16
+#' @date 2025.5.20
 renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     stopifnot(is.data.frame(df))
     stopifnot(is.character(nameMap), !is.null(names(nameMap)))
 
-    names(df) <- ifelse(
-        names(df) %in% names(nameMap),
-        nameMap[names(df)],
-        names(df) # 対応がない列はそのまま
-    )
+    names(df) <- vapply(names(df), function(nm) {
+        if (nm %in% names(nameMap)) nameMap[[nm]] else nm
+    }, FUN.VALUE = character(1))
     return(df)
 }
+
 GetEngToJpnColumnMappings <- function() {
     engToJpnColumnMappings <- list(
         name = c(
