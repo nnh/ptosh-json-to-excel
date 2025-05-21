@@ -2,13 +2,14 @@
 #'
 #' @file excel_json_validator_allocation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.16
+#' @date 2025.5.21
 CheckAllocation <- function(sheetList, jsonList) {
     sheetName <- "allocation"
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     json <- GetAllocationFromJson(jsonList)
     sheet$groups.if_references <- ifelse(is.na(sheet$groups.if_references), "", sheet$groups.if_references)
+    json$groups.if_references <- ifelse(is.na(json$groups.if_references), "", json$groups.if_references)
     sheet$formula_field_references <- sheet$formula_field_references |> str_remove_all(" ")
     json$formula_field_references <- json$formula_field_references |> str_remove_all(" ")
     sheet$formula_field <- as.character(json$formula_field)

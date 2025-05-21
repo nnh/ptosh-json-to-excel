@@ -36,7 +36,22 @@ GetAllocation <- function(json_file) {
     ) %>%
         bind_cols(groups)
     res$formula_field <- formula_field_str
-    formula_field_references <- GetFieldText(formula_field_str, json_file$alias_name)
-    res$formula_field_references <- if (is.null(formula_field_references)) NA else formula_field_references
+    temp_formula_field_references <- GetDfSheetField(formula_field_str, json_file$alias_name)
+    if (!is.null(temp_formula_field_references)) {
+        formula_field_references <- temp_formula_field_references %>% EditRefFieldTextVec()
+        # Replace raw in formula_field_str with text for all rows if raw is present
+        if (!is.null(formula_field_references) && nrow(formula_field_references) > 0) {
+            for (i in 1:nrow(formula_field_references)) {
+                raw_val <- formula_field_references[i, "raw"]
+                text_val <- formula_field_references[i, "text"]
+                if (!is.null(raw_val) && !is.null(text_val)) {
+                    if (grepl(raw_val, formula_field_str, fixed = TRUE)) {
+                        formula_field_str <- gsub(raw_val, text_val, formula_field_str, fixed = TRUE)
+                    }
+                }
+            }
+        }
+    }
+    res$formula_field_references <- formula_field_str
     return(res)
 }

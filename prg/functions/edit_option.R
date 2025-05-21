@@ -1,11 +1,10 @@
 GetOptions <- function(field_items) {
     target <- field_items %>%
         keep(~ !is.null(.x$option) && .x$type == "FieldItem::Article")
-    target_options <- target %>% keep(~ {
-        options <- .x$option
-        any(map_lgl(options$values, ~ isTRUE(.x$is_usable)))
-    })
-    options <- target_options %>%
+    if (length(target) == 0) {
+        return(NULL)
+    }
+    options <- target %>%
         map(~ {
             option <- .x$option
             option_name <- option$name
@@ -20,6 +19,8 @@ GetOptions <- function(field_items) {
             df_option_values$option.name <- option_name
             return(df_option_values)
         }) %>%
-        bind_rows()
+        bind_rows() %>%
+        distinct() %>%
+        filter(option.values_is_usable == TRUE)
     return(options)
 }

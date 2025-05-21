@@ -79,13 +79,13 @@ GetEngToJpnColumnMappings <- function() {
             is_double_blinded = "二重盲検",
             double_blind_emails = "割付責任者メールアドレス",
             allocation_method = "割付方法",
-            groups.code = "割付グループ.コード",
-            groups.label = "割付グループ.ラベル",
-            formula_field = "調整因子フィールド.式",
-            formula_field_references = "調整因子フィールド.式の参照先情報",
             groups.if = "割付グループ.論理式",
             groups.if_references = "割付グループ.論理式の参照先情報",
-            groups.message = "割付グループ.エラーメッセージ"
+            groups.code = "割付グループ.コード",
+            groups.label = "割付グループ.ラベル",
+            groups.message = "割付グループ.エラーメッセージ",
+            formula_field = "調整因子フィールド.式",
+            formula_field_references = "調整因子フィールド.式の参照先情報"
         ),
         comment = c(
             jpname = "シート名",

@@ -14,11 +14,17 @@ GetTargetByType <- function(field_items, type) {
     }
     return(target)
 }
-EditRefFieldText <- function(df_sheet_field) {
+EditRefFieldTextVec <- function(df_sheet_field) {
     join_field_info <- dplyr::left_join(df_sheet_field, field_list, by = c("alias_name", "field_number"))
     join_field_info$text <- paste(join_field_info$alias_name, join_field_info$name, join_field_info$label, sep = ",") %>%
         paste0("(", ., ")")
-    res <- join_field_info$text %>% paste(collapse = "")
+    return(join_field_info)
+}
+EditRefFieldText <- function(df_sheet_field) {
+    join_field_info <- EditRefFieldTextVec(df_sheet_field)
+    res <- join_field_info$text %>%
+        unique() %>%
+        paste(collapse = "")
     return(res)
 }
 ExtractAliasAndField <- function(x, thisSheetName) {
@@ -39,7 +45,7 @@ ExtractAliasAndField <- function(x, thisSheetName) {
     }
     list(alias = alias, number = number)
 }
-GetFieldText <- function(target, thisSheetName) {
+GetDfSheetField <- function(target, thisSheetName) {
     kFieldText <- c("ref\\('\\w[\\w\\d\\p{Punct}]*', \\d+\\)", "f\\d+", "field\\d+")
     fieldTextList <- unlist(str_extract_all(target, kFieldText))
 
@@ -56,6 +62,13 @@ GetFieldText <- function(target, thisSheetName) {
             field_number = purrr::map_dbl(parsed, "number")
         ) %>%
         select(-parsed)
+    return(df_sheet_field)
+}
+GetFieldText <- function(target, thisSheetName) {
+    df_sheet_field <- GetDfSheetField(target, thisSheetName)
+    if (is.null(df_sheet_field)) {
+        return(NULL)
+    }
     res <- EditRefFieldText(df_sheet_field)
     return(res)
 }

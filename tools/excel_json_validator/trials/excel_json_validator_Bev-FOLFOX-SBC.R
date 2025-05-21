@@ -33,13 +33,6 @@ df_item_sheet <- jsonSheetItemList$sheet |>
   as.data.frame() %>%
   mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
 checkChecklist$item <- CheckTarget(df_item_sheet, df_item_json)
-for (row in 1:nrow(df_item_sheet)) {
-  for (col in 1:ncol(df_item_sheet)) {
-    if (df_item_json[row, col] != df_item_sheet[row, col]) {
-      checkChecklist$item$checklist[row, col] <- paste0("NG: ", df_item_json[row, col], " != ", df_item_sheet[row, col])
-    }
-  }
-}
 ##############
 # allocation #
 ##############

@@ -127,7 +127,7 @@ sheet_data_list <- json_files %>% map(~ {
   option <- field_items %>% GetOptions()
   comment <- field_items %>% GetComment("content")
   explanation <- field_items %>% GetComment("description")
-  presence <- field_items %>% GetPresence()
+  presence <- field_items %>% GetPresence(json_file)
   master <- field_items %>% GetComment("link_type")
   visit <- field_items %>% GetVisit()
   title <- field_items %>%
