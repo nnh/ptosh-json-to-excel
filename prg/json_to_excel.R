@@ -122,7 +122,7 @@ sheet_data_list <- json_files %>% map(~ {
     GetTargetByType("FieldItem::Article") %>%
     EditItem(json_file$alias_name)
   allocation <- json_file %>% GetAllocation()
-  action <- field_items %>% GetAction()
+  action <- field_items %>% GetAction(json_file$alias_name)
   display <- field_items %>% GetDisplay()
   option <- field_items %>% GetOptions()
   comment <- field_items %>% GetComment("content")
