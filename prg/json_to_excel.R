@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.20
+#' @date 2025.5.22
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -33,28 +33,12 @@ InstallAndLoadPackage("jsonlite")
 InstallAndLoadPackage("openxlsx")
 InstallAndLoadPackage("rlang")
 source(here("prg", "functions", "common_functions.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_functions.R"), encoding = "UTF-8")
 source(here("prg", "functions", "io_functions.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_common.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_item.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_allocation.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_action.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_display.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_option.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_comment.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_presence.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_visit.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_title.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_assigned.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_limitation.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_checklist_convert_column_name.R"), encoding = "UTF-8")
-
 # ------ constants ------
 kInputFolderName <- "input"
 kOutputFolderName <- "output"
 kOutputPath <- here(kOutputFolderName)
-kAlertTargetColnames <- c("normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to")
 kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
 kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
@@ -64,37 +48,6 @@ temp <- ExecReadJsonFiles()
 trialName <- temp$trialName
 json_files <- temp$json_files
 rm(temp)
-CreatedummyDf <- function(target_columns) {
-  df <- data.frame(matrix(ncol = length(target_columns), nrow = 0))
-  colnames(df) <- target_columns
-  return(df)
-}
-JoinJpnameAndAliasName <- function(df, json_file) {
-  df$jpname <- json_file$name
-  df$alias_name <- json_file$alias_name
-  return(df)
-}
-SelectColumns <- function(df, target_columns) {
-  df <- df %>%
-    select(all_of(target_columns))
-  return(df)
-}
-JoinJpnameAndAliasNameAndSelectColumns <- function(df_name, json_file) {
-  df <- get(df_name, envir = parent.frame())
-  if (is.null(df) || nrow(df) == 0) {
-    return(NULL)
-  }
-  df <- JoinJpnameAndAliasName(df, json_file)
-  df <- SelectColumns(df, kEngColumnNames[[df_name]])
-  return(df)
-}
-GetJsonFile <- function(json_file) {
-  json_file <- json_file$rawJson
-  return(json_file)
-}
-GetFieldItems <- function(json_file) {
-  return(json_file$field_items)
-}
 
 field_list <- json_files %>%
   map(~ {
@@ -115,6 +68,7 @@ field_list <- json_files %>%
     return(fields)
   }) %>%
   bind_rows()
+
 sheet_data_list <- json_files %>% map(~ {
   json_file <- GetJsonFile(.)
   field_items <- json_file %>% GetFieldItems()
@@ -163,6 +117,7 @@ for (nm in names(sheet_data_combine)) {
   }
 }
 output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
+
 # create output folder.
 output_folder_name <- Sys.time() %>%
   format("%Y%m%d%H%M%S") %>%
