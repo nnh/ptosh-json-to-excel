@@ -46,8 +46,8 @@ ExtractAliasAndField <- function(x, thisSheetName) {
     list(alias = alias, number = number)
 }
 GetDfSheetField <- function(target, thisSheetName) {
-    kFieldText <- c("ref\\('\\w[\\w\\d\\p{Punct}]*', \\d+\\)", "f\\d+", "field\\d+")
-    fieldTextList <- unlist(str_extract_all(target, kFieldText))
+    kFieldText <- c("ref\\('\\w[\\w\\d\\p{Punct}]*', \\d+\\)", "f\\d+", "field\\d+", "ref\\('[^']+',\\s*\\d+\\)")
+    fieldTextList <- unlist(lapply(kFieldText, function(pattern) str_extract_all(target, pattern))) %>% unique()
 
     if (length(fieldTextList) == 0) {
         return(NULL)
@@ -69,6 +69,18 @@ GetFieldText <- function(target, thisSheetName) {
     if (is.null(df_sheet_field)) {
         return(NULL)
     }
-    res <- EditRefFieldText(df_sheet_field)
+    df_refFieldText <- EditRefFieldTextVec(df_sheet_field)
+    temp_ref <- target
+    res <- list()
+    for (i in 1:nrow(df_refFieldText)) {
+        if (str_detect(target, fixed(df_refFieldText$raw[i]))) {
+            res <- append(res, df_refFieldText[i, "text"])
+            temp_ref <- str_remove_all(temp_ref, fixed(df_refFieldText$raw[i]))
+        }
+    }
+    if (length(res) == 0) {
+        return(NULL)
+    }
+    res <- paste(res, collapse = "")
     return(res)
 }
