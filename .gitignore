@@ -9,9 +9,11 @@
 /input_*/*.json
 /input_*/
 /output/*
-!/output/dummy
-!/input/dummy
+/input/*
+!/input/.gitkeep
+!/output/.gitkeep
 !/temp/dummy
+/forTest_input_*/*
 *.Rproj
 # History files
 .Rhistory

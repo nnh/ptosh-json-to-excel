@@ -2,8 +2,8 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2024.8.29
-rm(list=ls())
+#' @date 2025.5.22
+rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
 #'
@@ -20,11 +20,11 @@ rm(list=ls())
 #' InstallAndLoadPackage("tidyverse")
 #'
 #' @export
-InstallAndLoadPackage <- function(package_name){
-  if (!requireNamespace(package_name, quietly=T)) {
-    install.packages(package_name, dependencies=T)
+InstallAndLoadPackage <- function(package_name) {
+  if (!requireNamespace(package_name, quietly = T)) {
+    install.packages(package_name, dependencies = T, type = "binary")
   }
-  library(package_name, character.only=T, warn.conflicts=F)
+  library(package_name, character.only = T, warn.conflicts = F)
 }
 # ------ libraries ------
 InstallAndLoadPackage("tidyverse")
@@ -32,44 +32,100 @@ InstallAndLoadPackage("here")
 InstallAndLoadPackage("jsonlite")
 InstallAndLoadPackage("openxlsx")
 InstallAndLoadPackage("rlang")
-InstallAndLoadPackage("future")
-plan(multisession)
-source(here("prg", "functions", "common_functions.R"), encoding="UTF-8")
-source(here("prg", "functions", "edit_functions.R"), encoding="UTF-8")
-source(here("prg", "functions", "io_functions.R"), encoding="UTF-8")
-source(here("prg", "functions", "edit_checklist_function.R"), encoding="UTF-8")
+source(here("prg", "functions", "common_functions.R"), encoding = "UTF-8")
+source(here("prg", "functions", "io_functions.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8")
 # ------ constants ------
 kInputFolderName <- "input"
 kOutputFolderName <- "output"
 kOutputPath <- here(kOutputFolderName)
-kOutputChecklistName <- "checklist.xlsx"
-kAlertTargetColnames <- c("normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to")
+kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
+kEngColumnNames <- kEngToJpnColumnMappings %>%
+  map(names)
+kTargetSheetNames <- c("item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation")
 # ------ main ------
-raw_json_files <- ExecReadJsonFiles()
-json_files <- raw_json_files
-input_list <- EditInputDataList(json_files)
-# json to excel
-df_dummyNames <- data.frame(matrix(ncol=length(kNames), nrow=0))
-colnames(df_dummyNames) <- kNames
-output_list <- pmap(
-  list(id=input_list[[kInputList$sheet_items]][[kSheetItemsKeys$id]],
-       jpname=input_list[[kInputList$sheet_items]][[kSheetItemsKeys$jpname]],
-       alias_name=input_list[[kInputList$sheet_items]][[kSheetItemsKeys$alias_name]]), ExecEditOutputData)
-names(output_list) <- input_list[[kInputList$sheet_items]][[kSheetItemsKeys$alias_name]]
-# create output folder.
-output_folder_name <- Sys.time() %>% format("%Y%m%d%H%M%S") %>% str_c("output_", .)
-output_folder_path <- CreateOutputFolder(output_folder_name, kOutputPath)
-cat(str_c("フォルダ", output_folder_path, "を作成しました\n"))
-# write excel.
-for (i in 1:length(output_list)){
-  WriteExcel(output_list[[i]], names(output_list)[i], output_folder_path)
+temp <- ExecReadJsonFiles()
+trialName <- temp$trialName
+json_files <- temp$json_files
+rm(temp)
+
+field_list <- json_files %>%
+  map(~ {
+    json_file <- GetJsonFile(.)
+    field_items <- json_file %>% GetFieldItems()
+    fields <- field_items %>%
+      map(~ {
+        res <- tibble::tibble(
+          name = .x$name,
+          field_number = .x$name %>% str_extract("\\d+") %>% as.numeric(),
+          label = .x$label
+        )
+        return(res)
+      }) %>%
+      bind_rows()
+    fields$jpname <- json_file$name
+    fields$alias_name <- json_file$alias_name
+    return(fields)
+  }) %>%
+  bind_rows()
+
+sheet_data_list <- json_files %>% map(~ {
+  json_file <- GetJsonFile(.)
+  field_items <- json_file %>% GetFieldItems()
+  item <- field_items %>%
+    GetTargetByType("FieldItem::Article") %>%
+    EditItem(json_file$alias_name)
+  allocation <- json_file %>% GetAllocation()
+  action <- field_items %>% GetAction(json_file$alias_name)
+  display <- field_items %>% GetDisplay()
+  option <- field_items %>% GetOptions()
+  comment <- field_items %>% GetComment("content")
+  explanation <- field_items %>% GetComment("description")
+  presence <- field_items %>% GetPresence(json_file)
+  master <- field_items %>% GetComment("link_type")
+  visit <- field_items %>% GetVisit()
+  title <- field_items %>%
+    GetTargetByType("FieldItem::Heading") %>%
+    EditTitle()
+  assigned <- field_items %>%
+    GetTargetByType("FieldItem::Assigned") %>%
+    EditAssigned()
+  name <- tibble(name = json_file$name, alias_name = json_file$alias_name, images_count = json_file$images_count)
+  limitation <- field_items %>%
+    GetLimitation() %>%
+    EditLimitation()
+  res <- kTargetSheetNames %>% map(~ JoinJpnameAndAliasNameAndSelectColumns(.x, json_file))
+  names(res) <- kTargetSheetNames
+  res$name <- name
+  return(res)
+})
+
+targetSheetNames <- kTargetSheetNames %>% append("name", .)
+sheet_data_combine <- targetSheetNames %>%
+  map(~ map(sheet_data_list, pluck, .x) %>%
+    compact() %>%
+    bind_rows()) %>%
+  set_names(targetSheetNames)
+# 0行0列のデータフレームを補完
+for (nm in names(sheet_data_combine)) {
+  df <- sheet_data_combine[[nm]]
+  if (is.data.frame(df) && nrow(df) == 0 && ncol(df) == 0) {
+    if (!is.null(kEngColumnNames[[nm]])) {
+      sheet_data_combine[[nm]] <- data.frame(matrix(ncol = length(kEngColumnNames[[nm]]), nrow = 0)) %>%
+        setNames(kEngColumnNames[[nm]])
+    }
+  }
 }
-# checklist
-json_files <- GetTargetJsonForChecklist(raw_json_files)
-input_list <- EditInputDataList(json_files)
-target_columns <- GetTargetColumns(input_list)
-df_reference <- GetSheetnameAndFieldForReference(json_files)
-output_checklist <- EditOutputDataList(input_list)
+output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
+
+# create output folder.
+output_folder_name <- Sys.time() %>%
+  format("%Y%m%d%H%M%S") %>%
+  str_c("output_", .)
+output_folder_path <- CreateOutputFolder(output_folder_name, kOutputPath)
+output_file_ymd <- Sys.time() %>%
+  format("%Y%m%d")
+kOutputChecklistName <- str_c(trialName, " eCRF Spec ", output_file_ymd, ".xlsx")
 output_checklist_path <- CreateOutputFolder("list", output_folder_path)
 cat(str_c("フォルダ", output_checklist_path, "を作成しました\n"))
 OutputChecklistXlsx(output_checklist, output_checklist_path)
