@@ -2,7 +2,7 @@
 #' description
 #' @file excel_json_validator_allb19.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
+#' @date 2025.5.22
 if (exists("keep_objects")) {
   rm(list = setdiff(ls(), keep_objects))
 }
@@ -151,68 +151,12 @@ df_item_json <- df_item |>
 df_item_sheet <- jsonSheetItemList$sheet |>
   as.data.frame() %>%
   mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
-df_item_sheet[2022, 10] <- ifelse(df_item_sheet[2022, 10] == "(baseline,field119,CNS status分類)(reinduction2,field741,髄注（TIT）の有無)(reinduction2,field744,用量調整理由/減量変更理由)",
-  "(reinduction2,field741,髄注（TIT）の有無)(reinduction2,field744,用量調整理由/減量変更理由)(baseline,field119,CNS status分類)",
-  NA
-)
+
 checkChecklist$item <- CheckTarget(df_item_sheet, df_item_json)
-for (row in 1:nrow(df_item_sheet)) {
-  for (col in 1:ncol(df_item_sheet)) {
-    if (df_item_sheet[row, col] != df_item_json[row, col]) {
-      print(row)
-      print(col)
-      print(df_item_sheet[row, col])
-      print(df_item_json[row, col])
-      print(df_item_sheet[row, col - 1])
-      print(df_item_json[row, col - 1])
-      stop()
-    }
-  }
-}
 ##############
 # allocation #
 ##############
-allocationJsonAndSheet <- sheetList |> GetAllocation(jsonList)
-allocationJsonAndSheet$sheet[9, 9] <- ifelse(allocationJsonAndSheet$sheet[9, 9] == "(baseline,field119,CNS status分類)(pcrmrdtp2,field6,)(registration,field26,初発診断日)(registration,field3,生年月日)(baseline,field87,白血球数（/uL）)(inductionlab,field81,PSL反応性)(inductionlab,field102,骨髄血腫瘍芽球（%）)(evaluationtp1,field89,PCR-MRD測定（定量カテゴリ選択）)(baseline,field327,キメラ遺伝子)(baseline,field159,染色体本数)(baseline,field199,DNA Index)(pcrmrdtp2,field5,PCR-MRD測定（定量カテゴリ選択）)(pcrmrdtp2,field6,)(evaluationtp2,field18,寛解判定)",
-  "(registration,field26,初発診断日)(registration,field3,生年月日)(baseline,field87,白血球数（/uL）)(inductionlab,field81,PSL反応性)(inductionlab,field102,骨髄血腫瘍芽球（%）)(evaluationtp1,field89,PCR-MRD測定（定量カテゴリ選択）)(baseline,field327,キメラ遺伝子)(baseline,field159,染色体本数)(baseline,field199,DNA Index)(baseline,field119,CNS status分類)(pcrmrdtp2,field5,PCR-MRD測定（定量カテゴリ選択）)(pcrmrdtp2,field6,)(evaluationtp2,field18,寛解 判定)",
-  NA
-)
-temp <- allocationJsonAndSheet$sheet[10, 9] %>% str_remove_all(temp, " ")
-temp2 <- "(registration,field26,初発診断日)(registration,field3,生年月日)(baseline,field119,CNS status分類)(baseline,field120,)(pcrmrdtp2,field6,)(baseline,field87,白血球数（/uL）)(inductionlab,field81,PSL反応性)(baseline,field327, キメラ遺伝子)(baseline,field159,染色体本数)(pcrmrdtp2,field5,PCR-MRD測定（定量カテゴリ選択）)(pcrmrdtp2,field6,)(evaluationtp2,field18,寛解判定)" %>% str_remove_all(" ")
-temp == temp2
-allocationJsonAndSheet$sheet[10, 9] <- ifelse(temp == temp2,
-  "(registration,field26,初発診断日)(registration,field3,生年月日)(baseline,field87,白血球数（/uL）)(inductionlab,field81,PSL反応性)(baseline,field327,キメラ遺伝子)(baseline,field159,染色体本数)(baseline,field119,CNS status分類)(baseline,field120,)(pcrmrdtp2,field5,PCR-MRD測定（定量カテゴリ選択）)(pcrmrdtp2,field6,)(evaluationtp2,field18,寛解判定)",
-  NA
-)
-allocationJsonAndSheet$sheet[11, 9] <- ifelse(allocationJsonAndSheet$sheet[11, 9] == "(registration,field26,初発診断日)(registration,field3,生年月日)(baseline,field119,CNS status分類)(baseline,field120,)(pcrmrdtp2,field6,)(baseline,field87,白血球数（/uL）)(inductionlab,field102,骨髄血腫瘍芽球（%）)(inductionlab,field81,PSL反応性)(baseline,field327,キメラ遺伝子)(baseline,field159,染色体本数)(pcrmrdtp2,field5,PCR-MRD測定（定量カテゴリ選択）)(pcrmrdtp2,field6,)(evaluationtp2,field18,寛解判定)",
-  "(registration,field26,初発診断日)(registration,field3,生年月日)(baseline,field87,白血球数（/uL）)(inductionlab,field102,骨髄血腫瘍芽球（%）)(inductionlab,field81,PSL反応性)(baseline,field327,キメラ遺伝子)(baseline,field159,染色体本数)(baseline,field119,CNS status分類)(baseline,field120,)(pcrmrdtp2,field5,PCR-MRD測定（定量カテゴリ選択）)(pcrmrdtp2,field6,)(evaluationtp2,field18,寛解判定)", NA
-)
-allocationJsonAndSheet$sheet[13, 9] <- ifelse(allocationJsonAndSheet$sheet[13, 9] == "(baseline,field327,キメラ遺伝子)(baseline,field222,CD19)",
-  "(baseline,field222,CD19)(baseline,field327,キメラ遺伝子)",
-  NA
-)
-allocationJsonAndSheet$sheet[14, 9] <- ifelse(allocationJsonAndSheet$sheet[14, 9] == "(baseline,field327,キメラ遺伝子)(baseline,field222,CD19)(baseline,field223,)",
-  "(baseline,field222,CD19)(baseline,field223,)(baseline,field327,キメラ遺伝子)",
-  NA
-)
-checkChecklist$allocation <- CheckTarget(allocationJsonAndSheet$sheet, allocationJsonAndSheet$json)
-for (row in 1:nrow(allocationJsonAndSheet$sheet)) {
-  for (col in 1:ncol(allocationJsonAndSheet$sheet)) {
-    if (is.na(allocationJsonAndSheet$sheet[row, col]) && is.na(allocationJsonAndSheet$json[row, col])) {
-      next
-    } else if (allocationJsonAndSheet$sheet[row, col] != allocationJsonAndSheet$json[row, col]) {
-      if (row != 9) {
-        print(row)
-        print(col)
-        print(allocationJsonAndSheet$sheet[row, col])
-        print(allocationJsonAndSheet$json[row, col])
-        print(allocationJsonAndSheet$sheet[row, col - 1])
-        print(allocationJsonAndSheet$json[row, col - 1])
-        stop()
-      }
-    }
-  }
-}
+checkChecklist$allocation <- sheetList |> CheckAllocation(jsonList)
 ##########
 # action #
 ##########

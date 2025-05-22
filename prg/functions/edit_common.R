@@ -64,6 +64,10 @@ GetDfSheetField <- function(target, thisSheetName) {
         select(-parsed)
     return(df_sheet_field)
 }
+RegexEscape <- function(text) {
+  # 正規表現の特殊文字をバックスラッシュでエスケープ
+  gsub("([][{}()+*^$|\\\\?.])", "\\\\\\1", text)
+}
 GetFieldText <- function(target, thisSheetName) {
     df_sheet_field <- GetDfSheetField(target, thisSheetName)
     if (is.null(df_sheet_field)) {
@@ -71,13 +75,18 @@ GetFieldText <- function(target, thisSheetName) {
     }
     df_refFieldText <- EditRefFieldTextVec(df_sheet_field)
     temp_ref <- target
-    res <- list()
     for (i in 1:nrow(df_refFieldText)) {
-        if (str_detect(target, fixed(df_refFieldText$raw[i]))) {
-            res <- append(res, df_refFieldText[i, "text"])
-            temp_ref <- str_remove_all(temp_ref, fixed(df_refFieldText$raw[i]))
-        }
+      raw_pattern <- RegexEscape(df_refFieldText$raw[i])
+      # 後に数字が続かない場合のみマッチ
+      regex_pattern <- paste0("(", raw_pattern, ")(?![0-9])")
+      if (str_detect(temp_ref, regex(regex_pattern))) {
+        temp_ref <- str_replace_all(temp_ref, regex(regex_pattern), df_refFieldText$text[i])
+      }
     }
+    text_patterns <- df_refFieldText$text
+    matched_with_pos <- sapply(text_patterns, function(pat) regexpr(pat, temp_ref, fixed = TRUE)[[1]])
+    res <- text_patterns[matched_with_pos != -1][order(matched_with_pos[matched_with_pos != -1])] %>% unique()
+    
     if (length(res) == 0) {
         return(NULL)
     }

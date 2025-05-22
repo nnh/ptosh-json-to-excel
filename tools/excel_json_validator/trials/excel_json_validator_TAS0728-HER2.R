@@ -2,7 +2,7 @@
 #' description
 #' @file excel_json_validator_TAS0728-HER2.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.16
+#' @date 2025.5.22
 if (exists("keep_objects")) {
   rm(list = setdiff(ls(), keep_objects))
 }
@@ -45,16 +45,6 @@ df_item_json <- df_item |>
 df_item_sheet <- jsonSheetItemList$sheet |>
   as.data.frame() %>%
   mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
-df_item_sheet[1167, 10] <- ifelse(
-  df_item_sheet[1167, 10] == "(lab_10000,field522,妊娠可能な被験者である)(registration,field3,性別)",
-  "(registration,field3,性別)(lab_10000,field522,妊娠可能な被験者である)",
-  NA
-)
-df_item_sheet[7778, 10] <- ifelse(
-  df_item_sheet[7778, 10] == "(lab_30000,field301,妊娠可能な被験者である)(registration,field3,性別)",
-  "(registration,field3,性別)(lab_30000,field301,妊娠可能な被験者である)",
-  NA
-)
 checkChecklist$item <- CheckTarget(df_item_sheet, df_item_json)
 ##############
 # allocation #
