@@ -39,10 +39,8 @@ ptosh-json-to-excel
 │       └── zzz.json
 ├── output
 │   └── output_YYYYMMDDHHMMSS
-│       ├── aaa.xlsx
-│       ├── list
-│       │   └── trial_name eCRF Spec YYYYMMDD.xlsx
-│       └── zzz.xlsx
+│       └──  list
+│           └── trial_name eCRF Spec YYYYMMDD.xlsx
 ├── prg
 │   ├── functions
 │   └── json_to_excel.R
