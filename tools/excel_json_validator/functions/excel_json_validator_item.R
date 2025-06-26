@@ -2,50 +2,7 @@
 #'
 #' @file excel_json_validator_item.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
-GetRefBefAft <- function(target, befAft) {
-    targetAliasNameAndNameAndLabel <<- target |>
-        select(c("alias_name", "name", "label")) |>
-        distinct()
-    target$test <- NA
-    testList <- list()
-    if (befAft == "before" | befAft == "after") {
-        target_colname <- str_c("validate_date_", befAft, "_or_equal_to")
-        output_colname <- str_c("references_", befAft)
-    } else {
-        target_colname <- str_c("validate_", befAft)
-        output_colname <- str_c(befAft, "_references")
-    }
-    for (i in 1:length(target[[target_colname]])) {
-        if (!is.na(target[[target_colname]][[i]])) {
-            temp <- target[[target_colname]][[i]] %>% gsub("f(\\d+)", "field\\1", .)
-            if (str_detect(temp, "field[0-9]*")) {
-                testList[[i]] <- temp |> str_extract_all("field[0-9]*")
-            } else {
-                testList[[i]] <- NA
-            }
-        } else {
-            testList[[i]] <- NA
-        }
-    }
-
-    for (i in 1:length(testList)) {
-        if (!is.na(testList[[i]])) {
-            test_item <- testList[[i]][[1]] |> unique()
-            refText <- ""
-            for (j in 1:length(test_item)) {
-                temp_test <- targetAliasNameAndNameAndLabel |> filter(alias_name == target[i, "alias_name", drop = T] & name == test_item[j])
-                refText <- str_c(refText, "(", str_c(temp_test, collapse = ","), ")")
-                target[i, "test"] <- refText
-            }
-        }
-    }
-
-    output_df <- target
-    output_df[[output_colname]] <- output_df$test
-    output_df <- output_df |> select(-c("test"))
-    return(output_df)
-}
+#' @date 2025.6.26
 GetItemFromJson <- function(sheetList, jsonList) {
     article <- fieldItems |>
         map(~ {

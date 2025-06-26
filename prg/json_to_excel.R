@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.22
+#' @date 2025.6.26
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -42,7 +42,7 @@ kOutputPath <- here(kOutputFolderName)
 kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
 kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
-kTargetSheetNames <- c("item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation")
+kTargetSheetNames <- c("item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 trialName <- temp$trialName
@@ -94,6 +94,9 @@ sheet_data_list <- json_files %>% map(~ {
   limitation <- field_items %>%
     GetLimitation() %>%
     EditLimitation()
+  date <- field_items %>%
+    GetDate() %>%
+    EditDate(json_file$alias_name)
   res <- kTargetSheetNames %>% map(~ JoinJpnameAndAliasNameAndSelectColumns(.x, json_file))
   names(res) <- kTargetSheetNames
   res$name <- name

@@ -2,7 +2,7 @@
 #' description
 #' @file excel_json_validator_allb19.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.22
+#' @date 2025.6.26
 if (exists("keep_objects")) {
   rm(list = setdiff(ls(), keep_objects))
 }
@@ -205,3 +205,7 @@ checkChecklist$assigned <- sheetList |> CheckAssigned()
 # limitation #
 ##############
 checkChecklist$limitation <- CheckLimitation(sheetList, jsonList)
+########
+# date #
+########
+checkChecklist$date <- CheckDate(sheetList, jsonList)
