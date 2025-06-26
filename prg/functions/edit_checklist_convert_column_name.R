@@ -144,9 +144,9 @@ GetEngToJpnColumnMappings <- function() {
             name = "フィールドID",
             label = "ラベル",
             validators.date.validate_date_after_or_equal_to = "日付の最小値",
-            references_after = "最小値の参照先情報",
+            references_after = "日付の最小値の参照先情報",
             validators.date.validate_date_before_or_equal_to = "日付の最大値",
-            references_before = "最大値の参照先情報"
+            references_before = "日付の最大値の参照先情報"
         )
     )
     return(engToJpnColumnMappings)
