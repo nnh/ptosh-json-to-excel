@@ -112,12 +112,20 @@ CleanTextForComment <- function(text) {
     gsub("\\s+", "", .) %>% # 半角スペース・タブ削除
     gsub("\u3000", "", .) # 全角スペース削除
 }
+GetRefText <- function(ref_alias_name, ref_field_id) {
+  ref_label <- targetAliasNameAndNameAndLabel |>
+    filter(alias_name == ref_alias_name & name == ref_field_id) |>
+    pull(label)
+  if (is.na(ref_label) || length(ref_label) == 0) {
+    ref_label <- ""
+  }
+  refText <- str_c("(", ref_alias_name, ",", ref_field_id, ",", ref_label, ")")
+  return(refText)
+}
 GetRefBefAft <- function(target, befAft) {
   targetAliasNameAndNameAndLabel <<- target |>
     select(c("alias_name", "name", "label")) |>
     distinct()
-  target$test <- NA
-  testList <- list()
   if (befAft == "before" | befAft == "after") {
     target_colname <- str_c("validate_date_", befAft, "_or_equal_to")
     output_colname <- str_c("references_", befAft)
@@ -128,35 +136,49 @@ GetRefBefAft <- function(target, befAft) {
     target_colname <- str_c("validate_", befAft)
     output_colname <- str_c(befAft, "_references")
   }
+  target[[output_colname]] <- NA
+  testItems <- list()
   for (i in 1:length(target[[target_colname]])) {
+    testItems[[i]] <- NA
     if (!is.na(target[[target_colname]][[i]])) {
       temp <- target[[target_colname]][[i]] %>% gsub("f(\\d+)", "field\\1", .)
       if (str_detect(temp, "field[0-9]*")) {
-        testList[[i]] <- temp |> str_extract_all("field[0-9]*")
-      } else {
-        testList[[i]] <- NA
+        temp_field_list <- temp |> str_extract_all("field[0-9]*")
+        for (j in 1:length(temp_field_list[[1]])) {
+          temp_field <- temp_field_list[[1]][j]
+          refText <- GetRefText(target[i, "alias_name", drop = T], temp_field)
+          if (is.null(testItems[[i]])) {
+            testItems[[i]] <- refText
+          } else {
+            testItems[[i]] <- c(testItems[[i]], refText)
+          }
+        }
       }
+      if (str_detect(target[[target_colname]][[i]], "ref\\('\\w+',\\s*\\d+\\)")) {
+        refAliasNameAndFieldId <- str_match_all(target[[target_colname]][[i]], "ref\\('([\\w]+)',\\s*(\\d+)\\)")
+        for (k in 1:nrow(refAliasNameAndFieldId[[1]])) {
+          ref_alias_name <- refAliasNameAndFieldId[[1]][k, 2]
+          ref_field_id <- refAliasNameAndFieldId[[1]][k, 3] %>% str_c("field", .)
+          refText <- GetRefText(ref_alias_name, ref_field_id)
+          if (is.null(testItems[[i]])) {
+            testItems[[i]] <- refText
+          } else {
+            testItems[[i]] <- c(testItems[[i]], refText)
+          }
+        }
+      }
+    }
+    if (length(testItems[[i]]) == 1 && is.na(testItems[[i]])) {
+      testItemsUnique <- NA
     } else {
-      testList[[i]] <- NA
+      testItemsUnique <- testItems[[i]] |>
+        unique() |>
+        na.omit() |>
+        paste0(collapse = "")
     }
+    target[i, output_colname] <- testItemsUnique
   }
-
-  for (i in 1:length(testList)) {
-    if (!is.na(testList[[i]])) {
-      test_item <- testList[[i]][[1]] |> unique()
-      refText <- ""
-      for (j in 1:length(test_item)) {
-        temp_test <- targetAliasNameAndNameAndLabel |> filter(alias_name == target[i, "alias_name", drop = T] & name == test_item[j])
-        refText <- str_c(refText, "(", str_c(temp_test, collapse = ","), ")")
-        target[i, "test"] <- refText
-      }
-    }
-  }
-
-  output_df <- target
-  output_df[[output_colname]] <- output_df$test
-  output_df <- output_df |> select(-c("test"))
-  return(output_df)
+  return(target)
 }
 # item
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item.R"), encoding = "UTF-8")

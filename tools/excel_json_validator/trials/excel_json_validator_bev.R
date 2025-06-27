@@ -2,7 +2,7 @@
 #' description
 #' @file excel_json_validator_bev.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
+#' @date 2025.6.27
 if (exists("keep_objects")) {
   rm(list = setdiff(ls(), keep_objects))
 }
@@ -21,14 +21,7 @@ checkChecklist <- list()
 ##############
 jsonSheetItemList <- GetItemFromJson(sheetList, jsonList)
 df_item <- jsonSheetItemList$json
-df_item$presence_if_references <- ifelse(df_item$validate_presence_if |> str_detect("ref\\('registration', 4\\)"),
-  "(registration,field4,性別)",
-  df_item$presence_if_references
-)
-df_item$formula_if_references <- ifelse(df_item$validate_formula_if |> str_detect("ref\\('registration', 4\\)"),
-  "(registration,field4,性別)",
-  df_item$formula_if_references
-)
+
 df_item_json <- df_item |>
   as.data.frame() %>%
   mutate(across(everything(), ~ ifelse(is.na(.), "", .)))

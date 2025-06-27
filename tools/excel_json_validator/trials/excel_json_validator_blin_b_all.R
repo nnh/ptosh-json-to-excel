@@ -2,7 +2,7 @@
 #' description
 #' @file excel_json_validator_blin_b_all.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
+#' @date 2025.6.27
 if (exists("keep_objects")) {
   rm(list = setdiff(ls(), keep_objects))
 }
@@ -27,14 +27,8 @@ df_item_json <- df_item |>
   mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
 
 df_item_json[318, 10] <- "(registration,field11,初発診断日)(registration,field2,生年月日)(allocationfac_100,field9,診断時白血球数（/uL）)(allocationfac_100,field16,NCI/Rome 分類)"
-df_item_json$presence_if_references <- ifelse(df_item_json$validate_presence_if == "ref('registration', 3)=='M'&&STAT.blank?", "(registration,field3,性別)", df_item_json$presence_if_references)
-df_item_json$presence_if_references <- ifelse(df_item_json$validate_presence_if == "ref('registration', 3)=='M'", "(registration,field3,性別)", df_item_json$presence_if_references)
-df_item_json$formula_if_references <- ifelse(df_item_json$validate_formula_if == "ref('registration', 3)=='M'", "(registration,field3,性別)", df_item_json$formula_if_references)
-df_item_json$formula_if_references <- ifelse(df_item_json$validate_formula_if == "((ORRES.blank? && STAT == 'NOT DONE') || (ORRES.present? && STAT.blank?))&&ref('registration', 3)=='M'", "(registration,field3,性別)", df_item_json$formula_if_references)
-df_item_json$formula_if_references <- ifelse(df_item_json$validate_formula_if == "((ORRES.blank? && STAT == 'NOT DONE') || (ORRES.present? && STAT.blank?)) && (ref('registration', 3)=='F')", "(registration,field3,性別)", df_item_json$formula_if_references)
-df_item_json$formula_if_references <- ifelse(df_item_json$validate_formula_if == "(ref('registration',3)=='M'&&f200=='N')||ref('registration',3)=='F'", "(registration,field3,性別)(screening_100,field200,妊娠可能な被験者である)", df_item_json$formula_if_references)
-df_item_json[1147, 10] <- "(registration,field3,性別)"
 df_item_json[1574, 10] <- "(registration,field3,性別)(lab_3000,field2,妊娠可能な被験者である)"
+df_item_json[2107, 10] <- "(registration,field3,性別)(screening_100,field200,妊娠可能な被験者である)"
 df_item_sheet <- jsonSheetItemList$sheet |>
   as.data.frame() %>%
   mutate(across(everything(), ~ ifelse(is.na(.), "", .)))

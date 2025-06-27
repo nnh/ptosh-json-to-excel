@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_date.R
 #' @author Mariko Ohtsuka
-#' @date 2025.6.26
+#' @date 2025.6.27
 CheckDate <- function(sheetList, jsonList) {
     sheetName <- "date"
     sheet <- sheetList[[sheetName]] |>
@@ -11,7 +11,7 @@ CheckDate <- function(sheetList, jsonList) {
         jpname, alias_name, name, label, validators.date.validate_date_after_or_equal_to, references_after, validators.date.validate_date_before_or_equal_to, references_before
     )
 
-    inputValidators <- GetValidatorsByTrial(jsonList)
+    inputValidators <- GetValidatorsDateByTrial(jsonList)
     test <- inputValidators %>%
         GetRefBefAft("date_before") %>%
         GetRefBefAft("date_after")
@@ -19,7 +19,7 @@ CheckDate <- function(sheetList, jsonList) {
     View(outputValidators)
     return(inputValidators)
 
-    checkValidators <- CheckValidators(inputValidators, outputValidators)
+    checkValidators <- CheckValidatorsDate(inputValidators, outputValidators)
     if (is.null(inputValidators)) {
         res <- NULL
     } else {
@@ -28,7 +28,7 @@ CheckDate <- function(sheetList, jsonList) {
     }
     return(res)
 }
-CheckValidators <- function(inputValidators, outputValidators) {
+CheckValidatorsDate <- function(inputValidators, outputValidators) {
     error_f <- FALSE
     inputValidators <- inputValidators %>% arrange(alias_name, name)
     inputValidators <- inputValidators %>%
@@ -134,7 +134,7 @@ GetValidatorDates <- function(fieldItem) {
         keep(~ !(is.atomic(.x) && is.na(.x)))
     return(validators)
 }
-GetValidatorsByTrial <- function(jsonList) {
+GetValidatorsDateByTrial <- function(jsonList) {
     jsons <- jsonList
     jpnameAndAliasname <- jsons %>% map_df(~ list(sheet_id = .x$id, jpname = .x$name, alias_name = .x$alias_name))
     fieldItems <- jsons %>% map(~ .x$field_items)

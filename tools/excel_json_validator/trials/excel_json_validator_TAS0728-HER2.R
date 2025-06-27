@@ -2,7 +2,7 @@
 #' description
 #' @file excel_json_validator_TAS0728-HER2.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.22
+#' @date 2025.6.27
 if (exists("keep_objects")) {
   rm(list = setdiff(ls(), keep_objects))
 }
@@ -21,16 +21,6 @@ checkChecklist <- list()
 ##############
 jsonSheetItemList <- GetItemFromJson(sheetList, jsonList)
 df_item <- jsonSheetItemList$json
-df_item$references_after <- ifelse(
-  df_item$validate_date_after_or_equal_to == "ref('registration', 1)",
-  "(registration,field1,同意取得日)",
-  df_item$references_after
-)
-df_item$references_after <- ifelse(
-  df_item$validate_date_after_or_equal_to == "ref('registration', 2)",
-  "(registration,field2,生年月日)",
-  df_item$references_after
-)
 df_item$formula_if_references <- ifelse(
   df_item$validate_formula_if == "(ref('registration',3)=='M' && field522=='N') || ref('registration',3)=='F'", "(registration,field3,性別)(lab_10000,field522,妊娠可能な被験者である)",
   df_item$formula_if_references
@@ -45,6 +35,7 @@ df_item_json <- df_item |>
 df_item_sheet <- jsonSheetItemList$sheet |>
   as.data.frame() %>%
   mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
+
 checkChecklist$item <- CheckTarget(df_item_sheet, df_item_json)
 ##############
 # allocation #
