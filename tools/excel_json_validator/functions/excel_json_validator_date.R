@@ -12,19 +12,14 @@ CheckDate <- function(sheetList, jsonList) {
     )
 
     inputValidators <- GetValidatorsDateByTrial(jsonList)
-    test <- inputValidators %>%
+    inputValidatorsAndReferences <- inputValidators %>%
         GetRefBefAft("date_before") %>%
         GetRefBefAft("date_after")
-    View(test)
-    View(outputValidators)
-    return(inputValidators)
-
-    checkValidators <- CheckValidatorsDate(inputValidators, outputValidators)
+    checkValidators <- CheckValidatorsDate(inputValidatorsAndReferences, outputValidators)
     if (is.null(inputValidators)) {
         res <- NULL
     } else {
-        res <- list()
-        res$limitation_validators <- checkValidators
+        res <- checkValidators
     }
     return(res)
 }

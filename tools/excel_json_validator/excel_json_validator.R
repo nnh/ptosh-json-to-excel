@@ -156,7 +156,7 @@ ExecExcelJsonValidator <- function(trialName) {
   ########
   # date #
   ########
-  print("dummy")
+  checkChecklist$date <- CheckDate(sheetList, jsonList)
   return(checkChecklist)
 }
 # ------ main ------
