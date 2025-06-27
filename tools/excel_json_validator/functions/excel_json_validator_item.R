@@ -2,8 +2,8 @@
 #'
 #' @file excel_json_validator_item.R
 #' @author Mariko Ohtsuka
-#' @date 2025.6.26
-GetItemFromJson <- function(sheetList, jsonList) {
+#' @date 2025.6.27
+GetItemFromJson <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName) {
     article <- fieldItems |>
         map(~ {
             df <- .

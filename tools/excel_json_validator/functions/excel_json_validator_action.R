@@ -2,19 +2,19 @@
 #'
 #' @file excel_json_validator_action.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
-CheckAction <- function(sheetList) {
+#' @date 2025.6.27
+CheckAction <- function(sheetList, fieldItems, jpNameAndAliasName) {
     sheetName <- "action"
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     sheet$id <- sheet$id |> as.integer()
     sheet$field_item_id <- sheet$field_item_id |> as.integer()
-    json <- GetActionFromJson()
+    json <- GetActionFromJson(fieldItems, jpNameAndAliasName)
     json$id <- json$id |> as.integer()
     json$field_item_id <- json$field_item_id |> as.integer()
     return(CheckTarget(sheet, json))
 }
-GetActionFromJson <- function() {
+GetActionFromJson <- function(fieldItems, jpNameAndAliasName) {
     action <- map2(fieldItems, names(fieldItems), ~ {
         fieldItem <- .x
         aliasName <- .y
@@ -50,6 +50,6 @@ GetActionFromJson <- function() {
     } else {
         df <- action
     }
-    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "id", "field_item_id", "field_item_id.name", "field_item_id.label", "codes", "fields", "fields.label"))
+    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "id", "field_item_id", "field_item_id.name", "field_item_id.label", "codes", "fields", "fields.label"), jpNameAndAliasName)
     return(res)
 }

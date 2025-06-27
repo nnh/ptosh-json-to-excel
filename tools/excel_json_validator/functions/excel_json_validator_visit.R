@@ -2,15 +2,15 @@
 #'
 #' @file excel_json_validator_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
-CheckVisit <- function(sheetList) {
+#' @date 2025.6.27
+CheckVisit <- function(sheetList, fieldItems, jpNameAndAliasName) {
     sheetName <- "visit"
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetVisitFromJson()
+    json <- GetVisitFromJson(fieldItems, jpNameAndAliasName)
     return(CheckTarget(sheet, json))
 }
-GetVisitFromJson <- function() {
+GetVisitFromJson <- function(fieldItems, jpNameAndAliasName) {
     df <- map2(fieldItems, names(fieldItems), ~ {
         fieldItem <- .x
         aliasName <- .y
@@ -19,6 +19,6 @@ GetVisitFromJson <- function() {
         visit$alias_name <- aliasName
         return(visit)
     }) |> bind_rows()
-    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "default_value"))
+    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "default_value"), jpNameAndAliasName)
     return(res)
 }

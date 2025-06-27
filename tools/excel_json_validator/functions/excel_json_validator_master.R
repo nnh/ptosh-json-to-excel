@@ -2,15 +2,15 @@
 #'
 #' @file excel_json_validator_master.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
-CheckMaster <- function(sheetList) {
+#' @date 2025.6.27
+CheckMaster <- function(sheetList, fieldItems, jpNameAndAliasName) {
     sheetName <- "master"
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetMasterFromJson()
+    json <- GetMasterFromJson(fieldItems, jpNameAndAliasName)
     return(CheckTarget(sheet, json))
 }
-GetMasterFromJson <- function() {
+GetMasterFromJson <- function(fieldItems, jpNameAndAliasName) {
     df <- map2(fieldItems, names(fieldItems), ~ {
         fieldItem <- .x
         aliasName <- .y
@@ -21,6 +21,6 @@ GetMasterFromJson <- function() {
     }) |>
         bind_rows() |>
         filter(link_type != "")
-    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "link_type"))
+    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "link_type"), jpNameAndAliasName)
     return(res)
 }

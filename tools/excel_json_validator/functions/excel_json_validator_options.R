@@ -2,15 +2,15 @@
 #'
 #' @file excel_json_validator_options.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
-CheckOption <- function(sheetList) {
+#' @date 2025.6.27
+CheckOption <- function(sheetList, fieldItems, jpNameAndAliasName) {
     sheetName <- "option"
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetOptionFromJson()
+    json <- GetOptionFromJson(fieldItems, jpNameAndAliasName)
     return(CheckTarget(sheet, json))
 }
-GetOptionFromJson <- function() {
+GetOptionFromJson <- function(fieldItems, jpNameAndAliasName) {
     df <- map2(fieldItems, names(fieldItems), ~ {
         fieldItem <- .x
         aliasName <- .y
@@ -36,7 +36,7 @@ GetOptionFromJson <- function() {
     }) |>
         bind_rows() |>
         distinct()
-    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "option.name", "option.values_name", "option.values_seq", "option.values_code", "option.values_is_usable"))
+    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "option.name", "option.values_name", "option.values_seq", "option.values_code", "option.values_is_usable"), jpNameAndAliasName)
     res <- res |> mutate(option.values_seq = as.numeric(option.values_seq))
     return(res)
 }

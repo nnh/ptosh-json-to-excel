@@ -2,15 +2,15 @@
 #'
 #' @file excel_json_validator_explanation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
-CheckExplanation <- function(sheetList) {
+#' @date 2025.6.27
+CheckExplanation <- function(sheetList, fieldItems, jpNameAndAliasName) {
   sheetName <- "explanation"
   sheet <- sheetList[[sheetName]] |>
     rename(!!!engToJpnColumnMappings[[sheetName]])
-  json <- GetExplanationFromJson()
+  json <- GetExplanationFromJson(fieldItems, jpNameAndAliasName)
   return(CheckTarget(sheet, json))
 }
-GetExplanationFromJson <- function() {
+GetExplanationFromJson <- function(fieldItems, jpNameAndAliasName) {
   df <- map2(fieldItems, names(fieldItems), ~ {
     fieldItem <- .x
     aliasName <- .y
@@ -21,6 +21,6 @@ GetExplanationFromJson <- function() {
   }) |>
     bind_rows() |>
     filter(description != "")
-  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "description"))
+  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "description"), jpNameAndAliasName)
   return(res)
 }

@@ -2,15 +2,15 @@
 #'
 #' @file excel_json_validator_title.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
-CheckTitle <- function(sheetList) {
+#' @date 2025.6.27
+CheckTitle <- function(sheetList, fieldItems, jpNameAndAliasName) {
     sheetName <- "title"
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetTitleFromJson()
+    json <- GetTitleFromJson(fieldItems, jpNameAndAliasName)
     return(CheckTarget(sheet, json))
 }
-GetTitleFromJson <- function() {
+GetTitleFromJson <- function(fieldItems, jpNameAndAliasName) {
     df <- map2(fieldItems, names(fieldItems), ~ {
         fieldItem <- .x
         aliasName <- .y
@@ -19,7 +19,7 @@ GetTitleFromJson <- function() {
         title$alias_name <- aliasName
         return(title)
     }) |> bind_rows()
-    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "level"))
+    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "level"), jpNameAndAliasName)
     res <- res |> mutate(level = as.numeric(level))
     return(res)
 }

@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.6.26
+#' @date 2025.6.27
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -87,7 +87,7 @@ GetFieldItemsByJsonList <- function(json_list) {
   res <- json_list |> map(~ .$field_items)
   return(res)
 }
-GetItemsSelectColnames <- function(input_tibble, target_colnames) {
+GetItemsSelectColnames <- function(input_tibble, target_colnames, jpNameAndAliasName) {
   if (nrow(input_tibble) == 0) {
     res <- as.data.frame(matrix("", nrow = 1, ncol = length(target_colnames)))
     colnames(res) <- target_colnames

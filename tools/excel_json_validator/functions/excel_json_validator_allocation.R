@@ -2,12 +2,12 @@
 #'
 #' @file excel_json_validator_allocation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.22
-GetAllocation <- function(sheetList, jsonList) {
+#' @date 2025.6.27
+GetAllocation <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName) {
     sheetName <- "allocation"
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetAllocationFromJson(jsonList)
+    json <- GetAllocationFromJson(jsonList, fieldItems, jpNameAndAliasName)
     sheet$groups.if_references <- ifelse(is.na(sheet$groups.if_references), "", sheet$groups.if_references)
     json$groups.if_references <- ifelse(is.na(json$groups.if_references), "", json$groups.if_references)
     sheet$formula_field_references <- ifelse(is.na(sheet$formula_field_references), "", sheet$formula_field_references)
@@ -18,13 +18,13 @@ GetAllocation <- function(sheetList, jsonList) {
     json$formula_field <- as.character(sheet$formula_field)
     return(list(sheet = sheet, json = json))
 }
-CheckAllocation <- function(sheetList, jsonList) {
-    temp <- GetAllocation(sheetList, jsonList)
+CheckAllocation <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName) {
+    temp <- GetAllocation(sheetList, jsonList, fieldItems, jpNameAndAliasName)
     sheet <- temp$sheet
     json <- temp$json
     return(CheckTarget(sheet, json))
 }
-GetAllocationFromJson <- function(jsonList) {
+GetAllocationFromJson <- function(jsonList, fieldItems, jpNameAndAliasName) {
     allocationColnames <- c(
         "jpname", "alias_name", "is_zelen", "zelen_imbalance", "is_double_blinded",
         "double_blind_emails", "allocation_method", "groups.if", "groups.if_references", "groups.code", "groups.label",
@@ -146,6 +146,6 @@ GetAllocationFromJson <- function(jsonList) {
         }
         df <- df |> left_join(temp_formula_fields, by = "alias_name")
     }
-    res <- GetItemsSelectColnames(df, allocationColnames)
+    res <- GetItemsSelectColnames(df, allocationColnames, jpNameAndAliasName)
     return(res)
 }

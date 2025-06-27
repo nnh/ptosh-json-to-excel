@@ -2,15 +2,15 @@
 #'
 #' @file excel_json_validator_assign.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
-CheckAssigned <- function(sheetList) {
+#' @date 2025.6.27
+CheckAssigned <- function(sheetList, fieldItems, jpNameAndAliasName) {
     sheetName <- "assigned"
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetAssignedFromJson()
+    json <- GetAssignedFromJson(fieldItems, jpNameAndAliasName)
     return(CheckTarget(sheet, json))
 }
-GetAssignedFromJson <- function() {
+GetAssignedFromJson <- function(fieldItems, jpNameAndAliasName) {
     df <- map2(fieldItems, names(fieldItems), ~ {
         fieldItem <- .x
         aliasName <- .y
@@ -19,6 +19,6 @@ GetAssignedFromJson <- function() {
         assigned$alias_name <- aliasName
         return(assigned)
     }) |> bind_rows()
-    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "default_value"))
+    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "default_value"), jpNameAndAliasName)
     return(res)
 }
