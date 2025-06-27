@@ -81,7 +81,7 @@ GetItemFromJson <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName)
         }
     }
     names(list_items) <- nameAndAliasname |> map_chr(~ .$alias_name)
-    sheetName <- "item"
+    sheetName <- "item_old"
     temp <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     output_items <- temp |>

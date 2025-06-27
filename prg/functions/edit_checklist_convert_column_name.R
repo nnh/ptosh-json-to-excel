@@ -21,7 +21,7 @@ GetEngToJpnColumnMappings <- function() {
             alias_name = "シート名英数字別名",
             images_count = "画像登録欄の数"
         ),
-        item = c(
+        item_old = c(
             jpname = "シート名",
             alias_name = "シート名英数字別名",
             name = "フィールドID",

@@ -42,7 +42,7 @@ kOutputPath <- here(kOutputFolderName)
 kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
 kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
-kTargetSheetNames <- c("item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
+kTargetSheetNames <- c("item_old", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 trialName <- temp$trialName
@@ -72,7 +72,7 @@ field_list <- json_files %>%
 sheet_data_list <- json_files %>% map(~ {
   json_file <- GetJsonFile(.)
   field_items <- json_file %>% GetFieldItems()
-  item <- field_items %>%
+  item_old <- field_items %>%
     GetTargetByType("FieldItem::Article") %>%
     EditItem(json_file$alias_name)
   allocation <- json_file %>% GetAllocation()
