@@ -1,4 +1,4 @@
-EditItem <- function(field_items, alias_name) {
+EditItem_old <- function(field_items, alias_name) {
     target <- field_items %>% map_df(~ {
         presence_if_references <- GetFieldText(.x$validators$presence$validate_presence_if, alias_name)
         formula_if_references <- GetFieldText(.x$validators$formula$validate_formula_if, alias_name)

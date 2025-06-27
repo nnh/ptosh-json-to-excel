@@ -74,7 +74,7 @@ sheet_data_list <- json_files %>% map(~ {
   field_items <- json_file %>% GetFieldItems()
   item_old <- field_items %>%
     GetTargetByType("FieldItem::Article") %>%
-    EditItem(json_file$alias_name)
+    EditItem_old(json_file$alias_name)
   allocation <- json_file %>% GetAllocation()
   action <- field_items %>% GetAction(json_file$alias_name)
   display <- field_items %>% GetDisplay()
