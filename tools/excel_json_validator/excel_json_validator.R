@@ -10,7 +10,7 @@ library(here, warn.conflicts = F)
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
 # ------ constants ------
 keep_objects <- c("keep_objects", "jsonList", "sheetList", "trialName", "kTrialNames")
-kTrialNames <- c("Bev-FOLFOX-SBC", "TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
+kTrialNames <- c("amld24", "Bev-FOLFOX-SBC", "TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
 # ------ functions ------
 ExecExcelJsonValidator <- function(trialName) {
   if (exists("keep_objects")) {
@@ -132,7 +132,17 @@ ExecExcelJsonValidator <- function(trialName) {
   ############
   # presence #
   ############
-  checkChecklist$presence <- sheetList |> CheckPresence(fieldItems, jpNameAndAliasName)
+  if (trialName == "amld24") {
+    sheetName <- "presence"
+    sheet <- sheetList[[sheetName]] |>
+      rename(!!!engToJpnColumnMappings[[sheetName]]) %>%
+      arrange(alias_name, name)
+    json <- GetPresenceFromJson(fieldItems, jpNameAndAliasName) %>%
+      arrange(alias_name, name)
+    return(CheckTarget(sheet, json))
+  } else {
+    checkChecklist$presence <- sheetList |> CheckPresence(fieldItems, jpNameAndAliasName)
+  }
   ##########
   # master #
   ##########
