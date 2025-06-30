@@ -15,29 +15,32 @@ renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
 }
 
 GetEngToJpnColumnMappings <- function() {
+    itemColumnName <- c(
+        jpname = "シート名",
+        alias_name = "シート名英数字別名",
+        name = "フィールドID",
+        label = "ラベル",
+        option.name = "オプション名",
+        default_value = "デフォルト値",
+        validators.presence.validate_presence_if = "バリデータ.必須がON.条件",
+        presence_if_references = "条件の参照先情報",
+        validators.formula.validate_formula_if = "バリデータ.論理式.論理式",
+        formula_if_references = "論理式の参照先情報",
+        validators.formula.validate_formula_message = "バリデータ.論理式.エラーメッセージ",
+        validators.date.validate_date_after_or_equal_to = "バリデータ.日付.最小値",
+        references_after = "最小値の参照先情報",
+        validators.date.validate_date_before_or_equal_to = "バリデータ.日付.最大値",
+        references_before = "最大値の参照先情報"
+    )
     engToJpnColumnMappings <- list(
         name = c(
             name = "シート名",
             alias_name = "シート名英数字別名",
             images_count = "画像登録欄の数"
         ),
-        item_old = c(
-            jpname = "シート名",
-            alias_name = "シート名英数字別名",
-            name = "フィールドID",
-            label = "ラベル",
-            option.name = "オプション名",
-            default_value = "デフォルト値",
-            validators.presence.validate_presence_if = "バリデータ.必須がON.条件",
-            presence_if_references = "条件の参照先情報",
-            validators.formula.validate_formula_if = "バリデータ.論理式.論理式",
-            formula_if_references = "論理式の参照先情報",
-            validators.formula.validate_formula_message = "バリデータ.論理式.エラーメッセージ",
-            validators.date.validate_date_after_or_equal_to = "バリデータ.日付.最小値",
-            references_after = "最小値の参照先情報",
-            validators.date.validate_date_before_or_equal_to = "バリデータ.日付.最大値",
-            references_before = "最大値の参照先情報"
-        ),
+        item_old = itemColumnName,
+        item_visit = itemColumnName,
+        item = itemColumnName,
         option = c(
             jpname = "シート名",
             alias_name = "シート名英数字別名",

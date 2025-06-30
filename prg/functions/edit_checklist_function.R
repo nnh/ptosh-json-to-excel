@@ -60,6 +60,7 @@ GetFieldItems <- function(json_file) {
 
 source(here("prg", "functions", "edit_common.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_item_old.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_item.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_allocation.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_action.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_display.R"), encoding = "UTF-8")
