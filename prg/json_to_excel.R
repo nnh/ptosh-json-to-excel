@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.6.26
+#' @date 2025.6.30
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -126,63 +126,11 @@ for (nm in names(sheet_data_combine)) {
     }
   }
 }
-GetGroupSheetNames <- function(targetColumn) {
-  return(str_remove(targetColumn, "_[0-9]+$"))
-}
+
 output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
-item_visit <- output_checklist$item_visit
-item_visit <- item_visit %>%
-  mutate(group = GetGroupSheetNames(`シート名英数字別名`)) %>%
-  select(-`シート名`)
-item_visit_groups <- item_visit$group %>% unique()
-item_visit_by_group <- item_visit %>%
-  group_by(group) %>%
-  arrange(`シート名英数字別名`)
-View(item_visit_by_group)
-item_visit_group <- list()
-unique_item_visit <- list()
-unique_item_visit_count <- 0
-reference_colnames <- c("条件の参照先情報", "論理式の参照先情報", "最小値の参照先情報", "最大値の参照先情報")
-for (i in seq_along(item_visit_groups)) {
-  item_visit_group[[i]] <- item_visit %>%
-    filter(group == !!item_visit_groups[[i]])
-  check_alias_name <- item_visit_group[[i]]$`シート名英数字別名` %>%
-    unique()
-  check_group <- list()
-  for (j in seq_along(check_alias_name)) {
-    check_group[[j]] <- item_visit_group[[i]] %>%
-      filter(`シート名英数字別名` == !!check_alias_name[[j]])
-    # 参照先情報内の自シート名をgroupに置き換える
-    for (col in reference_colnames) {
-      for (row in 1:nrow(check_group[[j]])) {
-        if (!is.na(check_group[[j]][row, col, drop = TRUE])) {
-          check_group[[j]][row, col] <- str_replace_all(check_group[[j]][row, col, drop = TRUE], check_group[[j]][row, "シート名英数字別名", drop = TRUE], item_visit_groups[[i]])
-        }
-      }
-    }
-    if (j > 1) {
-      temp1 <- unique_item_visit[[unique_item_visit_count]] %>% select(-`シート名英数字別名`)
-      temp2 <- check_group[[j]] %>% select(-`シート名英数字別名`)
-      if (!identical(temp1, temp2)) {
-        cat(str_c("グループ", item_visit_groups[[i]], "のシート", check_alias_name[[j]], "は、前のシートと異なる項目があります。\n"))
-        for (k in seq_along(temp1)) {
-          if (!identical(temp1[[k]], temp2[[k]])) {
-            cat(str_c("項目", names(temp1)[[k]], "が異なります。\n"))
-          }
-        }
-        unique_item_visit_count <- unique_item_visit_count + 1
-        unique_item_visit[[unique_item_visit_count]] <- check_group[[j]]
-      } else {
-        unique_item_visit[[unique_item_visit_count]][["シート名英数字別名"]] <- str_c(unique_item_visit[[unique_item_visit_count]][["シート名英数字別名"]], ", ", check_group[[j]][["シート名英数字別名"]])
-      }
-    } else {
-      unique_item_visit_count <- unique_item_visit_count + 1
-      unique_item_visit[[unique_item_visit_count]] <- check_group[[j]]
-    }
-  }
-}
-item_visit_tibble <- unique_item_visit %>% bind_rows()
+item_visit <- EditItemVisit(output_checklist$item_visit)
+output_checklist$item_visit <- item_visit
 
 # create output folder.
 output_folder_name <- Sys.time() %>%

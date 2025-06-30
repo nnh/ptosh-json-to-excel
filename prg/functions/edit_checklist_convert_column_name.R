@@ -3,7 +3,7 @@
 #'
 #' @file edit_checklist_convert_column_name.R
 #' @author Mariko Ohtsuka
-#' @date 2025.6.25
+#' @date 2025.6.30
 renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     stopifnot(is.data.frame(df))
     stopifnot(is.character(nameMap), !is.null(names(nameMap)))
@@ -17,7 +17,7 @@ renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
 GetEngToJpnColumnMappings <- function() {
     itemColumnName <- c(
         jpname = "シート名",
-        alias_name = "シート名英数字別名",
+        alias_name = kAliasNameJapaneseColumnName,
         name = "フィールドID",
         label = "ラベル",
         option.name = "オプション名",
@@ -35,7 +35,7 @@ GetEngToJpnColumnMappings <- function() {
     engToJpnColumnMappings <- list(
         name = c(
             name = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             images_count = "画像登録欄の数"
         ),
         item_old = itemColumnName,
@@ -43,7 +43,7 @@ GetEngToJpnColumnMappings <- function() {
         item = itemColumnName,
         option = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             option.name = "オプション名",
             option.values_name = "ラベル",
             option.values_seq = "-",
@@ -52,20 +52,20 @@ GetEngToJpnColumnMappings <- function() {
         ),
         visit = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             name = "フィールドID",
             default_value = "デフォルト値"
         ),
         master = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             name = "フィールドID",
             label = "ラベル",
             link_type = "保存先のマスタ"
         ),
         action = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             id = "-",
             field_item_id = "--",
             field_item_id.name = "開閉のトリガーになるフィールドID",
@@ -76,7 +76,7 @@ GetEngToJpnColumnMappings <- function() {
         ),
         allocation = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             is_zelen = "Zelenの施設内バランス化",
             zelen_imbalance = "施設間の差",
             is_double_blinded = "二重盲検",
@@ -92,47 +92,47 @@ GetEngToJpnColumnMappings <- function() {
         ),
         comment = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             name = "フィールドID",
             label = "ラベル",
             content = "フリーコメント"
         ),
         explanation = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             name = "フィールドID",
             label = "ラベル",
             description = "説明"
         ),
         display = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             name = "フィールドID",
             label = "ラベル"
         ),
         presence = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             name = "フィールドID",
             label = "ラベル"
         ),
         title = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             name = "フィールドID",
             label = "ラベル",
             level = "見出し"
         ),
         assigned = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             name = "フィールドID",
             label = "ラベル",
             default_value = "デフォルト値"
         ),
         limitation = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             name = "フィールドID",
             label = "ラベル",
             default_value = "デフォルト値",
@@ -143,7 +143,7 @@ GetEngToJpnColumnMappings <- function() {
         ),
         date = c(
             jpname = "シート名",
-            alias_name = "シート名英数字別名",
+            alias_name = kAliasNameJapaneseColumnName,
             name = "フィールドID",
             label = "ラベル",
             validators.date.validate_date_after_or_equal_to = "日付の最小値",
