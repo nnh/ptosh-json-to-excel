@@ -3,7 +3,7 @@
 #'
 #' @file edit_checklist_convert_column_name.R
 #' @author Mariko Ohtsuka
-#' @date 2025.6.30
+#' @date 2025.7.1
 renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     stopifnot(is.data.frame(df))
     stopifnot(is.character(nameMap), !is.null(names(nameMap)))
@@ -39,7 +39,7 @@ GetEngToJpnColumnMappings <- function() {
             images_count = "画像登録欄の数"
         ),
         item_old = itemColumnName,
-        item_visit = itemColumnName,
+        item_visit = c(itemColumnName, field_type = "フィールドタイプ"),
         item = itemColumnName,
         option = c(
             jpname = "シート名",
