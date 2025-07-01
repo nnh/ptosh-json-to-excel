@@ -7,10 +7,12 @@ rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
+kAliasNameJapaneseColumnName <- "シート名英数字別名"
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
 # ------ constants ------
 keep_objects <- c("keep_objects", "jsonList", "sheetList", "trialName", "kTrialNames")
-kTrialNames <- c("amld24", "Bev-FOLFOX-SBC", "TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
+# kTrialNames <- c("amld24", "Bev-FOLFOX-SBC", "TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
+kTrialNames <- c("amld24", "allb19", "allr23")
 # ------ functions ------
 ExecExcelJsonValidator <- function(trialName) {
   if (exists("keep_objects")) {
@@ -22,10 +24,10 @@ ExecExcelJsonValidator <- function(trialName) {
   fieldItems <- jsonList |> GetFieldItemsByJsonList()
   jpNameAndAliasName <- jsonList |> GetNameAndAliasNameByJson()
   checkChecklist <- list()
-  ##############
-  # item sheet #
-  ##############
-  jsonSheetItemList <- GetItemFromJson(sheetList, jsonList, fieldItems, jpNameAndAliasName)
+  ##################
+  # item old sheet #
+  ##################
+  jsonSheetItemList <- GetItemOldFromJson(sheetList, jsonList, fieldItems, jpNameAndAliasName)
   df_item <- jsonSheetItemList$json
   if (trialName == "TAS0728-HER2") {
     df_item$formula_if_references <- ifelse(

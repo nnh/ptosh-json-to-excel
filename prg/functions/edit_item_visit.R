@@ -74,6 +74,9 @@ GetItemVisitByGroupList <- function(item_visit_by_group, alias_name_columnName) 
     return(res)
 }
 EditItemVisit <- function(item_visit) {
+    if (nrow(item_visit) == 0) {
+        return(item_visit)
+    }
     sheetName_columnName <- "シート名"
     alias_name_columnName <- kAliasNameJapaneseColumnName
     item_visit_by_group <- item_visit %>%
