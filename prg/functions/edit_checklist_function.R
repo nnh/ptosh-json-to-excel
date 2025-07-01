@@ -2,9 +2,8 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2025.6.30
+#' @date 2025.7.1
 # ------ constants ------
-kAliasNameJapaneseColumnName <- "シート名英数字別名"
 # ------ functions ------
 OutputChecklistSheet <- function(df_output, wb, sheet_name) {
   output_colnames <- df_output %>% colnames()
@@ -17,6 +16,13 @@ OutputChecklistSheet <- function(df_output, wb, sheet_name) {
   setColWidths(wb = wb, sheet = sheet_name, cols = 1:ncol(df_output), widths = "auto")
   fontStyle <- setFontStyle()
   addStyle(wb = wb, sheet = sheet_name, style = fontStyle, rows = 1:(nrow(df_output) + 1), cols = 1:ncol(df_output), gridExpand = TRUE)
+  if (sheet_name == kItemVisit) {
+    setColumnConditionalFormatting(
+      wb = wb, sheetName = sheet_name,
+      targetColName = kItemVisitConditionalFormattingColumnName,
+      rows = 2:(nrow(df_output) + 1)
+    )
+  }
 
   return(wb)
 }
@@ -74,4 +80,7 @@ source(here("prg", "functions", "edit_title.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_assigned.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_limitation.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_date.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_checklist_convert_column_name.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_checklist_convert_column_name.R"),
+  encoding = "UTF-8"
+)
+source(here("prg", "functions", "set_items_sheet_settings.R"), encoding = "UTF-8")

@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.6.30
+#' @date 2025.7.1
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -39,10 +39,13 @@ source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8"
 kInputFolderName <- "input"
 kOutputFolderName <- "output"
 kOutputPath <- here(kOutputFolderName)
+kAliasNameJapaneseColumnName <- "シート名英数字別名"
+kItemVisitConditionalFormattingColumnName <- "数値チェック・アラート条件の有無"
 kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
 kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
-kTargetSheetNames <- c("item_old", "item_visit", "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
+kItemVisit <- "item_visit"
+kTargetSheetNames <- c("item_old", kItemVisit, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 trialName <- temp$trialName
