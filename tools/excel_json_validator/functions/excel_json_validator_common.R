@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.6.27
+#' @date 2025.7.2
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -180,8 +180,35 @@ GetRefBefAft <- function(target, befAft) {
   }
   return(target)
 }
+ExcelJsonValidator_item <- function(jsonSheetItemList) {
+  df_item <- jsonSheetItemList$json
+  if (trialName == "TAS0728-HER2") {
+    df_item$formula_if_references <- ifelse(
+      df_item$validate_formula_if == "(ref('registration',3)=='M' && field522=='N') || ref('registration',3)=='F'", "(registration,field3,性別)(lab_10000,field522,妊娠可能な被験者である)",
+      df_item$formula_if_references
+    )
+    df_item$formula_if_references <- ifelse(
+      df_item$validate_formula_if == "(ref('registration',3)=='M' && field301=='N') || ref('registration',3)=='F'", "(registration,field3,性別)(lab_30000,field301,妊娠可能な被験者である)",
+      df_item$formula_if_references
+    )
+  }
+  df_item_json <- df_item |>
+    as.data.frame() %>%
+    mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
+  if (trialName == "blin_b_all") {
+    df_item_json[318, 10] <- "(registration,field11,初発診断日)(registration,field2,生年月日)(allocationfac_100,field9,診断時白血球数（/uL）)(allocationfac_100,field16,NCI/Rome 分類)"
+    df_item_json[1574, 10] <- "(registration,field3,性別)(lab_3000,field2,妊娠可能な被験者である)"
+    df_item_json[2107, 10] <- "(registration,field3,性別)(screening_100,field200,妊娠可能な被験者である)"
+  }
+  df_item_sheet <- jsonSheetItemList$sheet |>
+    as.data.frame() %>%
+    mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
+  res <- CheckTarget(df_item_sheet, df_item_json)
+  return(res)
+}
 # item
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_old.R"), encoding = "UTF-8")
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item.R"), encoding = "UTF-8")
 # allocation
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_allocation.R"), encoding = "UTF-8")
 # action
