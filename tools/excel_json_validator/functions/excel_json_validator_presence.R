@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_presence.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.16
+#' @date 2025.7.3
 CheckPresence <- function(sheetList) {
     sheetName <- "presence"
     sheet <- sheetList[[sheetName]] |>
@@ -25,9 +25,20 @@ GetPresenceFromJson <- function() {
             label <- .x$label
             return(data.frame(sheet_id = sheet_id, name = name, label = label))
         })
-    df_no_validators_presence_jpname_aliasname <- df_no_validators_presence %>%
-        inner_join(jpnameAndAliasnameAndSheetId, by = c("sheet_id" = "sheet_id")) %>%
-        arrange(alias_name, sheet_id)
+    if (nrow(df_no_validators_presence) == 0) {
+        df_no_validators_presence_jpname_aliasname <- data.frame(
+            sheet_id = character(),
+            name = character(),
+            label = character(),
+            jpname = character(),
+            alias_name = character(),
+            stringsAsFactors = FALSE
+        )
+    } else {
+        df_no_validators_presence_jpname_aliasname <- df_no_validators_presence %>%
+            inner_join(jpnameAndAliasnameAndSheetId, by = c("sheet_id" = "sheet_id")) %>%
+            arrange(alias_name, sheet_id)
+    }
     cdiscSheetConfigs <- jsonList %>%
         map(~ .x$cdisc_sheet_config)
     excludeTargetsStat <- cdiscSheetConfigs %>%
@@ -80,10 +91,14 @@ GetPresenceFromJson <- function() {
         bind_rows(excludeTargetsStat) %>%
         inner_join(jpnameAndAliasnameAndSheetId, by = c("sheet_id" = "sheet_id")) %>%
         arrange(alias_name, sheet_id)
-    presenceExcludeTargets <- df_no_validators_presence_jpname_aliasname %>%
-        anti_join(excludeTargets, by = c("sheet_id" = "sheet_id", "name" = "name")) %>%
-        select(c("jpname", "alias_name", "name", "label"))
-    if (nrow(presenceExcludeTargets) == 0) {
+    if (nrow(df_no_validators_presence_jpname_aliasname) == 0) {
+        presenceExcludeTargets <- NULL
+    } else {
+        presenceExcludeTargets <- df_no_validators_presence_jpname_aliasname %>%
+            anti_join(excludeTargets, by = c("sheet_id" = "sheet_id", "name" = "name")) %>%
+            select(c("jpname", "alias_name", "name", "label"))
+    }
+    if (is.null(presenceExcludeTargets) || nrow(presenceExcludeTargets) == 0) {
         res <- data.frame(
             jpname = "",
             alias_name = "",
