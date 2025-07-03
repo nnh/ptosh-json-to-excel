@@ -67,11 +67,11 @@ GetItemFromJson <- function(sheetList, jsonList) {
             if (!is.list(.)) {
                 return("")
             }
-            option <- .$option
+            option <- .[["option"]]
             if (is.null(option)) {
                 return("")
             } else {
-                temp <- list(option.name = option$name)
+                temp <- list(option.name = option[["name"]])
                 return(temp)
             }
         })
