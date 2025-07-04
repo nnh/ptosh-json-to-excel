@@ -65,7 +65,7 @@ CheckIdenticalItemVisitList <- function(item_visit_by_group_list, alias_name_col
 }
 
 GetItemVisitByGroupList <- function(item_visit_by_group, alias_name_columnName) {
-    item_visit_groups <- item_visit_by_group$group %>% unique()
+    item_visit_groups <- item_visit_by_group[["group"]] %>% unique()
     res <- item_visit_groups %>%
         map(~ {
             group <- .x

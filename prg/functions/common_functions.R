@@ -2,7 +2,7 @@
 #'
 #' @file common_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2024.1.24
+#' @date 2024.7.4
 # ------ functions ------
 #' Remove specified elements from a list.
 #'
@@ -119,8 +119,8 @@ ExecReadJsonFiles <- function() {
   json_files <- ReadJsonFiles(json_filenames, targetTrialFolder)
   trialName <- targetTrialFolder %>% basename()
   res <- list()
-  res$json_files <- json_files
-  res$trialName <- trialName
+  res[["json_files"]] <- json_files
+  res[["trialName"]] <- trialName
   return(res)
 }
 #' Replace Text Function

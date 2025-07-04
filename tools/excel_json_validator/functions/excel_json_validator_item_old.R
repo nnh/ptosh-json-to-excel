@@ -9,7 +9,7 @@ GetItemOldFromJson <- function(sheetList, jsonList, fieldItems, jpNameAndAliasNa
             df <- .
             res <- df |>
                 map(~ {
-                    if (.$type == "FieldItem::Article") {
+                    if (.[["type"]] == "FieldItem::Article") {
                         return(.)
                     } else {
                         return(NULL)
@@ -40,21 +40,21 @@ GetItemOldFromJson <- function(sheetList, jsonList, fieldItems, jpNameAndAliasNa
             if (!is.list(.)) {
                 return("")
             }
-            validators <- .$validators
+            validators <- .[["validators"]]
             if (is.null(validators)) {
                 return("")
             } else {
-                validatorsDate <- validators$date
+                validatorsDate <- validators[["date"]]
                 temp <- list()
                 temp <- temp |>
-                    append(validators$presence) |>
-                    append(validators$formula)
-                if (!is.null(validatorsDate$validate_date_after_or_equal_to)) {
-                    temp2 <- list(validate_date_after_or_equal_to = validatorsDate$validate_date_after_or_equal_to)
+                    append(validators[["presence"]]) |>
+                    append(validators[["formula"]])
+                if (!is.null(validatorsDate[["validate_date_after_or_equal_to"]])) {
+                    temp2 <- list(validate_date_after_or_equal_to = validatorsDate[["validate_date_after_or_equal_to"]])
                     temp <- temp |> append(temp2)
                 }
-                if (!is.null(validatorsDate$validate_date_before_or_equal_to)) {
-                    temp2 <- list(validate_date_before_or_equal_to = validatorsDate$validate_date_before_or_equal_to)
+                if (!is.null(validatorsDate[["validate_date_before_or_equal_to"]])) {
+                    temp2 <- list(validate_date_before_or_equal_to = validatorsDate[["validate_date_before_or_equal_to"]])
                     temp <- temp |> append(temp2)
                 }
                 return(temp)
@@ -63,8 +63,8 @@ GetItemOldFromJson <- function(sheetList, jsonList, fieldItems, jpNameAndAliasNa
         return(res)
     })
     nameAndAliasname <- jsonList |>
-        map(~ list(jpname = .$name, alias_name = .$alias_name)) |>
-        keep(~ !is.null(article[[.$alias_name]]))
+        map(~ list(jpname = .[["name"]], alias_name = .[["alias_name"]])) |>
+        keep(~ !is.null(article[[.[["alias_name"]]]]))
     list_items <- list()
     for (i in 1:length(nameAndAliasname)) {
         list_items[[i]] <- list()
@@ -72,15 +72,15 @@ GetItemOldFromJson <- function(sheetList, jsonList, fieldItems, jpNameAndAliasNa
             list_items[[i]][[j]] <- list()
             list_items[[i]][[j]] <- list_items[[i]][[j]] |>
                 append(nameAndAliasname[[i]]) |>
-                append(list(name = article[[i]][[j]]$name)) |>
-                append(list(label = article[[i]][[j]]$label)) |>
-                append(list(default_value = article[[i]][[j]]$default_value)) |>
+                append(list(name = article[[i]][[j]][["name"]])) |>
+                append(list(label = article[[i]][[j]][["label"]])) |>
+                append(list(default_value = article[[i]][[j]][["default_value"]])) |>
                 append(article_option_name[[i]][[j]]) |>
                 append(article_validatores[[i]][[j]])
             list_items[[i]][[j]] <- list_items[[i]][[j]] %>% keep(~ !is.null(.) && . != "")
         }
     }
-    names(list_items) <- nameAndAliasname |> map_chr(~ .$alias_name)
+    names(list_items) <- nameAndAliasname |> map_chr(~ .[["alias_name"]])
     sheetName <- "item_old"
     temp <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])

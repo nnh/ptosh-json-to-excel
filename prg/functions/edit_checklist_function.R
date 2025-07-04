@@ -39,8 +39,8 @@ CreatedummyDf <- function(target_columns) {
   return(df)
 }
 JoinJpnameAndAliasName <- function(df, json_file) {
-  df$jpname <- json_file$name
-  df$alias_name <- json_file$alias_name
+  df[["jpname"]] <- json_file[["name"]]
+  df[["alias_name"]] <- json_file[["alias_name"]]
   return(df)
 }
 SelectColumns <- function(df, target_columns) {
@@ -58,11 +58,11 @@ JoinJpnameAndAliasNameAndSelectColumns <- function(df_name, json_file) {
   return(df)
 }
 GetJsonFile <- function(json_file) {
-  json_file <- json_file$rawJson
+  json_file <- json_file[["rawJson"]]
   return(json_file)
 }
 GetFieldItems <- function(json_file) {
-  return(json_file$field_items)
+  return(json_file[["field_items"]])
 }
 
 source(here("prg", "functions", "edit_common.R"), encoding = "UTF-8")

@@ -1,6 +1,6 @@
 GetOptions <- function(field_items) {
     target <- field_items %>%
-        keep(~ !is.null(.x[["option"]]) && .x$type == "FieldItem::Article")
+        keep(~ !is.null(.x[["option"]]) && .x[["type"]] == "FieldItem::Article")
     if (length(target) == 0) {
         return(NULL)
     }
@@ -16,7 +16,7 @@ GetOptions <- function(field_items) {
                     option.values_code = .x[["code"]] %||% NA,
                     option.values_is_usable = .x[["is_usable"]] %||% NA
                 ))
-            df_option_values$option.name <- option_name
+            df_option_values[["option.name"]] <- option_name
             return(df_option_values)
         }) %>%
         bind_rows() %>%

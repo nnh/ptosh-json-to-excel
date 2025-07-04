@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.1
+#' @date 2025.7.4
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -48,8 +48,8 @@ kItemVisit <- "item_visit"
 kTargetSheetNames <- c("item_old", kItemVisit, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
 # ------ main ------
 temp <- ExecReadJsonFiles()
-trialName <- temp$trialName
-json_files <- temp$json_files
+trialName <- temp[["trialName"]]
+json_files <- temp[["json_files"]]
 rm(temp)
 
 field_list <- json_files %>%
@@ -59,15 +59,15 @@ field_list <- json_files %>%
     fields <- field_items %>%
       map(~ {
         res <- tibble::tibble(
-          name = .x$name,
-          field_number = .x$name %>% str_extract("\\d+") %>% as.numeric(),
-          label = .x$label
+          name = .x[["name"]],
+          field_number = .x[["name"]] %>% str_extract("\\d+") %>% as.numeric(),
+          label = .x[["label"]]
         )
         return(res)
       }) %>%
       bind_rows()
-    fields$jpname <- json_file$name
-    fields$alias_name <- json_file$alias_name
+    fields[["jpname"]] <- json_file[["name"]]
+    fields[["alias_name"]] <- json_file[["alias_name"]]
     return(fields)
   }) %>%
   bind_rows()
@@ -75,18 +75,18 @@ field_list <- json_files %>%
 sheet_data_list <- json_files %>% map(~ {
   json_file <- GetJsonFile(.)
   field_items <- json_file %>% GetFieldItems()
-  if (json_file$category == "visit") {
-    item_visit <- EditItem(field_items, json_file$alias_name)
+  if (json_file[["category"]] == "visit") {
+    item_visit <- EditItem(field_items, json_file[["alias_name"]])
     item <- NULL
   } else {
     item_visit <- NULL
-    item <- EditItem(field_items, json_file$alias_name)
+    item <- EditItem(field_items, json_file[["alias_name"]])
   }
   item_old <- field_items %>%
     GetTargetByType("FieldItem::Article") %>%
-    EditItem_old(json_file$alias_name)
+    EditItem_old(json_file[["alias_name"]])
   allocation <- json_file %>% GetAllocation()
-  action <- field_items %>% GetAction(json_file$alias_name)
+  action <- field_items %>% GetAction(json_file[["alias_name"]])
   display <- field_items %>% GetDisplay()
   option <- field_items %>% GetOptions()
   comment <- field_items %>% GetComment("content")
@@ -100,16 +100,16 @@ sheet_data_list <- json_files %>% map(~ {
   assigned <- field_items %>%
     GetTargetByType("FieldItem::Assigned") %>%
     EditAssigned()
-  name <- tibble(name = json_file$name, alias_name = json_file$alias_name, images_count = json_file$images_count)
+  name <- tibble(name = json_file[["name"]], alias_name = json_file[["alias_name"]], images_count = json_file[["images_count"]])
   limitation <- field_items %>%
     GetLimitation() %>%
     EditLimitation()
   date <- field_items %>%
     GetDate() %>%
-    EditDate(json_file$alias_name)
+    EditDate(json_file[["alias_name"]])
   res <- kTargetSheetNames %>% map(~ JoinJpnameAndAliasNameAndSelectColumns(.x, json_file))
   names(res) <- kTargetSheetNames
-  res$name <- name
+  res[["name"]] <- name
   return(res)
 })
 
@@ -132,8 +132,8 @@ for (nm in names(sheet_data_combine)) {
 
 output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
-item_visit <- EditItemVisit(output_checklist$item_visit)
-output_checklist$item_visit <- item_visit
+item_visit <- EditItemVisit(output_checklist[["item_visit"]])
+output_checklist[["item_visit"]] <- item_visit
 
 # create output folder.
 output_folder_name <- Sys.time() %>%

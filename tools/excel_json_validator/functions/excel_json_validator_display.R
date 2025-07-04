@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_display.R
 #' @author Mariko Ohtsuka
-#' @date 2025.6.27
+#' @date 2025.7.4
 CheckDisplay <- function(sheetList, fieldItems, jpNameAndAliasName) {
     sheetName <- "display"
     sheet <- sheetList[[sheetName]] |>
@@ -17,14 +17,14 @@ GetDisplayFromJson <- function(fieldItems, jpNameAndAliasName) {
         res <- fieldItem |>
             map(~ {
                 temp <- .
-                type <- temp$type
-                is_invisible <- temp$is_invisible
+                type <- temp[["type"]]
+                is_invisible <- temp[["is_invisible"]]
                 if (type == "FieldItem::Assigned" & !is_invisible) {
-                    res <- tibble(alias_name = aliasName, name = temp$name, label = temp$label)
+                    res <- tibble(alias_name = aliasName, name = temp[["name"]], label = temp[["label"]])
                     return(res)
                 }
                 if (type == "FieldItem::Article" & is_invisible) {
-                    res <- tibble(alias_name = aliasName, name = temp$name, label = temp$label)
+                    res <- tibble(alias_name = aliasName, name = temp[["name"]], label = temp[["label"]])
                     return(res)
                 }
                 return(NULL)

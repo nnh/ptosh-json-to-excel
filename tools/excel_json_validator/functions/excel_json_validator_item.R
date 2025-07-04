@@ -9,7 +9,7 @@ GetItemArticleFromFieldItems <- function(fieldItems) {
             df <- .
             res <- df |>
                 map(~ {
-                    if (.$type == "FieldItem::Article") {
+                    if (.[["type"]] == "FieldItem::Article") {
                         return(.)
                     } else {
                         return(NULL)
@@ -46,21 +46,21 @@ GetItemArticleValidators <- function(article) {
             if (!is.list(.)) {
                 return("")
             }
-            validators <- .$validators
+            validators <- .[["validators"]]
             if (is.null(validators)) {
                 return("")
             } else {
-                validatorsDate <- validators$date
+                validatorsDate <- validators[["date"]]
                 temp <- list()
                 temp <- temp |>
-                    append(validators$presence) |>
-                    append(validators$formula)
-                if (!is.null(validatorsDate$validate_date_after_or_equal_to)) {
-                    temp2 <- list(validate_date_after_or_equal_to = validatorsDate$validate_date_after_or_equal_to)
+                    append(validators[["presence"]]) |>
+                    append(validators[["formula"]])
+                if (!is.null(validatorsDate[["validate_date_after_or_equal_to"]])) {
+                    temp2 <- list(validate_date_after_or_equal_to = validatorsDate[["validate_date_after_or_equal_to"]])
                     temp <- temp |> append(temp2)
                 }
-                if (!is.null(validatorsDate$validate_date_before_or_equal_to)) {
-                    temp2 <- list(validate_date_before_or_equal_to = validatorsDate$validate_date_before_or_equal_to)
+                if (!is.null(validatorsDate[["validate_date_before_or_equal_to"]])) {
+                    temp2 <- list(validate_date_before_or_equal_to = validatorsDate[["validate_date_before_or_equal_to"]])
                     temp <- temp |> append(temp2)
                 }
                 return(temp)
@@ -82,8 +82,8 @@ CreateItemListItemsCleanEntry <- function(x) {
 
 CreateItemListItems <- function(jsonList, article, article_option_name, article_validators) {
     nameAndAliasname <- jsonList |>
-        map(~ list(jpname = .$name, alias_name = .$alias_name)) |>
-        keep(~ !is.null(article[[.$alias_name]]))
+        map(~ list(jpname = .[["name"]], alias_name = .[["alias_name"]])) |>
+        keep(~ !is.null(article[[.[["alias_name"]]]]))
     list_items <- list()
     for (i in 1:length(nameAndAliasname)) {
         list_items[[i]] <- list()
@@ -91,13 +91,13 @@ CreateItemListItems <- function(jsonList, article, article_option_name, article_
             list_items[[i]][[j]] <- list()
             list_items[[i]][[j]] <- list_items[[i]][[j]] |>
                 append(nameAndAliasname[[i]]) |>
-                append(list(name = article[[i]][[j]]$name)) |>
-                append(list(label = article[[i]][[j]]$label)) |>
+                append(list(name = article[[i]][[j]][["name"]])) |>
+                append(list(label = article[[i]][[j]][["label"]])) |>
                 append(list(
-                    default_value = if (is.null(article[[i]][[j]]$default_value)) {
+                    default_value = if (is.null(article[[i]][[j]][["default_value"]])) {
                         "NA"
                     } else {
-                        article[[i]][[j]]$default_value
+                        article[[i]][[j]][["default_value"]]
                     }
                 )) |>
                 append(
@@ -111,7 +111,7 @@ CreateItemListItems <- function(jsonList, article, article_option_name, article_
             list_items[[i]][[j]] <- list_items[[i]][[j]] %>% keep(~ !is.null(.))
         }
     }
-    names(list_items) <- nameAndAliasname |> map_chr(~ .$alias_name)
+    names(list_items) <- nameAndAliasname |> map_chr(~ .[["alias_name"]])
     return(list_items)
 }
 GetItemFromSheet <- function(sheetList, sheetName) {
@@ -161,17 +161,17 @@ GetItemFieldTypeFromJson <- function(fieldItems) {
                     if (!is.list(.)) {
                         return(NULL)
                     }
-                    if (!is.null(.$field_type) && !.$field_type %in% c("text", "text_area")) {
+                    if (!is.null(.[["field_type"]]) && !.[["field_type"]] %in% c("text", "text_area")) {
                         return(NULL)
                     }
-                    numericality <- .$validators$numericality
+                    numericality <- .[["validators"]][["numericality"]]
                     if (!is.null(numericality)) {
                         field_type <- "数値"
                     } else {
                         field_type <- "テキスト"
                     }
                     return(list(
-                        field_id = .$name,
+                        field_id = .[["name"]],
                         field_type = field_type
                     ))
                 }) %>%
@@ -187,8 +187,8 @@ GetItemFieldTypeFromJson <- function(fieldItems) {
                 function(entry) {
                     tibble(
                         alias_name = alias_name,
-                        name = entry$field_id,
-                        field_type = entry$field_type
+                        name = entry[["field_id"]],
+                        field_type = entry[["field_type"]]
                     )
                 }
             )

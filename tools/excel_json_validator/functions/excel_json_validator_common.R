@@ -33,12 +33,12 @@ GetTargetFolder <- function(trialName) {
     stop(str_c("No folders found for trial name: ", trialName))
   }
   df <- tibble(folderName = targetDirs)
-  df$dateTime <- df$folderName |>
+  df[["dateTime"]] <- df[["folderName"]] |>
     str_extract("[0-9]+") |>
     as.numeric()
   latestFolder <- df |>
     filter(dateTime == max(dateTime, na.rm = T)) %>%
-    .$folderName |>
+    .[["folderName"]] |>
     list_c()
   print(str_c("target: ", latestFolder))
   return(latestFolder)
@@ -65,14 +65,14 @@ GetAliasnameAndFieldIdAndLabel <- function(fieldItems) {
   res <- map2(fieldItems, names(fieldItems), ~ {
     fieldItem <- .x
     aliasName <- .y
-    res <- fieldItem |> map_df(~ c(fields = .$name, fields.label = .$label))
-    res$alias_name <- aliasName
+    res <- fieldItem |> map_df(~ c(fields = .[["name"]], fields.label = .[["label"]]))
+    res[["alias_name"]] <- aliasName
     return(res)
   }) |> bind_rows()
   return(res)
 }
 GetNameAndAliasNameByJson <- function(json_list) {
-  res <- json_list |> map_df(~ list(jpname = .$name, alias_name = .$alias_name))
+  res <- json_list |> map_df(~ list(jpname = .[["name"]], alias_name = .[["alias_name"]]))
   return(res)
 }
 LoadJsonList <- function(input_path) {
@@ -84,7 +84,7 @@ LoadJsonList <- function(input_path) {
   return(jsonList)
 }
 GetFieldItemsByJsonList <- function(json_list) {
-  res <- json_list |> map(~ .$field_items)
+  res <- json_list |> map(~ .[["field_items"]])
   return(res)
 }
 GetItemsSelectColnames <- function(input_tibble, target_colnames, jpNameAndAliasName) {
@@ -181,15 +181,15 @@ GetRefBefAft <- function(target, befAft) {
   return(target)
 }
 ExcelJsonValidator_item <- function(jsonSheetItemList, old_flag) {
-  df_item <- jsonSheetItemList$json
+  df_item <- jsonSheetItemList[["json"]]
   if (trialName == "TAS0728-HER2") {
-    df_item$formula_if_references <- ifelse(
-      df_item$validate_formula_if == "(ref('registration',3)=='M' && field522=='N') || ref('registration',3)=='F'", "(registration,field3,性別)(lab_10000,field522,妊娠可能な被験者である)",
-      df_item$formula_if_references
+    df_item[["formula_if_references"]] <- ifelse(
+      df_item[["validate_formula_if"]] == "(ref('registration',3)=='M' && field522=='N') || ref('registration',3)=='F'", "(registration,field3,性別)(lab_10000,field522,妊娠可能な被験者である)",
+      df_item[["formula_if_references"]]
     )
-    df_item$formula_if_references <- ifelse(
-      df_item$validate_formula_if == "(ref('registration',3)=='M' && field301=='N') || ref('registration',3)=='F'", "(registration,field3,性別)(lab_30000,field301,妊娠可能な被験者である)",
-      df_item$formula_if_references
+    df_item[["formula_if_references"]] <- ifelse(
+      df_item[["validate_formula_if"]] == "(ref('registration',3)=='M' && field301=='N') || ref('registration',3)=='F'", "(registration,field3,性別)(lab_30000,field301,妊娠可能な被験者である)",
+      df_item[["formula_if_references"]]
     )
   }
   df_item_json <- df_item |>
@@ -200,7 +200,7 @@ ExcelJsonValidator_item <- function(jsonSheetItemList, old_flag) {
     df_item_json[1574, 10] <- "(registration,field3,性別)(lab_3000,field2,妊娠可能な被験者である)"
     df_item_json[2107, 10] <- "(registration,field3,性別)(screening_100,field200,妊娠可能な被験者である)"
   }
-  df_item_sheet <- jsonSheetItemList$sheet |>
+  df_item_sheet <- jsonSheetItemList[["sheet"]] |>
     as.data.frame() %>%
     mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
   res <- CheckTarget(df_item_sheet, df_item_json)

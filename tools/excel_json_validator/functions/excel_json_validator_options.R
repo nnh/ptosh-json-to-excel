@@ -17,14 +17,14 @@ GetOptionFromJson <- function(fieldItems, jpNameAndAliasName) {
         res <- fieldItem |>
             map(~ {
                 item <- .
-                if (item$type != "FieldItem::Article") {
+                if (item[["type"]] != "FieldItem::Article") {
                     return(NULL)
                 }
                 option <- item[["option"]]
                 if (is.null(option)) {
                     return(NULL)
                 }
-                option$values <- option[["values"]] |> keep(~ .[["is_usable"]])
+                option[["values"]] <- option[["values"]] |> keep(~ .[["is_usable"]])
                 optionName <- option[["name"]]
                 optionValues <- option[["values"]] |> map(
                     ~ list(
@@ -39,7 +39,7 @@ GetOptionFromJson <- function(fieldItems, jpNameAndAliasName) {
             }) |>
             keep(~ !is.null(.)) |>
             map_df(~.)
-        res$alias_name <- aliasName
+        res[["alias_name"]] <- aliasName
         return(res)
     }) |>
         bind_rows() |>

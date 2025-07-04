@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_master.R
 #' @author Mariko Ohtsuka
-#' @date 2025.6.27
+#' @date 2025.7.4
 CheckMaster <- function(sheetList, fieldItems, jpNameAndAliasName) {
     sheetName <- "master"
     sheet <- sheetList[[sheetName]] |>
@@ -14,9 +14,9 @@ GetMasterFromJson <- function(fieldItems, jpNameAndAliasName) {
     df <- map2(fieldItems, names(fieldItems), ~ {
         fieldItem <- .x
         aliasName <- .y
-        res <- fieldItem |> keep(~ !is.null(.$link_type))
-        master <- res |> map_df(~ list(name = .$name, label = .$label, link_type = .$link_type))
-        master$alias_name <- aliasName
+        res <- fieldItem |> keep(~ !is.null(.[["link_type"]]))
+        master <- res |> map_df(~ list(name = .[["name"]], label = .[["label"]], link_type = .[["link_type"]]))
+        master[["alias_name"]] <- aliasName
         return(master)
     }) |>
         bind_rows() |>
