@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.2
+#' @date 2025.7.4
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -180,7 +180,7 @@ GetRefBefAft <- function(target, befAft) {
   }
   return(target)
 }
-ExcelJsonValidator_item <- function(jsonSheetItemList) {
+ExcelJsonValidator_item <- function(jsonSheetItemList, old_flag) {
   df_item <- jsonSheetItemList$json
   if (trialName == "TAS0728-HER2") {
     df_item$formula_if_references <- ifelse(
@@ -195,7 +195,7 @@ ExcelJsonValidator_item <- function(jsonSheetItemList) {
   df_item_json <- df_item |>
     as.data.frame() %>%
     mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
-  if (trialName == "blin_b_all") {
+  if (trialName == "blin_b_all" && old_flag) {
     df_item_json[318, 10] <- "(registration,field11,初発診断日)(registration,field2,生年月日)(allocationfac_100,field9,診断時白血球数（/uL）)(allocationfac_100,field16,NCI/Rome 分類)"
     df_item_json[1574, 10] <- "(registration,field3,性別)(lab_3000,field2,妊娠可能な被験者である)"
     df_item_json[2107, 10] <- "(registration,field3,性別)(screening_100,field200,妊娠可能な被験者である)"

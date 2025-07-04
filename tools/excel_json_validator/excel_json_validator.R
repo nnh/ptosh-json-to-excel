@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.2
+#' @date 2025.7.4
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -11,8 +11,7 @@ kAliasNameJapaneseColumnName <- "シート名英数字別名"
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
 # ------ constants ------
 keep_objects <- c("keep_objects", "jsonList", "sheetList", "trialName", "kTrialNames", "kAliasNameJapaneseColumnName")
-# kTrialNames <- c("amld24", "Bev-FOLFOX-SBC", "TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
-kTrialNames <- c("amld24", "allb19", "allr23")
+kTrialNames <- c("amld24", "Bev-FOLFOX-SBC", "TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
 # ------ functions ------
 ExecExcelJsonValidator <- function(trialName) {
   if (exists("keep_objects")) {
@@ -27,10 +26,15 @@ ExecExcelJsonValidator <- function(trialName) {
   item_jsonList <- jsonList %>% keep(~ .x$category != "visit")
   item_fieldItems <- item_jsonList |> GetFieldItemsByJsonList()
   jsonSheetItemList <- GetItem_item(sheetList, item_jsonList, item_fieldItems)
-  checkChecklist$item <- ExcelJsonValidator_item(jsonSheetItemList)
+  checkChecklist$item <- ExcelJsonValidator_item(jsonSheetItemList, old_flag = FALSE)
   if (!is.null(checkChecklist$item)) {
-    for (row in 1:nrow(jsonSheetItemList$sheet)) {
-      for (col in 1:ncol(jsonSheetItemList$sheet)) {
+    for (col in 1:ncol(jsonSheetItemList$sheet)) {
+      if (identical(jsonSheetItemList$sheet[, col], jsonSheetItemList$json[, col])) {
+        next
+      } else {
+        print(str_c("Validation error in column: ", col, " of item sheet"))
+      }
+      for (row in 1:nrow(jsonSheetItemList$sheet)) {
         if (is.na(jsonSheetItemList$sheet[row, col]) && is.na(jsonSheetItemList$json[row, col])) {
           next
         }
@@ -48,7 +52,7 @@ ExecExcelJsonValidator <- function(trialName) {
   ##################
   fieldItems <- jsonList |> GetFieldItemsByJsonList()
   jsonSheetItemList <- GetItemOldFromJson(sheetList, jsonList, fieldItems, jpNameAndAliasName)
-  checkChecklist$item_old <- ExcelJsonValidator_item(jsonSheetItemList)
+  checkChecklist$item_old <- ExcelJsonValidator_item(jsonSheetItemList, old_flag = TRUE)
   ##############
   # allocation #
   ##############
@@ -139,7 +143,7 @@ ExecExcelJsonValidator <- function(trialName) {
       arrange(alias_name, name)
     json <- GetPresenceFromJson(fieldItems, jpNameAndAliasName) %>%
       arrange(alias_name, name)
-    return(CheckTarget(sheet, json))
+    checkChecklist$presence <- CheckTarget(sheet, json)
   } else {
     checkChecklist$presence <- sheetList |> CheckPresence(fieldItems, jpNameAndAliasName)
   }
