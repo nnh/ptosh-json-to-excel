@@ -11,7 +11,7 @@ kAliasNameJapaneseColumnName <- "シート名英数字別名"
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
 # ------ constants ------
 keep_objects <- c("keep_objects", "jsonList", "sheetList", "trialName", "kTrialNames", "kAliasNameJapaneseColumnName")
-kTrialNames <- c("amld24", "Bev-FOLFOX-SBC", "TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
+kTrialNames <- c("JCCG-LFS25", "amld24", "Bev-FOLFOX-SBC", "TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
 # ------ functions ------
 ExecExcelJsonValidator <- function(trialName) {
   if (exists("keep_objects")) {

@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_item_old.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.1
+#' @date 2025.7.4
 GetItemOldFromJson <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName) {
     article <- fieldItems |>
         map(~ {
@@ -24,11 +24,11 @@ GetItemOldFromJson <- function(sheetList, jsonList, fieldItems, jpNameAndAliasNa
             if (!is.list(.)) {
                 return("")
             }
-            option <- .$option
+            option <- .[["option"]]
             if (is.null(option)) {
                 return("")
             } else {
-                temp <- list(option.name = option$name)
+                temp <- list(option.name = option[["name"]])
                 return(temp)
             }
         })

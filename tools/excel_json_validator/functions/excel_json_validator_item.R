@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_item.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.2
+#' @date 2025.7.4
 GetItemArticleFromFieldItems <- function(fieldItems) {
     article <- fieldItems |>
         map(~ {
@@ -27,11 +27,11 @@ GetItemArticleOptionName <- function(article) {
             if (!is.list(.)) {
                 return("")
             }
-            option <- .$option
+            option <- .[["option"]]
             if (is.null(option)) {
                 return("")
             } else {
-                temp <- list(option.name = option$name)
+                temp <- list(option.name = option[["name"]])
                 return(temp)
             }
         })

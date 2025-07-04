@@ -38,7 +38,7 @@ EditItem <- function(field_items, alias_name) {
         res <- tibble::tibble(
             name = .x$name,
             label = .x$label,
-            option.name = .x$option$name %||% NA,
+            option.name = .x[["option"]][["name"]] %||% NA,
             default_value = .x$default_value %||% NA,
             validators.presence.validate_presence_if = .x$validators$presence$validate_presence_if %||% NA,
             presence_if_references = presence_if_references %||% NA,
