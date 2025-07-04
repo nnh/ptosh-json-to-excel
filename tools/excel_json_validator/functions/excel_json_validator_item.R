@@ -70,6 +70,16 @@ GetItemArticleValidators <- function(article) {
     })
     return(article_validators)
 }
+
+CreateItemListItemsCleanEntry <- function(x) {
+    x %>%
+        map(~ {
+            named_x <- .x[!is.null(names(.x)) & names(.x) != ""]
+            tibble(!!!named_x)
+        }) %>%
+        bind_rows()
+}
+
 CreateItemListItems <- function(jsonList, article, article_option_name, article_validators) {
     nameAndAliasname <- jsonList |>
         map(~ list(jpname = .$name, alias_name = .$alias_name)) |>
@@ -127,7 +137,9 @@ GetItemFromJson <- function(fieldItems, jsonList, template_df_items) {
     article_option_name <- article |> GetItemArticleOptionName()
     article_validators <- article |> GetItemArticleValidators()
     list_items <- jsonList |> CreateItemListItems(article, article_option_name, article_validators)
-    flatten_list_items <- list_items |> flatten_df()
+    flatten_list_items <- list_items |>
+        map(CreateItemListItemsCleanEntry) %>%
+        bind_rows()
     df_items <- template_df_items |>
         bind_rows(flatten_list_items) |>
         filter(!is.na(jpname))
@@ -149,11 +161,11 @@ GetItemFieldTypeFromJson <- function(fieldItems) {
                     if (!is.list(.)) {
                         return(NULL)
                     }
-                    if (.$field_type != "text" && .$field_type != "text_area") {
+                    if (!is.null(.$field_type) && !.$field_type %in% c("text", "text_area")) {
                         return(NULL)
                     }
                     numericality <- .$validators$numericality
-                    if (is.null(numericality)) {
+                    if (!is.null(numericality)) {
                         field_type <- "数値"
                     } else {
                         field_type <- "テキスト"
@@ -167,14 +179,21 @@ GetItemFieldTypeFromJson <- function(fieldItems) {
             return(res)
         }) |>
         keep(~ length(.) > 0)
-    result <- imap_dfr(
+    result <- imap(
         fieldTypes,
-        ~ tibble(
-            alias_name = .y,
-            name = .x[[1]]$field_id,
-            field_type = .x[[1]]$field_type
-        )
-    )
+        function(entries, alias_name) {
+            map_dfr(
+                entries,
+                function(entry) {
+                    tibble(
+                        alias_name = alias_name,
+                        name = entry$field_id,
+                        field_type = entry$field_type
+                    )
+                }
+            )
+        }
+    ) %>% bind_rows()
     return(result)
 }
 GetItem_item <- function(sheetList, jsonList, fieldItems) {

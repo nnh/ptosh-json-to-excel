@@ -30,6 +30,7 @@ CheckIdenticalItemVisitList <- function(item_visit_by_group_list, alias_name_col
         rest_tibbles <- .x[-1]
         res <- base_tibble
         identical_tibble_1 <- base_tibble %>% select(-all_of(alias_name_columnName))
+        different_columns <- NULL
         for (i in seq_along(rest_tibbles)) {
             identical_tibble_2 <- rest_tibbles[[i]] %>%
                 ReplaceItemVisitSheetName(., alias_name_columnName) %>%
@@ -42,14 +43,21 @@ CheckIdenticalItemVisitList <- function(item_visit_by_group_list, alias_name_col
                     res[[alias_name_columnName]], ", ", alias_name
                 )
             } else {
-                print(str_c("グループ", base_tibble[["group"]][1], "のシート", base_tibble[[alias_name_columnName]][1], "は、前のシートと異なる項目があります。\n"))
+                error_title <- str_c("グループ", base_tibble[["group"]][1], "のシート", base_tibble[[alias_name_columnName]][1], "は、前のシートと異なる項目があります。\n")
+                error_columns <- list()
                 for (col in colnames(identical_tibble_1)) {
                     if (!identical(identical_tibble_1[[col]], identical_tibble_2[[col]])) {
-                        print(str_c("列", col, "が異なります。"))
+                        error_columns <- append(error_columns, col)
                     }
                 }
+                error_message <- paste(error_columns, collapse = ", ") %>%
+                    str_c("列", ., "の項目が異なります。")
+                different_columns <- append(different_columns, error_title) %>% append(error_message)
                 res <- bind_rows(res, rest_tibbles[[i]])
             }
+        }
+        if (!is.null(different_columns)) {
+            print(different_columns %>% unique())
         }
         return(res)
     })
