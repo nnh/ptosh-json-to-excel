@@ -22,7 +22,12 @@ ReplaceItemVisitSheetName <- function(check_group, alias_name_columnName) {
 }
 
 CheckIdenticalItemVisitList <- function(item_visit_by_group_list, alias_name_columnName) {
+    sheetName_columnName <- "シート名"
     res <- item_visit_by_group_list %>% map(~ {
+        outputSheetName <- ifelse(length(.x) > 1, str_remove(.x[[1]][[sheetName_columnName]][1], "\\(.*$"), .x[[1]][[sheetName_columnName]][1])
+        for (i in seq_along(.x)) {
+            .x[[i]][[sheetName_columnName]] <- outputSheetName
+        }
         base_tibble <- .x[[1]] %>% ReplaceItemVisitSheetName(., alias_name_columnName)
         if (length(.x) == 1) {
             return(base_tibble)
@@ -85,11 +90,9 @@ EditItemVisit <- function(item_visit) {
     if (nrow(item_visit) == 0) {
         return(item_visit)
     }
-    sheetName_columnName <- "シート名"
     alias_name_columnName <- kAliasNameJapaneseColumnName
     item_visit_by_group <- item_visit %>%
-        mutate(group = GetGroupSheetNames(.data[[alias_name_columnName]])) %>%
-        select(-all_of(sheetName_columnName))
+        mutate(group = GetGroupSheetNames(.data[[alias_name_columnName]]))
     item_visit_by_group_list <- GetItemVisitByGroupList(item_visit_by_group, alias_name_columnName)
     unique_item_visit <- CheckIdenticalItemVisitList(item_visit_by_group_list, alias_name_columnName)
     item_visit_tibble <- unique_item_visit %>% bind_rows()

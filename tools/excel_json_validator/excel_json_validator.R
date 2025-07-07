@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.4
+#' @date 2025.7.7
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -12,6 +12,7 @@ source(here("tools", "excel_json_validator", "functions", "excel_json_validator_
 # ------ constants ------
 keep_objects <- c("keep_objects", "jsonList", "sheetList", "trialName", "kTrialNames", "kAliasNameJapaneseColumnName")
 kTrialNames <- c("JCCG-LFS25", "amld24", "Bev-FOLFOX-SBC", "TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
+# kTrialNames <- c("amld24")
 # ------ functions ------
 ExecExcelJsonValidator <- function(trialName) {
   if (exists("keep_objects")) {
@@ -22,31 +23,16 @@ ExecExcelJsonValidator <- function(trialName) {
   source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
   jpNameAndAliasName <- jsonList |> GetNameAndAliasNameByJson()
   checkChecklist <- list()
+  # item_visit
+  # item_visit_jsonList <- jsonList %>% keep(~ .x[["category"]] == "visit")
+  # item_visit_fieldItems <- item_visit_jsonList |> GetFieldItemsByJsonList()
+  # jsonSheetItemVisitList <- GetItem_item_visit(sheetList, item_visit_jsonList, item_visit_fieldItems)
   # item
   item_jsonList <- jsonList %>% keep(~ .x[["category"]] != "visit")
   item_fieldItems <- item_jsonList |> GetFieldItemsByJsonList()
   jsonSheetItemList <- GetItem_item(sheetList, item_jsonList, item_fieldItems)
   checkChecklist[["item"]] <- ExcelJsonValidator_item(jsonSheetItemList, old_flag = FALSE)
-  if (!is.null(checkChecklist[["item"]])) {
-    for (col in 1:ncol(jsonSheetItemList[["sheet"]])) {
-      if (identical(jsonSheetItemList[["sheet"]][, col], jsonSheetItemList[["json"]][, col])) {
-        next
-      } else {
-        print(str_c("Validation error in column: ", col, " of item sheet"))
-      }
-      for (row in 1:nrow(jsonSheetItemList[["sheet"]])) {
-        if (is.na(jsonSheetItemList[["sheet"]][row, col]) && is.na(jsonSheetItemList[["json"]][row, col])) {
-          next
-        }
-        if (jsonSheetItemList[["sheet"]][row, col] != jsonSheetItemList[["json"]][row, col]) {
-          stop(str_c(
-            "Validation error in item at row ", row, " and column ", col, ": ",
-            jsonSheetItemList[["sheet"]][row, col], " != ", jsonSheetItemList[["json"]][row, col]
-          ))
-        }
-      }
-    }
-  }
+  dummy <- CheckChecklistItems(checkChecklist, jsonSheetItemList)
   ##################
   # item old sheet #
   ##################

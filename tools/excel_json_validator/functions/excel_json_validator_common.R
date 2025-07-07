@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.4
+#' @date 2025.7.7
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -207,8 +207,10 @@ ExcelJsonValidator_item <- function(jsonSheetItemList, old_flag) {
   return(res)
 }
 # item
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_common.R"), encoding = "UTF-8")
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_old.R"), encoding = "UTF-8")
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item.R"), encoding = "UTF-8")
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_visit.R"), encoding = "UTF-8")
 # allocation
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_allocation.R"), encoding = "UTF-8")
 # action
