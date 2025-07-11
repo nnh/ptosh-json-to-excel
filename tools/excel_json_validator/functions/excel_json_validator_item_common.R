@@ -112,7 +112,11 @@ GetItemArticleValidators <- function(article) {
 CreateItemListItems <- function(jsonList, article, article_option_name, article_validators) {
     nameAndAliasname <- jsonList |>
         map(~ list(jpname = .[["name"]], alias_name = .[["alias_name"]])) |>
-        keep(~ !is.null(article[[.[["alias_name"]]]]))
+        set_names(map_chr(jsonList, ~ .[["alias_name"]])) |>
+        keep(~ {
+            alias <- .[["alias_name"]]
+            !is.null(alias) && !is.null(article[[alias]]) && length(article[[alias]]) > 0
+        })
     list_items <- list()
     for (i in 1:length(nameAndAliasname)) {
         list_items[[i]] <- list()
@@ -183,8 +187,8 @@ EditOutputJsonItems <- function(
 
     return(json)
 }
-CheckChecklistItems <- function(checkChecklist, jsonSheetItemList) {
-    if (is.null(checkChecklist[["item"]])) {
+CheckChecklistItems <- function(checkChecklist, jsonSheetItemList, target) {
+    if (is.null(checkChecklist[[target]])) {
         return()
     }
     for (col in 1:ncol(jsonSheetItemList[["sheet"]])) {
