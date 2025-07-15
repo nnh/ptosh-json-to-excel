@@ -84,11 +84,14 @@ GetFieldItemsItemVisitByJsonList <- function(item_visit_jsonList, jpNameAndAlias
         }
     }
     groups <- groups[!is.na(groups)]
+    if (length(groups) == 0) {
+        return(item_visit_fieldItems)
+    }
     target_fieldItems <- item_visit_fieldItems %>% map(~ {
         fieldItems <- .x
         res <- fieldItems %>% map(~ {
             # 必要な要素だけ抽出し、他は削除
-            res <- .x[c("name", "label", "option", "default_value", "validators", "type")]
+            res <- .x[c("name", "label", "option", "default_value", "validators", "type", "normal_range")]
             if (!is.null(res[["option"]]) && is.list(res[["option"]])) {
                 temp_option_name <- res[["option"]][["name"]]
                 res[["option"]] <- NULL
