@@ -10,13 +10,14 @@ GetItemVisitCheckItemsFromJson <- function(item_visit_fieldItems) {
             df <- .
             res <- df |>
                 map(~ {
-                    if (!is.list(.)) {
+                    target <- .x
+                    if (!is.list(target)) {
                         return(NULL)
                     }
-                    numericality <- .[["validators"]][["numericality"]]
+                    numericality <- target[["validators"]][["numericality"]]
                     hasNumericality <- !is.null(numericality)
-                    normalRangeLessThan <- .[["normal_range"]][["less_than_or_equal_to"]]
-                    normalRangeGreaterThan <- .[["normal_range"]][["greater_than_or_equal_to"]]
+                    normalRangeLessThan <- target[["normal_range"]][["less_than_or_equal_to"]]
+                    normalRangeGreaterThan <- target[["normal_range"]][["greater_than_or_equal_to"]]
                     # normalRangeLessThanかnormalRangeGreaterThanのどちらもNULLならFalse
                     hasNormalRange <- FALSE
                     if (is.null(normalRangeLessThan) && is.null(normalRangeGreaterThan)) {
@@ -36,13 +37,13 @@ GetItemVisitCheckItemsFromJson <- function(item_visit_fieldItems) {
                     } else if (hasNumericality && hasNormalRange) {
                         field_type_result <- "数値・アラート有"
                     } else if (hasNumericality && !hasNormalRange) {
-                        field_type_result <- "アラート設定有"
+                        field_type_result <- "数値チェック有"
                     } else if (!hasNumericality && hasNormalRange) {
-                        field_type_result <- "数値チェック設定有"
+                        field_type_result <- "アラート設定有"
                     }
                     if (!is.null(field_type_result)) {
                         return(list(
-                            field_id = .[["name"]],
+                            field_id = target[["name"]],
                             field_type = field_type_result
                         ))
                     } else {
@@ -54,10 +55,19 @@ GetItemVisitCheckItemsFromJson <- function(item_visit_fieldItems) {
         }) |>
         keep(~ length(.) > 0)
 
-    result <- CreateItemsByTargetTibble(checkItems, id_col = "field_id", type_col = "field_type")
+    result <- CreateItemsByTargetTibble(
+        checkItems,
+        id_col = "field_id",
+        type_col = "field_type"
+    )
+    result[["numericality_normal_range_check"]] <- result[["field_type"]]
+    result <- result %>% select(-"field_type")
     return(result)
 }
 GetFieldItemsItemVisitByJsonList <- function(item_visit_jsonList, jpNameAndAliasName) {
+    if (length(item_visit_jsonList) == 0) {
+        return(NULL)
+    }
     item_visit_fieldItems <- item_visit_jsonList |> GetFieldItemsByJsonList()
 
     alias_names <- item_visit_jsonList |> names()
@@ -178,11 +188,12 @@ GetItem_item_visit <- function(sheetList, item_visit_jsonList, item_visit_fieldI
     item_visit_jsonList <- c(item_visit_jsonList_matched, target_visit_jsonList_unique)
 
     json_items <- GetItemFromJson(item_visit_fieldItems, item_visit_jsonList, sheet)
+    json_items <- json_items %>% select(-"numericality_normal_range_check")
     check_items <- GetItemVisitCheckItemsFromJson(item_visit_fieldItems)
     json <- EditOutputJsonItems(
         target = check_items,
         json = json_items,
-        colName = "field_type",
+        colName = "numericality_normal_range_check",
         sheet_colnames = sheet |> colnames(),
         na_convert_targets = c("option.name", "default_value")
     )

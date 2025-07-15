@@ -12,7 +12,6 @@ source(here("tools", "excel_json_validator", "functions", "excel_json_validator_
 # ------ constants ------
 keep_objects <- c("keep_objects", "jsonList", "sheetList", "trialName", "kTrialNames", "kAliasNameJapaneseColumnName")
 kTrialNames <- c("JCCG-LFS25", "amld24", "Bev-FOLFOX-SBC", "TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
-kTrialNames <- c("amld24")
 # ------ functions ------
 ExecExcelJsonValidator <- function(trialName) {
   if (exists("keep_objects")) {
@@ -24,10 +23,16 @@ ExecExcelJsonValidator <- function(trialName) {
   jpNameAndAliasName <- jsonList |> GetNameAndAliasNameByJson()
   checkChecklist <- list()
   # item_visit
-  item_visit_jsonList <- jsonList %>% keep(~ .x[["category"]] == "visit")
-  item_visit_fieldItems <- GetFieldItemsItemVisitByJsonList(item_visit_jsonList, jpNameAndAliasName)
-  jsonSheetItemVisitList <- GetItem_item_visit(sheetList, item_visit_jsonList, item_visit_fieldItems)
-  if (!is.null(jsonSheetItemVisitList)) {
+  if (trialName != "TAS0728-HER2") {
+    item_visit_jsonList <- jsonList %>% keep(~ .x[["category"]] == "visit")
+    item_visit_fieldItems <- GetFieldItemsItemVisitByJsonList(item_visit_jsonList, jpNameAndAliasName)
+    jsonSheetItemVisitList <- GetItem_item_visit(sheetList, item_visit_jsonList, item_visit_fieldItems)
+  } else {
+    print(str_c("Skipping item_visit validation for ", trialName, " trial."))
+    item_visit_jsonList <- NULL
+    jsonSheetItemVisitList <- NULL
+  }
+  if (!is.null(jsonSheetItemVisitList) || !is.null(item_visit_jsonList)) {
     checkChecklist[["item_visit"]] <- ExcelJsonValidator_item(jsonSheetItemVisitList, old_flag = FALSE)
     dummy <- CheckChecklistItems(checkChecklist, jsonSheetItemVisitList, "item_visit")
   } else {

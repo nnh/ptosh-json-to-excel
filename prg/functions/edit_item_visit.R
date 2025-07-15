@@ -69,16 +69,8 @@ GetItemVisitByGroupList <- function(item_visit_by_group, alias_name_columnName) 
     names(res) <- item_visit_groups
     return(res)
 }
-EditItemVisit <- function(item_visit) {
-    if (nrow(item_visit) == 0) {
-        return(item_visit)
-    }
-    alias_name_columnName <- kAliasNameJapaneseColumnName
-    item_visit_by_group <- item_visit %>%
-        mutate(group = GetGroupSheetNames(.data[[alias_name_columnName]]))
-    item_visit_by_group_list <- GetItemVisitByGroupList(item_visit_by_group, alias_name_columnName)
-    unique_item_visit <- CheckIdenticalItemVisitList(item_visit_by_group_list, alias_name_columnName)
-    item_visit_tibble <- unique_item_visit %>% bind_rows()
+ReplaceItemVisitSheetName <- function(
+    item_visit_by_group_list, item_visit_tibble) {
     group_and_alias_name <- list()
     for (i in 1:length(item_visit_by_group_list)) {
         alias_names <- item_visit_by_group_list[[i]] %>%
@@ -96,16 +88,41 @@ EditItemVisit <- function(item_visit) {
     group_and_alias_name <- group_and_alias_name %>%
         keep(~ !is.null(.x)) %>%
         map_df(~ tibble(group = .x$group, alias_name = .x$alias_name))
-    # referencesを置換する
-    for (col_idx in seq_along(kReferenceColnames)) {
-        col_name <- kReferenceColnames[col_idx]
-        for (i in 1:nrow(group_and_alias_name)) {
-            group <- group_and_alias_name$group[i]
-            alias_name <- group_and_alias_name$alias_name[i]
-            item_visit_tibble <- item_visit_tibble %>%
-                mutate(!!col_name := str_replace_all(.data[[col_name]], alias_name, group))
+    if (nrow(group_and_alias_name) > 0) {
+        # referencesを置換する
+        for (col_idx in seq_along(kReferenceColnames)) {
+            col_name <- kReferenceColnames[col_idx]
+            for (i in 1:nrow(group_and_alias_name)) {
+                group <- group_and_alias_name$group[i]
+                alias_name <- group_and_alias_name$alias_name[i]
+                item_visit_tibble <- item_visit_tibble %>%
+                    mutate(!!col_name := str_replace_all(
+                        .data[[col_name]],
+                        alias_name,
+                        group
+                    ))
+            }
         }
     }
     res <- item_visit_tibble %>% select(-"group")
+    return(res)
+}
+EditItemVisit <- function(item_visit) {
+    if (nrow(item_visit) == 0) {
+        return(item_visit)
+    }
+    alias_name_columnName <- kAliasNameJapaneseColumnName
+    item_visit_by_group <- item_visit %>%
+        mutate(group = GetGroupSheetNames(.data[[alias_name_columnName]]))
+    item_visit_by_group_list <- GetItemVisitByGroupList(
+        item_visit_by_group, alias_name_columnName
+    )
+    unique_item_visit <- CheckIdenticalItemVisitList(
+        item_visit_by_group_list, alias_name_columnName
+    )
+    item_visit_tibble <- unique_item_visit %>% bind_rows()
+    res <- ReplaceItemVisitSheetName(
+        item_visit_by_group_list, item_visit_tibble
+    )
     return(res)
 }

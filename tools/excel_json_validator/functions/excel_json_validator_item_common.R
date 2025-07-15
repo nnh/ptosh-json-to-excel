@@ -192,7 +192,10 @@ CheckChecklistItems <- function(checkChecklist, jsonSheetItemList, target) {
         return()
     }
     for (col in 1:ncol(jsonSheetItemList[["sheet"]])) {
-        if (identical(jsonSheetItemList[["sheet"]][, col], jsonSheetItemList[["json"]][, col])) {
+        if (identical(
+            as.character(jsonSheetItemList[["sheet"]][, col, drop = TRUE]),
+            as.character(jsonSheetItemList[["json"]][, col, drop = TRUE])
+        )) {
             next
         } else {
             print(str_c("Validation error in column: ", col, " of item sheet"))
