@@ -1,25 +1,7 @@
 GetGroupSheetNames <- function(targetColumn) {
     return(str_remove(targetColumn, "_[0-9]+$"))
 }
-ReplaceItemVisitSheetName <- function(check_group, alias_name_columnName) {
-    reference_colnames <- c("条件の参照先情報", "論理式の参照先情報", "最小値の参照先情報", "最大値の参照先情報")
-    group_name <- check_group[["group"]] %>%
-        unlist() %>%
-        unique()
-    # 参照先情報内の自シート名をgroupに置き換える
-    for (col in reference_colnames) {
-        for (row in 1:nrow(check_group)) {
-            if (!is.na(check_group[row, col, drop = TRUE])) {
-                check_group[row, col] <- str_replace_all(
-                    check_group[row, col, drop = TRUE],
-                    check_group[row, alias_name_columnName, drop = TRUE],
-                    group_name
-                )
-            }
-        }
-    }
-    return(check_group)
-}
+
 
 CheckIdenticalItemVisitList <- function(item_visit_by_group_list, alias_name_columnName) {
     sheetName_columnName <- "シート名"
@@ -28,7 +10,7 @@ CheckIdenticalItemVisitList <- function(item_visit_by_group_list, alias_name_col
         for (i in seq_along(.x)) {
             .x[[i]][[sheetName_columnName]] <- outputSheetName
         }
-        base_tibble <- .x[[1]] %>% ReplaceItemVisitSheetName(., alias_name_columnName)
+        base_tibble <- .x[[1]]
         if (length(.x) == 1) {
             return(base_tibble)
         }
@@ -38,9 +20,10 @@ CheckIdenticalItemVisitList <- function(item_visit_by_group_list, alias_name_col
         different_columns <- NULL
         for (i in seq_along(rest_tibbles)) {
             identical_tibble_2 <- rest_tibbles[[i]] %>%
-                ReplaceItemVisitSheetName(., alias_name_columnName) %>%
                 select(-all_of(alias_name_columnName))
-            if (identical(identical_tibble_1, identical_tibble_2)) {
+            check_tibble1 <- identical_tibble_1 %>% select(-all_of(kReferenceColnames))
+            check_tibble2 <- identical_tibble_2 %>% select(-all_of(kReferenceColnames))
+            if (identical(check_tibble1, check_tibble2)) {
                 alias_name <- rest_tibbles[[i]][[alias_name_columnName]] %>%
                     unlist() %>%
                     unique()
@@ -96,6 +79,33 @@ EditItemVisit <- function(item_visit) {
     item_visit_by_group_list <- GetItemVisitByGroupList(item_visit_by_group, alias_name_columnName)
     unique_item_visit <- CheckIdenticalItemVisitList(item_visit_by_group_list, alias_name_columnName)
     item_visit_tibble <- unique_item_visit %>% bind_rows()
+    group_and_alias_name <- list()
+    for (i in 1:length(item_visit_by_group_list)) {
+        alias_names <- item_visit_by_group_list[[i]] %>%
+            names()
+        if (length(alias_names) == 1) {
+            group_and_alias_name[[i]] <- NULL
+        } else {
+            group_and_alias_name[[i]] <- list()
+            group_and_alias_name[[i]]$group <- item_visit_by_group_list %>%
+                names() %>%
+                .[i]
+            group_and_alias_name[[i]]$alias_name <- alias_names
+        }
+    }
+    group_and_alias_name <- group_and_alias_name %>%
+        keep(~ !is.null(.x)) %>%
+        map_df(~ tibble(group = .x$group, alias_name = .x$alias_name))
+    # referencesを置換する
+    for (col_idx in seq_along(kReferenceColnames)) {
+        col_name <- kReferenceColnames[col_idx]
+        for (i in 1:nrow(group_and_alias_name)) {
+            group <- group_and_alias_name$group[i]
+            alias_name <- group_and_alias_name$alias_name[i]
+            item_visit_tibble <- item_visit_tibble %>%
+                mutate(!!col_name := str_replace_all(.data[[col_name]], alias_name, group))
+        }
+    }
     res <- item_visit_tibble %>% select(-"group")
     return(res)
 }

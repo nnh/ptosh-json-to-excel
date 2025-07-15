@@ -41,6 +41,7 @@ kOutputFolderName <- "output"
 kOutputPath <- here(kOutputFolderName)
 kAliasNameJapaneseColumnName <- "シート名英数字別名"
 kItemVisitConditionalFormattingColumnName <- "数値チェック・アラート条件の有無"
+kReferenceColnames <- c("条件の参照先情報", "論理式の参照先情報", "最小値の参照先情報", "最大値の参照先情報")
 kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
 kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
