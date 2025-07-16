@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_item_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.7
+#' @date 2025.7.16
 GetItemVisitCheckItemsFromJson <- function(item_visit_fieldItems) {
     article <- item_visit_fieldItems |> GetItemArticleFromFieldItems()
     checkItems <- article |>
@@ -64,166 +64,78 @@ GetItemVisitCheckItemsFromJson <- function(item_visit_fieldItems) {
     result <- result %>% select(-"field_type")
     return(result)
 }
-GetFieldItemsItemVisitByJsonList <- function(item_visit_jsonList, jpNameAndAliasName) {
-    if (length(item_visit_jsonList) == 0) {
-        return(NULL)
-    }
-    item_visit_fieldItems <- item_visit_jsonList |> GetFieldItemsByJsonList()
-
-    alias_names <- item_visit_jsonList |> names()
-    groups <- alias_names %>%
-        str_remove("_[0-9]+$") %>%
-        unique()
-    for (i in 1:length(groups)) {
-        group <- groups[i]
-        target_alias_names <- alias_names %>%
-            str_match_all(str_c("^", group, "_[0-9]+$")) %>%
-            unlist()
-        if (length(target_alias_names) < 2) {
-            groups[i] <- NA
-        }
-    }
-    groups <- groups[!is.na(groups)]
-    if (length(groups) == 0) {
-        return(item_visit_fieldItems)
-    }
-    target_fieldItems <- item_visit_fieldItems %>% map(~ {
-        fieldItems <- .x
-        res <- fieldItems %>% map(~ {
-            # 必要な要素だけ抽出し、他は削除
-            res <- .x[c("name", "label", "option", "default_value", "validators", "type", "normal_range")]
-            if (!is.null(res[["option"]]) && is.list(res[["option"]])) {
-                temp_option_name <- res[["option"]][["name"]]
-                res[["option"]] <- NULL
-                res[["option"]][["name"]] <- temp_option_name
-            }
-            # 要素がなくてもエラーにならないようにNULLを許容
-            res <- res[!sapply(res, is.null)]
-            return(res)
-        })
-        return(res)
-    })
-    for (group_count in 1:length(groups)) {
-        group <- groups[group_count]
-        target_alias_names <- alias_names[str_starts(alias_names, group)]
-        target_items <- target_fieldItems[names(target_fieldItems) %in% target_alias_names]
-        base_items <- target_items[[1]]
-        duplicated_check <- TRUE
-        for (i in 2:length(target_items)) {
-            if (!identical(base_items, target_items[[i]])) {
-                duplicated_check <- FALSE
-                print(str_c(
-                    "Validation error in item_visit: ",
-                    group, " has different items: ",
-                    paste0(target_alias_names, collapse = ", ")
-                ))
-                break
-            }
-        }
-        if (duplicated_check) {
-            target_fieldItems[[group]] <- base_items
-            for (i in 1:length(target_alias_names)) {
-                target_fieldItems[[target_alias_names[[i]]]] <- NULL
-            }
-        }
-    }
-    res <- target_fieldItems
-    for (i in 1:length(res)) {
-        groupName <- names(res)[i]
-        matched_row <- jpNameAndAliasName %>% filter(alias_name == groupName)
-        if (nrow(matched_row) == 0) {
-            matched_row <- jpNameAndAliasName %>%
-                filter(startsWith(alias_name, groupName)) %>%
-                .[1, , drop = FALSE]
-            matched_row[1, "alias_name"] <- groupName
-            matched_row[1, "jpname"] <- matched_row[1, "jpname"] %>% str_remove("\\(.*\\)$")
-        }
-        if (nrow(matched_row) == 0) {
-            stop(str_c("No matching alias_name found for groupName: ", groupName))
-        }
-        jpName <- matched_row[1, "jpname", drop = TRUE]
-        aliasName <- matched_row[1, "alias_name", drop = TRUE]
-        for (j in 1:length(res[[i]])) {
-            res[[i]][[j]][["jpname"]] <- jpName
-            res[[i]][[j]][["alias_name"]] <- aliasName
-        }
-    }
-    return(res)
-}
-GetItem_item_visit <- function(sheetList, item_visit_jsonList, item_visit_fieldItems) {
+GetItem_item_visit <- function(sheetList, jsonList, fieldItems) {
+    sheetName <- "item_visit"
+    varName <- "numericality_normal_range_check"
     # sheet
-    sheet <- "item_visit" %>% GetItemFromSheet(sheetList, .)
-    sheetEmpty <- nrow(sheet) == 1 && all(is.na(sheet) | sheet == "")
-    if (sheetEmpty && length(item_visit_jsonList) == 0) {
-        return(NULL)
-    }
+    sheet <- sheetName %>% GetItemFromSheet(sheetList, .)
     # json
-    item_visit_fieldItems_alias_names <- item_visit_fieldItems |> names()
-    item_visit_jsonList_matched <- item_visit_jsonList[names(item_visit_jsonList) %in% item_visit_fieldItems_alias_names]
-    item_visit_jsonList_unmatched <- item_visit_jsonList[!names(item_visit_jsonList) %in% item_visit_fieldItems_alias_names]
-    unmatched_alias_names <- setdiff(item_visit_fieldItems_alias_names, names(item_visit_jsonList_matched))
-    target_visit_jsonList_unique <- list()
-    convert_alias_name_list <- list()
-    for (alias_name in unmatched_alias_names) {
-        join_alias_name <- names(item_visit_jsonList) %>%
-            str_match_all(str_c("^", alias_name, "_[0-9]+$")) %>%
-            unlist() %>%
-            paste0(collapse = ", ")
-        convert_alias_name_list[[alias_name]] <- list()
-        convert_alias_name_list[[alias_name]][["alias_name"]] <- alias_name
-        convert_alias_name_list[[alias_name]][["join_alias_name"]] <- join_alias_name
-        for (target_json in item_visit_jsonList_unmatched) {
-            if (startsWith(target_json[["alias_name"]], alias_name)) {
-                target_visit_jsonList_unique[[alias_name]] <- target_json
-                jpname <- target_json[["name"]] %>% str_remove("\\(.*\\)$")
-                convert_alias_name_list[[alias_name]][["join_jpname"]] <- jpname
-                target_visit_jsonList_unique[[alias_name]][["alias_name"]] <- alias_name
-                break
-            }
-        }
-    }
-    if (length(convert_alias_name_list) > 0) {
-        convert_alias_name_tibble <- convert_alias_name_list %>%
-            map_df(~ as_tibble(.), .id = "alias_name")
-    } else {
-        convert_alias_name_tibble <- NULL
-    }
-    item_visit_jsonList <- c(item_visit_jsonList_matched, target_visit_jsonList_unique)
-
-    json_items <- GetItemFromJson(item_visit_fieldItems, item_visit_jsonList, sheet)
-    json_items <- json_items %>% select(-"numericality_normal_range_check")
-    check_items <- GetItemVisitCheckItemsFromJson(item_visit_fieldItems)
+    json_items <- GetItemFromJson(fieldItems, jsonList, sheet) %>%
+        select(-all_of(varName))
+    check_items <- GetItemVisitCheckItemsFromJson(fieldItems)
     json <- EditOutputJsonItems(
         target = check_items,
         json = json_items,
-        colName = "numericality_normal_range_check",
+        colName = varName,
         sheet_colnames = sheet |> colnames(),
         na_convert_targets = c("option.name", "default_value")
     )
-    if (!is.null(convert_alias_name_tibble)) {
-        temp1 <- json %>% inner_join(
-            convert_alias_name_tibble,
-            by = c("alias_name" = "alias_name")
-        )
-        temp1 <- temp1 %>%
-            select(-c("jpname", "alias_name")) %>%
-            rename(jpname = join_jpname, alias_name = join_alias_name)
-
-        temp2 <- json %>% anti_join(
-            convert_alias_name_tibble,
-            by = c("alias_name" = "alias_name")
-        )
-        temp <- bind_rows(temp1, temp2)
-        json <- temp %>% select(all_of(json |> colnames()))
-    }
-    for (target_alias_name in unmatched_alias_names) {
-        for (variableName in c("presence_if_references", "formula_if_references", "references_after", "references_before")) {
-            json[[variableName]] <- json[[variableName]] %>%
-                str_replace_all(str_c("^", target_alias_name, "_[0-9]+$"), target_alias_name)
+    item_visit_jsonList <- jsonList %>%
+        keep(~ .x[["category"]] == "visit") %>%
+        names() %>%
+        tibble(alias_name = .)
+    if (all(sheet %>% unlist() %>% is.na() | sheet %>% unlist() == "")) {
+        if (nrow(item_visit_jsonList) == 0) {
+            return(NULL)
         }
     }
-    sheet <- sheet %>% arrange(alias_name, name)
+    item_visit_jsonList$group <- item_visit_jsonList$alias_name %>%
+        str_remove("_[0-9]+$")
+    groups <- item_visit_jsonList$group %>%
+        unique()
+    target_item_visit <- tibble()
+    for (i in 1:length(groups)) {
+        group <- groups[i]
+        temp <- item_visit_jsonList %>%
+            filter(group == groups[i])
+        alias_name_and_group <- list()
+        alias_name_text <- temp$alias_name %>%
+            paste0(collapse = ", ")
+        target_item_visit <- bind_rows(target_item_visit, temp[1, ])
+        target_item_visit[[i, "group_count"]] <- nrow(temp)
+        target_item_visit[[i, "alias_name_text"]] <- alias_name_text
+    }
+    json <- json %>% filter(alias_name %in% target_item_visit$alias_name)
+
+    kReferenceColnames <- c(
+        "presence_if_references",
+        "formula_if_references",
+        "references_after",
+        "references_before"
+    )
+    for (i in 1:nrow(target_item_visit)) {
+        group_count <- target_item_visit[i, "group_count"]
+        if (group_count == 1) {
+            next
+        }
+        aliasName <- target_item_visit[i, "alias_name", drop = TRUE]
+        group <- target_item_visit[i, "group", drop = TRUE]
+        alias_name_text <- target_item_visit[i, "alias_name_text", drop = TRUE]
+        target <- json %>%
+            filter(alias_name == aliasName)
+        non_target <- json %>%
+            filter(alias_name != aliasName)
+        target$alias_name <- alias_name_text
+        target$jpname <- target$jpname %>% str_remove("\\(.*\\)$")
+        json <- bind_rows(non_target, target)
+        for (j in 1:length(kReferenceColnames)) {
+            colname <- kReferenceColnames[j]
+            json[[colname]] <- json[[colname]] %>%
+                str_replace_all(aliasName, group)
+        }
+    }
     json <- json %>% arrange(alias_name, name)
+    sheet <- sheet %>% arrange(alias_name, name)
     result <- list(
         sheet = sheet,
         json = json

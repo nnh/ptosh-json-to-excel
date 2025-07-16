@@ -1,3 +1,8 @@
+#' test script
+#'
+#' @file excel_json_validator_common.R
+#' @author Mariko Ohtsuka
+#' @date 2025.7.16
 CreateItemsByTargetTibble <- function(target, id_col = "field_id", type_col = "field_type") {
     result <- imap(
         target,
@@ -187,29 +192,38 @@ EditOutputJsonItems <- function(
 
     return(json)
 }
-CheckChecklistItems <- function(checkChecklist, jsonSheetItemList, target) {
-    if (is.null(checkChecklist[[target]])) {
-        return()
+ValidateSheetAndJsonEquality <- function(sheet, json) {
+    if (nrow(sheet) != nrow(json)) {
+        stop("Row count mismatch between sheet and json")
     }
-    for (col in 1:ncol(jsonSheetItemList[["sheet"]])) {
-        if (identical(
-            as.character(jsonSheetItemList[["sheet"]][, col, drop = TRUE]),
-            as.character(jsonSheetItemList[["json"]][, col, drop = TRUE])
-        )) {
+    if (ncol(sheet) != ncol(json)) {
+        stop("Column count mismatch between sheet and json")
+    }
+    for (col in 1:ncol(sheet)) {
+        if (identical(as.character(sheet[, col, drop = TRUE]), as.character(json[, col, drop = TRUE]))) {
             next
         } else {
-            print(str_c("Validation error in column: ", col, " of item sheet"))
-        }
-        for (row in 1:nrow(jsonSheetItemList[["sheet"]])) {
-            if (is.na(jsonSheetItemList[["sheet"]][row, col]) && is.na(jsonSheetItemList[["json"]][row, col])) {
-                next
-            }
-            if (jsonSheetItemList[["sheet"]][row, col] != jsonSheetItemList[["json"]][row, col]) {
-                stop(str_c(
-                    "Validation error in item at row ", row, " and column ", col, ": ",
-                    jsonSheetItemList[["sheet"]][row, col], " != ", jsonSheetItemList[["json"]][row, col]
-                ))
+            for (row in 1:nrow(sheet)) {
+                if (is.na(sheet[row, col]) && is.na(json[row, col])) {
+                    next
+                }
+                if (sheet[row, col] != json[row, col]) {
+                    stop(str_c(
+                        "Validation error in item at row ", row, " and column ", col, ": ",
+                        sheet[row, col], " != ", json[row, col]
+                    ))
+                }
             }
         }
     }
+}
+ExecValidateSheetAndJsonEquality <- function(checkChecklist, sheetName) {
+    if (is.null(checkChecklist[[sheetName]])) {
+        return()
+    }
+    ValidateSheetAndJsonEquality(
+        checkChecklist[[sheetName]][["sheet"]],
+        checkChecklist[[sheetName]][["json"]]
+    )
+    stop(str_c("Validation error in ", sheetName))
 }

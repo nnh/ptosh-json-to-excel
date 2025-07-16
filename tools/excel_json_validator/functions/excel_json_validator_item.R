@@ -34,19 +34,26 @@ GetItemFieldTypeFromJson <- function(fieldItems) {
     result <- CreateItemsByTargetTibble(fieldTypes, id_col = "field_id", type_col = "field_type")
     return(result)
 }
-GetItem_item <- function(sheetList, item_jsonList, item_fieldItems) {
+GetItem_item <- function(sheetList, jsonList, fieldItems) {
+    sheetName <- "item"
+    varName <- "field_type"
     # sheet
-    sheet <- "item" %>% GetItemFromSheet(sheetList, .)
+    sheet <- sheetName %>% GetItemFromSheet(sheetList, .)
     # json
-    json_items <- GetItemFromJson(item_fieldItems, item_jsonList, sheet) %>% select(-"field_type")
-    field_types <- GetItemFieldTypeFromJson(item_fieldItems)
+    json_items <- GetItemFromJson(fieldItems, jsonList, sheet) %>% select(-all_of(c(varName)))
+    field_types <- GetItemFieldTypeFromJson(fieldItems)
     json <- EditOutputJsonItems(
         target = field_types,
         json = json_items,
-        colName = "field_type",
+        colName = varName,
         sheet_colnames = sheet |> colnames(),
         na_convert_targets = c("option.name", "default_value")
     )
+    item_jsonList <- jsonList %>%
+        keep(~ .x[["category"]] != "visit") %>%
+        names()
+    json <- json %>% filter(alias_name %in% item_jsonList)
+
     result <- list(
         sheet = sheet,
         json = json
