@@ -64,31 +64,7 @@ GetItemVisitCheckItemsFromJson <- function(item_visit_fieldItems) {
     result <- result %>% select(-"field_type")
     return(result)
 }
-GetItem_item_visit <- function(sheetList, jsonList, fieldItems) {
-    sheetName <- "item_visit"
-    varName <- "numericality_normal_range_check"
-    # sheet
-    sheet <- sheetName %>% GetItemFromSheet(sheetList, .)
-    # json
-    json_items <- GetItemFromJson(fieldItems, jsonList, sheet) %>%
-        select(-all_of(varName))
-    check_items <- GetItemVisitCheckItemsFromJson(fieldItems)
-    json <- EditOutputJsonItems(
-        target = check_items,
-        json = json_items,
-        colName = varName,
-        sheet_colnames = sheet |> colnames(),
-        na_convert_targets = c("option.name", "default_value")
-    )
-    item_visit_jsonList <- jsonList %>%
-        keep(~ .x[["category"]] == "visit") %>%
-        names() %>%
-        tibble(alias_name = .)
-    if (all(sheet %>% unlist() %>% is.na() | sheet %>% unlist() == "")) {
-        if (nrow(item_visit_jsonList) == 0) {
-            return(NULL)
-        }
-    }
+EditItem_item_visit <- function(item_visit_jsonList, json) {
     item_visit_jsonList$group <- item_visit_jsonList$alias_name %>%
         str_remove("_[0-9]+$")
     groups <- item_visit_jsonList$group %>%
@@ -134,6 +110,34 @@ GetItem_item_visit <- function(sheetList, jsonList, fieldItems) {
                 str_replace_all(aliasName, group)
         }
     }
+    return(json)
+}
+GetItem_item_visit <- function(sheetList, jsonList, fieldItems) {
+    sheetName <- "item_visit"
+    varName <- "numericality_normal_range_check"
+    # sheet
+    sheet <- sheetName %>% GetItemFromSheet(sheetList, .)
+    # json
+    json_items <- GetItemFromJson(fieldItems, jsonList, sheet) %>%
+        select(-all_of(varName))
+    check_items <- GetItemVisitCheckItemsFromJson(fieldItems)
+    json <- EditOutputJsonItems(
+        target = check_items,
+        json = json_items,
+        colName = varName,
+        sheet_colnames = sheet |> colnames(),
+        na_convert_targets = c("option.name", "default_value")
+    )
+    item_visit_jsonList <- jsonList %>%
+        keep(~ .x[["category"]] == "visit") %>%
+        names() %>%
+        tibble(alias_name = .)
+    if (all(sheet %>% unlist() %>% is.na() | sheet %>% unlist() == "")) {
+        if (nrow(item_visit_jsonList) == 0) {
+            return(NULL)
+        }
+    }
+    json <- EditItem_item_visit(item_visit_jsonList, json)
     json <- json %>% arrange(alias_name, name)
     sheet <- sheet %>% arrange(alias_name, name)
     result <- list(
