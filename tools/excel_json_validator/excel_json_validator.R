@@ -45,13 +45,6 @@ ExecExcelJsonValidator <- function(trialName) {
       dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
     }
   }
-  ##################
-  # item old sheet #
-  ##################
-  sheetName <- "item_old"
-  jsonSheetItemOldList <- GetItemOldFromJson(sheetList, jsonList, fieldItems, jpNameAndAliasName)
-  checkChecklist[[sheetName]] <- ExcelJsonValidator_item(jsonSheetItemOldList, old_flag = TRUE)
-  dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   ##############
   # allocation #
   ##############

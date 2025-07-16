@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.1
+#' @date 2025.7.16
 # ------ constants ------
 # ------ functions ------
 OutputChecklistSheet <- function(df_output, wb, sheet_name) {
@@ -66,7 +66,6 @@ GetFieldItems <- function(json_file) {
 }
 
 source(here("prg", "functions", "edit_common.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_item_old.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_item.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_item_visit.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_allocation.R"), encoding = "UTF-8")

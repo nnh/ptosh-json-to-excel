@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_item.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.7
+#' @date 2025.7.16
 GetItemFieldTypeFromJson <- function(fieldItems) {
     article <- fieldItems |> GetItemArticleFromFieldItems()
     fieldTypes <- article |>
