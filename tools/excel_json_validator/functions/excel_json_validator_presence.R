@@ -2,9 +2,8 @@
 #'
 #' @file excel_json_validator_presence.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.4
-CheckPresence <- function(sheetList, fieldItems, jpNameAndAliasName) {
-    sheetName <- "presence"
+#' @date 2025.7.17
+CheckPresence <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     json <- GetPresenceFromJson(fieldItems, jpNameAndAliasName)

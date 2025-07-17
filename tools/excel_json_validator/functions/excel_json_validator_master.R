@@ -2,9 +2,8 @@
 #'
 #' @file excel_json_validator_master.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.4
-CheckMaster <- function(sheetList, fieldItems, jpNameAndAliasName) {
-    sheetName <- "master"
+#' @date 2025.7.17
+CheckMaster <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     json <- GetMasterFromJson(fieldItems, jpNameAndAliasName)

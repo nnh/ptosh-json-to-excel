@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_item.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.16
+#' @date 2025.7.17
 GetItemFieldTypeFromJson <- function(fieldItems) {
     article <- fieldItems |> GetItemArticleFromFieldItems()
     fieldTypes <- article |>
@@ -34,8 +34,7 @@ GetItemFieldTypeFromJson <- function(fieldItems) {
     result <- CreateItemsByTargetTibble(fieldTypes, id_col = "field_id", type_col = "field_type")
     return(result)
 }
-GetItem_item <- function(sheetList, jsonList, fieldItems) {
-    sheetName <- "item"
+GetItem_item <- function(sheetList, jsonList, fieldItems, sheetName) {
     varName <- "field_type"
     # sheet
     sheet <- sheetName %>% GetItemFromSheet(sheetList, .)

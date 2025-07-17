@@ -2,9 +2,8 @@
 #'
 #' @file excel_json_validator_explanation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.4
-CheckExplanation <- function(sheetList, fieldItems, jpNameAndAliasName) {
-  sheetName <- "explanation"
+#' @date 2025.7.17
+CheckExplanation <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
   sheet <- sheetList[[sheetName]] |>
     rename(!!!engToJpnColumnMappings[[sheetName]])
   json <- GetExplanationFromJson(fieldItems, jpNameAndAliasName)

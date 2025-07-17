@@ -2,9 +2,8 @@
 #'
 #' @file excel_json_validator_allocation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.4
-GetAllocation <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName) {
-    sheetName <- "allocation"
+#' @date 2025.7.17
+GetAllocation <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     json <- GetAllocationFromJson(jsonList, fieldItems, jpNameAndAliasName)
@@ -18,8 +17,8 @@ GetAllocation <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName) {
     json[["formula_field"]] <- as.character(sheet[["formula_field"]])
     return(list(sheet = sheet, json = json))
 }
-CheckAllocation <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName) {
-    temp <- GetAllocation(sheetList, jsonList, fieldItems, jpNameAndAliasName)
+CheckAllocation <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName, sheetName) {
+    temp <- GetAllocation(sheetList, jsonList, fieldItems, jpNameAndAliasName, sheetName)
     sheet <- temp[["sheet"]]
     json <- temp[["json"]]
     return(CheckTarget(sheet, json))

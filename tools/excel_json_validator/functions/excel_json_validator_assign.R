@@ -2,9 +2,8 @@
 #'
 #' @file excel_json_validator_assign.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.4
-CheckAssigned <- function(sheetList, fieldItems, jpNameAndAliasName) {
-    sheetName <- "assigned"
+#' @date 2025.7.17
+CheckAssigned <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     json <- GetAssignedFromJson(fieldItems, jpNameAndAliasName)

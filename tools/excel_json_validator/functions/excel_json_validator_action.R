@@ -2,9 +2,8 @@
 #'
 #' @file excel_json_validator_action.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.4
-CheckAction <- function(sheetList, fieldItems, jpNameAndAliasName) {
-    sheetName <- "action"
+#' @date 2025.7.17
+CheckAction <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     sheet[["id"]] <- sheet[["id"]] |> as.integer()

@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_item_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.16
+#' @date 2025.7.17
 GetItemVisitCheckItemsFromJson <- function(item_visit_fieldItems) {
     article <- item_visit_fieldItems |> GetItemArticleFromFieldItems()
     checkItems <- article |>
@@ -112,8 +112,7 @@ EditItem_item_visit <- function(item_visit_jsonList, json) {
     }
     return(json)
 }
-GetItem_item_visit <- function(sheetList, jsonList, fieldItems) {
-    sheetName <- "item_visit"
+GetItem_item_visit <- function(sheetList, jsonList, fieldItems, sheetName) {
     varName <- "numericality_normal_range_check"
     # sheet
     sheet <- sheetName %>% GetItemFromSheet(sheetList, .)

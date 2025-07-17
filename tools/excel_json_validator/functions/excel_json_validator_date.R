@@ -2,9 +2,8 @@
 #'
 #' @file excel_json_validator_date.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.4
-CheckDate <- function(sheetList, jsonList) {
-    sheetName <- "date"
+#' @date 2025.7.17
+CheckDate <- function(sheetList, jsonList, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     outputValidators <- sheet %>% select(

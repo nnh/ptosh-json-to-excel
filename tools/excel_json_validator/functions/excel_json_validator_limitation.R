@@ -2,9 +2,8 @@
 #'
 #' @file excel_json_validator_limitation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.15
-CheckLimitation <- function(sheetList, jsonList) {
-    sheetName <- "limitation"
+#' @date 2025.7.17
+CheckLimitation <- function(sheetList, jsonList, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     outputNormalRanges <- sheet %>% select(jpname, alias_name, name, label, default_value, normal_range.less_than_or_equal_to, normal_range.greater_than_or_equal_to)

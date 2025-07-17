@@ -2,9 +2,8 @@
 #'
 #' @file excel_json_validator_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.4
-CheckVisit <- function(sheetList, fieldItems, jpNameAndAliasName) {
-    sheetName <- "visit"
+#' @date 2025.7.17
+CheckVisit <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     json <- GetVisitFromJson(fieldItems, jpNameAndAliasName)

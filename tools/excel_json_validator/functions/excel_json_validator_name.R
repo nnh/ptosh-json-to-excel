@@ -2,9 +2,8 @@
 #'
 #' @file excel_json_validator_name.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.4
-CheckName <- function(sheetList, jsonList) {
-    sheetName <- "name"
+#' @date 2025.7.17
+CheckName <- function(sheetList, jsonList, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     json <- jsonList |>
