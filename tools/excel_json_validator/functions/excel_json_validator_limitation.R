@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_limitation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.4
+#' @date 2025.7.15
 CheckLimitation <- function(sheetList, jsonList) {
     sheetName <- "limitation"
     sheet <- sheetList[[sheetName]] |>
@@ -12,6 +12,13 @@ CheckLimitation <- function(sheetList, jsonList) {
         jpname, alias_name, name, label, default_value, validators.numericality.validate_numericality_less_than_or_equal_to,
         validators.numericality.validate_numericality_greater_than_or_equal_to
     )
+    is_blank_df <- function(df) {
+        all(sapply(df, function(x) all(is.na(x) | x == "")))
+    }
+    if (is_blank_df(sheet) && is_blank_df(outputNormalRanges) && is_blank_df(outputValidators)) {
+        print("No data to check in limitation sheet.")
+        return(NULL)
+    }
 
     normalRangeAndValidators <- GetNormalRangeAndValidatorsByTrial(jsonList)
     inputNormalRanges <- normalRangeAndValidators[["df_normalRanges"]]

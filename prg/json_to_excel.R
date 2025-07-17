@@ -45,12 +45,18 @@ kReferenceColnames <- c("条件の参照先情報", "論理式の参照先情報
 kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
 kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
+kOptions <- "options"
 kItemVisit <- "item_visit"
 kTargetSheetNames <- c(kItemVisit, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 trialName <- temp[["trialName"]]
 json_files <- temp[["json_files"]]
+options_flag <- kOptions %in% names(json_files)
+if (options_flag) {
+  options_json <- json_files[[kOptions]] %>% GetJsonFile(.)
+  json_files <- json_files[names(json_files) != kOptions]
+}
 rm(temp)
 
 field_list <- json_files %>%

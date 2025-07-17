@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.16
+#' @date 2025.7.17
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -20,7 +20,12 @@ ExecExcelJsonValidator <- function(trialName) {
   library(tidyverse, warn.conflicts = F)
   library(here, warn.conflicts = F)
   source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
+  kOptions <- "options"
   jpNameAndAliasName <- jsonList |> GetNameAndAliasNameByJson()
+  options_json <<- jsonList[[kOptions]]
+  if (!is.null(options_json)) {
+    jsonList <- jsonList[names(jsonList) != kOptions]
+  }
   checkChecklist <- list()
   ########
   # item #
