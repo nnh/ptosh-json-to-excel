@@ -1,9 +1,9 @@
 GetTargetByType <- function(field_items, type) {
     target <- field_items %>%
         keep(~ {
-            if (is.null(.x$type)) {
+            if (is.null(.x[["type"]])) {
                 return(FALSE)
-            } else if (.x$type == type) {
+            } else if (.x[["type"]] == type) {
                 return(TRUE)
             } else {
                 return(FALSE)
@@ -16,13 +16,13 @@ GetTargetByType <- function(field_items, type) {
 }
 EditRefFieldTextVec <- function(df_sheet_field) {
     join_field_info <- dplyr::left_join(df_sheet_field, field_list, by = c("alias_name", "field_number"))
-    join_field_info$text <- paste(join_field_info$alias_name, join_field_info$name, join_field_info$label, sep = ",") %>%
+    join_field_info[["text"]] <- paste(join_field_info[["alias_name"]], join_field_info[["name"]], join_field_info[["label"]], sep = ",") %>%
         paste0("(", ., ")")
     return(join_field_info)
 }
 EditRefFieldText <- function(df_sheet_field) {
     join_field_info <- EditRefFieldTextVec(df_sheet_field)
-    res <- join_field_info$text %>%
+    res <- join_field_info[["text"]] %>%
         unique() %>%
         paste(collapse = "")
     return(res)
@@ -65,8 +65,8 @@ GetDfSheetField <- function(target, thisSheetName) {
     return(df_sheet_field)
 }
 RegexEscape <- function(text) {
-  # 正規表現の特殊文字をバックスラッシュでエスケープ
-  gsub("([][{}()+*^$|\\\\?.])", "\\\\\\1", text)
+    # 正規表現の特殊文字をバックスラッシュでエスケープ
+    gsub("([][{}()+*^$|\\\\?.])", "\\\\\\1", text)
 }
 GetFieldText <- function(target, thisSheetName) {
     df_sheet_field <- GetDfSheetField(target, thisSheetName)
@@ -76,17 +76,17 @@ GetFieldText <- function(target, thisSheetName) {
     df_refFieldText <- EditRefFieldTextVec(df_sheet_field)
     temp_ref <- target
     for (i in 1:nrow(df_refFieldText)) {
-      raw_pattern <- RegexEscape(df_refFieldText$raw[i])
-      # 後に数字が続かない場合のみマッチ
-      regex_pattern <- paste0("(", raw_pattern, ")(?![0-9])")
-      if (str_detect(temp_ref, regex(regex_pattern))) {
-        temp_ref <- str_replace_all(temp_ref, regex(regex_pattern), df_refFieldText$text[i])
-      }
+        raw_pattern <- RegexEscape(df_refFieldText$raw[i])
+        # 後に数字が続かない場合のみマッチ
+        regex_pattern <- paste0("(", raw_pattern, ")(?![0-9])")
+        if (str_detect(temp_ref, regex(regex_pattern))) {
+            temp_ref <- str_replace_all(temp_ref, regex(regex_pattern), df_refFieldText[["text"]][i])
+        }
     }
-    text_patterns <- df_refFieldText$text
+    text_patterns <- df_refFieldText[["text"]]
     matched_with_pos <- sapply(text_patterns, function(pat) regexpr(pat, temp_ref, fixed = TRUE)[[1]])
     res <- text_patterns[matched_with_pos != -1][order(matched_with_pos[matched_with_pos != -1])] %>% unique()
-    
+
     if (length(res) == 0) {
         return(NULL)
     }

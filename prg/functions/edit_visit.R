@@ -1,9 +1,9 @@
 GetVisit <- function(field_items) {
     target <- field_items %>%
         keep(~ {
-            if (is.null(.x$label)) {
+            if (is.null(.x[["label"]])) {
                 return(FALSE)
-            } else if (.x$label == "Visit Number") {
+            } else if (.x[["label"]] == "Visit Number") {
                 return(TRUE)
             } else {
                 return(FALSE)
@@ -15,8 +15,8 @@ GetVisit <- function(field_items) {
     res <- target %>%
         map_df(~ {
             res <- tibble::tibble(
-                name = .x$name,
-                default_value = .x$default_value %||% NA,
+                name = .x[["name"]],
+                default_value = .x[["default_value"]] %||% NA,
             )
             return(res)
         })

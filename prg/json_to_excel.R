@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.22
+#' @date 2025.7.16
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -39,14 +39,24 @@ source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8"
 kInputFolderName <- "input"
 kOutputFolderName <- "output"
 kOutputPath <- here(kOutputFolderName)
+kAliasNameJapaneseColumnName <- "シート名英数字別名"
+kItemVisitConditionalFormattingColumnName <- "数値チェック・アラート条件の有無"
+kReferenceColnames <- c("条件の参照先情報", "論理式の参照先情報", "最小値の参照先情報", "最大値の参照先情報")
 kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
 kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
-kTargetSheetNames <- c("item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation")
+kOptions <- "options"
+kItemVisit <- "item_visit"
+kTargetSheetNames <- c(kItemVisit, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
 # ------ main ------
 temp <- ExecReadJsonFiles()
-trialName <- temp$trialName
-json_files <- temp$json_files
+trialName <- temp[["trialName"]]
+json_files <- temp[["json_files"]]
+options_flag <- kOptions %in% names(json_files)
+if (options_flag) {
+  options_json <- json_files[[kOptions]] %>% GetJsonFile(.)
+  json_files <- json_files[names(json_files) != kOptions]
+}
 rm(temp)
 
 field_list <- json_files %>%
@@ -56,15 +66,15 @@ field_list <- json_files %>%
     fields <- field_items %>%
       map(~ {
         res <- tibble::tibble(
-          name = .x$name,
-          field_number = .x$name %>% str_extract("\\d+") %>% as.numeric(),
-          label = .x$label
+          name = .x[["name"]],
+          field_number = .x[["name"]] %>% str_extract("\\d+") %>% as.numeric(),
+          label = .x[["label"]]
         )
         return(res)
       }) %>%
       bind_rows()
-    fields$jpname <- json_file$name
-    fields$alias_name <- json_file$alias_name
+    fields[["jpname"]] <- json_file[["name"]]
+    fields[["alias_name"]] <- json_file[["alias_name"]]
     return(fields)
   }) %>%
   bind_rows()
@@ -72,11 +82,15 @@ field_list <- json_files %>%
 sheet_data_list <- json_files %>% map(~ {
   json_file <- GetJsonFile(.)
   field_items <- json_file %>% GetFieldItems()
-  item <- field_items %>%
-    GetTargetByType("FieldItem::Article") %>%
-    EditItem(json_file$alias_name)
+  if (json_file[["category"]] == "visit") {
+    item_visit <- EditItem(field_items, json_file[["alias_name"]])
+    item <- NULL
+  } else {
+    item_visit <- NULL
+    item <- EditItem(field_items, json_file[["alias_name"]])
+  }
   allocation <- json_file %>% GetAllocation()
-  action <- field_items %>% GetAction(json_file$alias_name)
+  action <- field_items %>% GetAction(json_file[["alias_name"]])
   display <- field_items %>% GetDisplay()
   option <- field_items %>% GetOptions()
   comment <- field_items %>% GetComment("content")
@@ -90,13 +104,16 @@ sheet_data_list <- json_files %>% map(~ {
   assigned <- field_items %>%
     GetTargetByType("FieldItem::Assigned") %>%
     EditAssigned()
-  name <- tibble(name = json_file$name, alias_name = json_file$alias_name, images_count = json_file$images_count)
+  name <- tibble(name = json_file[["name"]], alias_name = json_file[["alias_name"]], images_count = json_file[["images_count"]])
   limitation <- field_items %>%
     GetLimitation() %>%
     EditLimitation()
+  date <- field_items %>%
+    GetDate() %>%
+    EditDate(json_file[["alias_name"]])
   res <- kTargetSheetNames %>% map(~ JoinJpnameAndAliasNameAndSelectColumns(.x, json_file))
   names(res) <- kTargetSheetNames
-  res$name <- name
+  res[["name"]] <- name
   return(res)
 })
 
@@ -116,7 +133,11 @@ for (nm in names(sheet_data_combine)) {
     }
   }
 }
+
 output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
+# item_visit、同一グループでシート情報以外がidenticalなものはまとめる
+item_visit <- EditItemVisit(output_checklist[[kItemVisit]])
+output_checklist[[kItemVisit]] <- item_visit
 
 # create output folder.
 output_folder_name <- Sys.time() %>%

@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.22
+#' @date 2025.7.16
 # ------ constants ------
 # ------ functions ------
 OutputChecklistSheet <- function(df_output, wb, sheet_name) {
@@ -16,6 +16,13 @@ OutputChecklistSheet <- function(df_output, wb, sheet_name) {
   setColWidths(wb = wb, sheet = sheet_name, cols = 1:ncol(df_output), widths = "auto")
   fontStyle <- setFontStyle()
   addStyle(wb = wb, sheet = sheet_name, style = fontStyle, rows = 1:(nrow(df_output) + 1), cols = 1:ncol(df_output), gridExpand = TRUE)
+  if (sheet_name == kItemVisit) {
+    setColumnConditionalFormatting(
+      wb = wb, sheetName = sheet_name,
+      targetColName = kItemVisitConditionalFormattingColumnName,
+      rows = 2:(nrow(df_output) + 1)
+    )
+  }
 
   return(wb)
 }
@@ -32,8 +39,8 @@ CreatedummyDf <- function(target_columns) {
   return(df)
 }
 JoinJpnameAndAliasName <- function(df, json_file) {
-  df$jpname <- json_file$name
-  df$alias_name <- json_file$alias_name
+  df[["jpname"]] <- json_file[["name"]]
+  df[["alias_name"]] <- json_file[["alias_name"]]
   return(df)
 }
 SelectColumns <- function(df, target_columns) {
@@ -51,15 +58,16 @@ JoinJpnameAndAliasNameAndSelectColumns <- function(df_name, json_file) {
   return(df)
 }
 GetJsonFile <- function(json_file) {
-  json_file <- json_file$rawJson
+  json_file <- json_file[["rawJson"]]
   return(json_file)
 }
 GetFieldItems <- function(json_file) {
-  return(json_file$field_items)
+  return(json_file[["field_items"]])
 }
 
 source(here("prg", "functions", "edit_common.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_item.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_item_visit.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_allocation.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_action.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_display.R"), encoding = "UTF-8")
@@ -70,4 +78,8 @@ source(here("prg", "functions", "edit_visit.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_title.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_assigned.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_limitation.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_checklist_convert_column_name.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_date.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_checklist_convert_column_name.R"),
+  encoding = "UTF-8"
+)
+source(here("prg", "functions", "set_items_sheet_settings.R"), encoding = "UTF-8")

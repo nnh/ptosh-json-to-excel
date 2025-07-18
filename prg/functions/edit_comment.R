@@ -5,8 +5,8 @@ GetComment <- function(field_items, condition_column) {
                 return(NULL)
             }
             return(tibble::tibble(
-                name = .x$name %||% NA,
-                label = .x$label %||% NA,
+                name = .x[["name"]] %||% NA,
+                label = .x[["label"]] %||% NA,
                 !!condition_column := .x[[condition_column]] %||% NA
             ))
         }) %>%

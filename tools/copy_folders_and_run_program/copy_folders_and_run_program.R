@@ -2,7 +2,7 @@
 #' テスト用インプットファイルでのプログラム実行
 #' @file copy_folders_and_run_program.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.2
+#' @date 2025.7.4
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)

@@ -2,29 +2,28 @@
 #'
 #' @file excel_json_validator_display.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.15
-CheckDisplay <- function(sheetList) {
-    sheetName <- "display"
+#' @date 2025.7.17
+CheckDisplay <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetDisplayFromJson()
+    json <- GetDisplayFromJson(fieldItems, jpNameAndAliasName)
     return(CheckTarget(sheet, json))
 }
-GetDisplayFromJson <- function() {
+GetDisplayFromJson <- function(fieldItems, jpNameAndAliasName) {
     df <- map2(fieldItems, names(fieldItems), ~ {
         fieldItem <- .x
         aliasName <- .y
         res <- fieldItem |>
             map(~ {
                 temp <- .
-                type <- temp$type
-                is_invisible <- temp$is_invisible
+                type <- temp[["type"]]
+                is_invisible <- temp[["is_invisible"]]
                 if (type == "FieldItem::Assigned" & !is_invisible) {
-                    res <- tibble(alias_name = aliasName, name = temp$name, label = temp$label)
+                    res <- tibble(alias_name = aliasName, name = temp[["name"]], label = temp[["label"]])
                     return(res)
                 }
                 if (type == "FieldItem::Article" & is_invisible) {
-                    res <- tibble(alias_name = aliasName, name = temp$name, label = temp$label)
+                    res <- tibble(alias_name = aliasName, name = temp[["name"]], label = temp[["label"]])
                     return(res)
                 }
                 return(NULL)
@@ -32,6 +31,6 @@ GetDisplayFromJson <- function() {
             keep(~ !is.null(.))
         return(res)
     }) |> bind_rows()
-    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label"))
+    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label"), jpNameAndAliasName)
     return(res)
 }

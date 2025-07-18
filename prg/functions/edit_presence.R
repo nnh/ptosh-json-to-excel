@@ -1,11 +1,11 @@
 GetPresence <- function(field_items, json_file) {
-    cdisc_sheet_configs <- json_file$cdisc_sheet_configs
+    cdisc_sheet_configs <- json_file[["cdisc_sheet_configs"]]
     exclude_fields <- cdisc_sheet_configs %>%
         map(~ {
-            table <- .x$table
+            table <- .x[["table"]]
             stat <- table %>%
                 keep(~ identical(.x, "STAT"))
-            if (.x$prefix == "IE") {
+            if (.x[["prefix"]] == "IE") {
                 ieorres <- table %>%
                     keep(~ identical(.x, "ORRES"))
             } else {
@@ -22,15 +22,15 @@ GetPresence <- function(field_items, json_file) {
         map_chr(~ names(.x)[1])
     target <- field_items %>%
         GetTargetByType("FieldItem::Article") %>%
-        keep(~ is.null(.x$validators$presence))
+        keep(~ is.null(.x[["validators"]][["presence"]]))
     if (length(target) == 0) {
         return(NULL)
     }
     res <- target %>%
         map_df(~ {
             res <- tibble::tibble(
-                name = .x$name,
-                label = .x$label,
+                name = .x[["name"]],
+                label = .x[["label"]],
             )
             return(res)
         })
