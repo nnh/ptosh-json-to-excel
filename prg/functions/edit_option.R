@@ -20,6 +20,7 @@ GetOptions <- function(field_items) {
         target <- field_items %>%
             keep(~ !is.null(.x[["option"]]) && .x[["type"]] == "FieldItem::Article")
     }
+
     if (length(target) == 0) {
         return(NULL)
     }
