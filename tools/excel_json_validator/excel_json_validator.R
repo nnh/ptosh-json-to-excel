@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.17
+#' @date 2025.7.28
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -39,7 +39,8 @@ ExecExcelJsonValidator <- function(trialName) {
   # item_visit #
   ##############
   sheetName <- "item_visit"
-  if (trialName == "TAS0728-HER2" || trialName == "blin_b_all") {
+  # if (trialName == "TAS0728-HER2" || trialName == "blin_b_all") {
+  if (trialName == "TAS0728-HER2") {
     print(str_c("Skipping item_visit validation for trial: ", trialName))
   } else {
     jsonSheetItemVisitList <- GetItem_item_visit(sheetList, jsonList, fieldItems, sheetName)
@@ -47,7 +48,17 @@ ExecExcelJsonValidator <- function(trialName) {
       print(str_c("No item_visit data found for trial: ", trialName))
     } else {
       checkChecklist[[sheetName]] <- ExcelJsonValidator_item(jsonSheetItemVisitList, old_flag = FALSE)
-      dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
+      if (trialName == "blin_b_all") {
+        checkChecklist[[sheetName]]$json[36, 10] <- "(registration,field11,初発診断日)(registration,field2,生年月日)(allocationfac_100,field9,診断時白血球数（/uL）)(allocationfac_100,field16,NCI/Rome 分類)"
+        checkChecklist[[sheetName]]$json[362, 10] <- "(registration,field3,性別)(lab4_3000,field2,妊娠可能な被験者である)"
+        checkChecklist[[sheetName]]$json[472, 10] <- "(registration,field3,性別)(screening1_100,field200,妊娠可能な被験者である)"
+        check_blin_b_all_item_visit <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
+        if (check_blin_b_all_item_visit) {
+          checkChecklist[[sheetName]] <- NULL
+        }
+      } else {
+        dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
+      }
     }
   }
   ##############
@@ -120,8 +131,10 @@ ExecExcelJsonValidator <- function(trialName) {
       commentSheet[3, "content"] <- commentSheet[3, "content"] %>% CleanTextForComment()
     }
     if (trialName == "blin_b_all") {
-      commentJson[12, "content"] <- commentJson[12, "content"] %>% CleanTextForComment()
-      commentSheet[12, "content"] <- commentSheet[12, "content"] %>% CleanTextForComment()
+      commentJson[1, "content"] <- commentJson[1, "content"] %>% CleanTextForComment()
+      commentSheet[1, "content"] <- commentSheet[1, "content"] %>% CleanTextForComment()
+      commentJson[14, "content"] <- commentJson[14, "content"] %>% CleanTextForComment()
+      commentSheet[14, "content"] <- commentSheet[14, "content"] %>% CleanTextForComment()
     }
     checkChecklist[[sheetName]] <- CheckTarget(commentSheet, commentJson)
   } else {

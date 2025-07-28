@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.16
+#' @date 2025.7.28
 CreateItemsByTargetTibble <- function(target, id_col = "field_id", type_col = "field_type") {
     result <- imap(
         target,
@@ -216,14 +216,18 @@ ValidateSheetAndJsonEquality <- function(sheet, json) {
             }
         }
     }
+    return(TRUE)
 }
 ExecValidateSheetAndJsonEquality <- function(checkChecklist, sheetName) {
     if (is.null(checkChecklist[[sheetName]])) {
         return()
     }
-    ValidateSheetAndJsonEquality(
+    res <- ValidateSheetAndJsonEquality(
         checkChecklist[[sheetName]][["sheet"]],
         checkChecklist[[sheetName]][["json"]]
     )
-    stop(str_c("Validation error in ", sheetName))
+    if (!res) {
+        stop(str_c("Validation error in ", sheetName))
+    }
+    return(res)
 }

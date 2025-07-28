@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.16
+#' @date 2025.7.28
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -79,6 +79,9 @@ field_list <- json_files %>%
   }) %>%
   bind_rows()
 
+# VISIT対応シートかどうか判定する
+is_visit <- any(map_lgl(json_files, ~ GetJsonFile(.)[["category"]] == "visit"))
+
 sheet_data_list <- json_files %>% map(~ {
   json_file <- GetJsonFile(.)
   field_items <- json_file %>% GetFieldItems()
@@ -97,7 +100,11 @@ sheet_data_list <- json_files %>% map(~ {
   explanation <- field_items %>% GetComment("description")
   presence <- field_items %>% GetPresence(json_file)
   master <- field_items %>% GetComment("link_type")
-  visit <- field_items %>% GetVisit()
+  if (!is_visit) {
+    visit <- field_items %>% GetVisit()
+  } else {
+    visit <- NULL
+  }
   title <- field_items %>%
     GetTargetByType("FieldItem::Heading") %>%
     EditTitle()
