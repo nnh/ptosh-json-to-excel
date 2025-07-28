@@ -182,7 +182,7 @@ ExecExcelJsonValidator <- function(trialName) {
   # visit #
   #########
   sheetName <- "visit"
-  checkChecklist[[sheetName]] <- sheetList |> CheckVisit(fieldItems, jpNameAndAliasName, sheetName)
+  checkChecklist[[sheetName]] <- sheetList |> CheckVisit(jpNameAndAliasName, sheetName, jsonList)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   #########
   # title #

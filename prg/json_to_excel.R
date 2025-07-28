@@ -47,6 +47,7 @@ kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
 kOptions <- "options"
 kItemVisit <- "item_visit"
+kVisit <- "visit"
 kTargetSheetNames <- c(kItemVisit, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
 # ------ main ------
 temp <- ExecReadJsonFiles()
@@ -80,12 +81,14 @@ field_list <- json_files %>%
   bind_rows()
 
 # VISIT対応シートかどうか判定する
-is_visit <- any(map_lgl(json_files, ~ GetJsonFile(.)[["category"]] == "visit"))
+visit_json_files <- json_files %>%
+  keep(~ GetJsonFile(.)[["category"]] == kVisit)
+is_visit <- length(visit_json_files) > 0
 
 sheet_data_list <- json_files %>% map(~ {
   json_file <- GetJsonFile(.)
   field_items <- json_file %>% GetFieldItems()
-  if (json_file[["category"]] == "visit") {
+  if (json_file[["category"]] == kVisit) {
     item_visit <- EditItem(field_items, json_file[["alias_name"]])
     item <- NULL
   } else {
@@ -141,10 +144,31 @@ for (nm in names(sheet_data_combine)) {
   }
 }
 
+if (is_visit) {
+  visit <- visit_json_files %>%
+    map_df(~ {
+      json_file <- GetJsonFile(.)
+      name <- json_file[["name"]]
+      alias_name <- json_file[["alias_name"]]
+      visit <- str_extract(name, "\\([^()]+\\)$") %>% str_remove_all("[()]")
+      visit_num <- alias_name %>%
+        str_extract("_\\d+$") %>%
+        str_remove("_") %>%
+        as.numeric()
+      tibble::tibble(
+        jpname = name, alias_name = alias_name,
+        name = visit, default_value = visit_num
+      )
+    })
+  sort_visit <- visit %>% arrange(default_value)
+  sheet_data_combine[[kVisit]] <- sort_visit
+}
+
 output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
 item_visit <- EditItemVisit(output_checklist[[kItemVisit]])
 output_checklist[[kItemVisit]] <- item_visit
+
 
 # create output folder.
 output_folder_name <- Sys.time() %>%
