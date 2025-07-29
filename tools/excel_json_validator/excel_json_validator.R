@@ -35,17 +35,17 @@ ExecExcelJsonValidator <- function(trialName) {
   jsonSheetItemList <- GetItem_item(sheetList, jsonList, fieldItems, sheetName)
   checkChecklist[[sheetName]] <- ExcelJsonValidator_item(jsonSheetItemList, old_flag = FALSE)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
-  ##############
-  # item_visit #
-  ##############
-  sheetName <- "item_visit"
+  ##################
+  # item_visit_old #
+  ##################
+  sheetName <- "item_visit_old"
   # if (trialName == "TAS0728-HER2" || trialName == "blin_b_all") {
   if (trialName == "TAS0728-HER2") {
-    print(str_c("Skipping item_visit validation for trial: ", trialName))
+    print(str_c("Skipping item_visit_old validation for trial: ", trialName))
   } else {
     jsonSheetItemVisitList <- GetItem_item_visit(sheetList, jsonList, fieldItems, sheetName)
     if (is.null(jsonSheetItemVisitList)) {
-      print(str_c("No item_visit data found for trial: ", trialName))
+      print(str_c("No item_visit_old data found for trial: ", trialName))
     } else {
       checkChecklist[[sheetName]] <- ExcelJsonValidator_item(jsonSheetItemVisitList, old_flag = FALSE)
       if (trialName == "blin_b_all") {

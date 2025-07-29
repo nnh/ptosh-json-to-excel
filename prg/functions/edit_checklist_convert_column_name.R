@@ -39,7 +39,7 @@ GetEngToJpnColumnMappings <- function() {
             images_count = "画像登録欄の数"
         ),
         item_old = itemColumnName,
-        item_visit = c(itemColumnName,
+        item_visit_old = c(itemColumnName,
             numericality_normal_range_check = "数値チェック・アラート条件の有無"
         ),
         item = c(itemColumnName, field_type = "フィールドタイプ"),

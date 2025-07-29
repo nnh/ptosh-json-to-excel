@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.28
+#' @date 2025.7.29
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -46,9 +46,9 @@ kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
 kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
 kOptions <- "options"
-kItemVisit <- "item_visit"
+kItemVisit_old <- "item_visit_old"
 kVisit <- "visit"
-kTargetSheetNames <- c(kItemVisit, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
+kTargetSheetNames <- c(kItemVisit_old, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 trialName <- temp[["trialName"]]
@@ -89,10 +89,10 @@ sheet_data_list <- json_files %>% map(~ {
   json_file <- GetJsonFile(.)
   field_items <- json_file %>% GetFieldItems()
   if (json_file[["category"]] == kVisit) {
-    item_visit <- EditItem(field_items, json_file[["alias_name"]])
+    item_visit_old <- EditItem(field_items, json_file[["alias_name"]])
     item <- NULL
   } else {
-    item_visit <- NULL
+    item_visit_old <- NULL
     item <- EditItem(field_items, json_file[["alias_name"]])
   }
   allocation <- json_file %>% GetAllocation()
@@ -166,8 +166,8 @@ if (is_visit) {
 
 output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
-item_visit <- EditItemVisit(output_checklist[[kItemVisit]])
-output_checklist[[kItemVisit]] <- item_visit
+item_visit_old <- EditItemVisit(output_checklist[[kItemVisit_old]])
+output_checklist[[kItemVisit_old]] <- item_visit_old
 
 
 # create output folder.
