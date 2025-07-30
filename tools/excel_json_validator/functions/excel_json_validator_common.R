@@ -209,6 +209,7 @@ ExcelJsonValidator_item <- function(jsonSheetItemList, old_flag) {
 # item
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_common.R"), encoding = "UTF-8")
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item.R"), encoding = "UTF-8")
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_visit_old.R"), encoding = "UTF-8")
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_visit.R"), encoding = "UTF-8")
 # allocation
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_allocation.R"), encoding = "UTF-8")

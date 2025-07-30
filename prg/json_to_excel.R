@@ -46,9 +46,10 @@ kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
 kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
 kOptions <- "options"
+kItemVisit <- "item_visit"
 kItemVisit_old <- "item_visit_old"
 kVisit <- "visit"
-kTargetSheetNames <- c(kItemVisit_old, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
+kTargetSheetNames <- c(kItemVisit, kItemVisit_old, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 trialName <- temp[["trialName"]]
@@ -121,7 +122,13 @@ sheet_data_list <- json_files %>% map(~ {
   date <- field_items %>%
     GetDate() %>%
     EditDate(json_file[["alias_name"]])
-  res <- kTargetSheetNames %>% map(~ JoinJpnameAndAliasNameAndSelectColumns(.x, json_file))
+  res <- kTargetSheetNames %>% map(~ {
+    if (.x == kItemVisit) {
+      return(kItemVisit)
+    } else {
+      JoinJpnameAndAliasNameAndSelectColumns(.x, json_file)
+    }
+  })
   names(res) <- kTargetSheetNames
   res[["name"]] <- name
   return(res)
@@ -166,7 +173,8 @@ if (is_visit) {
 
 output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
-item_visit_old <- EditItemVisit(output_checklist[[kItemVisit_old]])
+output_checklist[[kItemVisit]] <- EditItemVisit(output_checklist[[kItemVisit_old]])
+item_visit_old <- EditItemVisitOld(output_checklist[[kItemVisit_old]])
 output_checklist[[kItemVisit_old]] <- item_visit_old
 
 

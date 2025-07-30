@@ -107,7 +107,7 @@ ReplaceItemVisitSheetName <- function(
     res <- item_visit_tibble %>% select(-"group")
     return(res)
 }
-EditItemVisit <- function(item_visit) {
+EditItemVisitOld <- function(item_visit) {
     if (nrow(item_visit) == 0) {
         return(item_visit)
     }

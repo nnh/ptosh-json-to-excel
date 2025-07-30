@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.28
+#' @date 2025.7.30
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -11,7 +11,7 @@ kAliasNameJapaneseColumnName <- "シート名英数字別名"
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
 # ------ constants ------
 keep_objects <- c("keep_objects", "jsonList", "sheetList", "trialName", "kTrialNames", "kAliasNameJapaneseColumnName")
-kTrialNames <- c("JCCG-LFS25", "amld24", "Bev-FOLFOX-SBC", "TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
+kTrialNames <- c("AML224-PIF", "JCCG-LFS25", "amld24", "Bev-FOLFOX-SBC", "TAS0728-HER2", "gpower", "bev", "allb19", "tran", "allr23", "blin_b_all")
 # ------ functions ------
 ExecExcelJsonValidator <- function(trialName) {
   if (exists("keep_objects")) {
@@ -43,7 +43,7 @@ ExecExcelJsonValidator <- function(trialName) {
   if (trialName == "TAS0728-HER2") {
     print(str_c("Skipping item_visit_old validation for trial: ", trialName))
   } else {
-    jsonSheetItemVisitList <- GetItem_item_visit(sheetList, jsonList, fieldItems, sheetName)
+    jsonSheetItemVisitList <- GetItem_item_visit_old(sheetList, jsonList, fieldItems, sheetName)
     if (is.null(jsonSheetItemVisitList)) {
       print(str_c("No item_visit_old data found for trial: ", trialName))
     } else {
@@ -56,10 +56,29 @@ ExecExcelJsonValidator <- function(trialName) {
         if (check_blin_b_all_item_visit) {
           checkChecklist[[sheetName]] <- NULL
         }
+      } else if (trialName == "AML224-PIF") {
+        checkChecklist[[sheetName]]$json[48, 10] <- "(allocationfac1_110,field11,AML診断時(初回寛解導入療法前)骨髄中芽球（%）)(allocationfac2_150,field7,初回治療が無効と判断した際の骨髄検査時の骨髄中芽球（%）)(allocationfac2_150,field2,骨髄芽球減少率)"
+        check_aml224_pif_item_visit <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
+        if (check_aml224_pif_item_visit) {
+          checkChecklist[[sheetName]] <- NULL
+        }
       } else {
         dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
       }
     }
+  }
+  ##############
+  # item_visit #
+  ##############
+  sheetName <- "item_visit"
+  if (trialName == "TAS0728-HER2") {
+    print(str_c("Skipping item_visit_old validation for trial: ", trialName))
+    jsonSheetItemVisitList <- NULL
+  }
+  if (is.null(jsonSheetItemVisitList)) {
+    checkChecklist[[sheetName]] <- NULL
+  } else {
+    checkChecklist[[sheetName]] <- CheckItemVisit(jsonSheetItemVisitList[["json"]], sheetName, sheetList)
   }
   ##############
   # allocation #

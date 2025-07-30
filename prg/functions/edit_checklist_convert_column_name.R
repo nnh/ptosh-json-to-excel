@@ -164,6 +164,8 @@ convertSheetColumnsToJapanese <- function(output_checklist) {
         if (sheetName %in% names(engToJpnColumnMappings)) {
             df <- renameColumnsFromEnglishToJapanese(output_checklist[[sheetName]], engToJpnColumnMappings[[sheetName]])
             res[[sheetName]] <- df
+        } else if (sheetName == kItemVisit) {
+            res[[sheetName]] <- output_checklist[[sheetName]]
         }
     }
     return(res)
