@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_allocation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.17
+#' @date 2025.7.30
 GetAllocation <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
@@ -95,7 +95,7 @@ GetAllocationFromJson <- function(jsonList, fieldItems, jpNameAndAliasName) {
                         input_text <- .[["formula_field"]]
                         temp <- input_text |>
                             str_remove_all(" ") |>
-                            str_extract_all("ref\\('[a-zA-Z0-9]+',[0-9]+\\)") |>
+                            str_extract_all("ref\\('[a-zA-Z0-9_]+',[0-9]+\\)") |>
                             list_c()
                         if (length(temp) == 0) {
                             return(tibble(alias_name = myAliasName, formula_field = .[["formula_field"]], formula_field_references = .[["formula_field"]]))
@@ -106,7 +106,7 @@ GetAllocationFromJson <- function(jsonList, fieldItems, jpNameAndAliasName) {
                                 list_c()
                             aliasName <- temp2[1] |>
                                 str_remove("ref") |>
-                                str_extract("[a-zA-Z0-9]+") |>
+                                str_extract("[a-zA-Z0-9_]+") |>
                                 unlist()
                             fieldName <- temp2[2] |>
                                 str_extract("[0-9]+") %>%
