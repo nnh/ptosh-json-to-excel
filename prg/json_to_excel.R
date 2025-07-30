@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.16
+#' @date 2025.7.29
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -47,7 +47,9 @@ kEngColumnNames <- kEngToJpnColumnMappings %>%
   map(names)
 kOptions <- "options"
 kItemVisit <- "item_visit"
-kTargetSheetNames <- c(kItemVisit, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
+kItemVisit_old <- "item_visit_old"
+kVisit <- "visit"
+kTargetSheetNames <- c(kItemVisit, kItemVisit_old, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 trialName <- temp[["trialName"]]
@@ -79,14 +81,19 @@ field_list <- json_files %>%
   }) %>%
   bind_rows()
 
+# VISIT対応シートかどうか判定する
+visit_json_files <- json_files %>%
+  keep(~ GetJsonFile(.)[["category"]] == kVisit)
+is_visit <- length(visit_json_files) > 0
+
 sheet_data_list <- json_files %>% map(~ {
   json_file <- GetJsonFile(.)
   field_items <- json_file %>% GetFieldItems()
-  if (json_file[["category"]] == "visit") {
-    item_visit <- EditItem(field_items, json_file[["alias_name"]])
+  if (json_file[["category"]] == kVisit) {
+    item_visit_old <- EditItem(field_items, json_file[["alias_name"]])
     item <- NULL
   } else {
-    item_visit <- NULL
+    item_visit_old <- NULL
     item <- EditItem(field_items, json_file[["alias_name"]])
   }
   allocation <- json_file %>% GetAllocation()
@@ -97,7 +104,11 @@ sheet_data_list <- json_files %>% map(~ {
   explanation <- field_items %>% GetComment("description")
   presence <- field_items %>% GetPresence(json_file)
   master <- field_items %>% GetComment("link_type")
-  visit <- field_items %>% GetVisit()
+  if (!is_visit) {
+    visit <- field_items %>% GetVisit()
+  } else {
+    visit <- NULL
+  }
   title <- field_items %>%
     GetTargetByType("FieldItem::Heading") %>%
     EditTitle()
@@ -111,7 +122,13 @@ sheet_data_list <- json_files %>% map(~ {
   date <- field_items %>%
     GetDate() %>%
     EditDate(json_file[["alias_name"]])
-  res <- kTargetSheetNames %>% map(~ JoinJpnameAndAliasNameAndSelectColumns(.x, json_file))
+  res <- kTargetSheetNames %>% map(~ {
+    if (.x == kItemVisit) {
+      return(kItemVisit)
+    } else {
+      JoinJpnameAndAliasNameAndSelectColumns(.x, json_file)
+    }
+  })
   names(res) <- kTargetSheetNames
   res[["name"]] <- name
   return(res)
@@ -134,10 +151,32 @@ for (nm in names(sheet_data_combine)) {
   }
 }
 
+if (is_visit) {
+  visit <- visit_json_files %>%
+    map_df(~ {
+      json_file <- GetJsonFile(.)
+      name <- json_file[["name"]]
+      alias_name <- json_file[["alias_name"]]
+      visit <- str_extract(name, "\\([^()]+\\)$") %>% str_remove_all("[()]")
+      visit_num <- alias_name %>%
+        str_extract("_\\d+$") %>%
+        str_remove("_") %>%
+        as.numeric()
+      tibble::tibble(
+        jpname = name, alias_name = alias_name,
+        name = visit, default_value = visit_num
+      )
+    })
+  sort_visit <- visit %>% arrange(default_value)
+  sheet_data_combine[[kVisit]] <- sort_visit
+}
+
 output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
-item_visit <- EditItemVisit(output_checklist[[kItemVisit]])
-output_checklist[[kItemVisit]] <- item_visit
+output_checklist[[kItemVisit]] <- EditItemVisit(output_checklist[[kItemVisit_old]])
+item_visit_old <- EditItemVisitOld(output_checklist[[kItemVisit_old]])
+output_checklist[[kItemVisit_old]] <- item_visit_old
+
 
 # create output folder.
 output_folder_name <- Sys.time() %>%

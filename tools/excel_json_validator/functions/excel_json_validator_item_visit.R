@@ -2,146 +2,71 @@
 #'
 #' @file excel_json_validator_item_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.17
-GetItemVisitCheckItemsFromJson <- function(item_visit_fieldItems) {
-    article <- item_visit_fieldItems |> GetItemArticleFromFieldItems()
-    checkItems <- article |>
-        map(~ {
-            df <- .
-            res <- df |>
-                map(~ {
-                    target <- .x
-                    if (!is.list(target)) {
-                        return(NULL)
-                    }
-                    numericality <- target[["validators"]][["numericality"]]
-                    hasNumericality <- !is.null(numericality)
-                    normalRangeLessThan <- target[["normal_range"]][["less_than_or_equal_to"]]
-                    normalRangeGreaterThan <- target[["normal_range"]][["greater_than_or_equal_to"]]
-                    # normalRangeLessThanかnormalRangeGreaterThanのどちらもNULLならFalse
-                    hasNormalRange <- FALSE
-                    if (is.null(normalRangeLessThan) && is.null(normalRangeGreaterThan)) {
-                        hasNormalRange <- FALSE
-                    } else if ((is.null(normalRangeLessThan) || normalRangeLessThan == "") &&
-                        (is.null(normalRangeGreaterThan) || normalRangeGreaterThan == "")) {
-                        # どちらも空白ならFalse
-                        hasNormalRange <- FALSE
-                    } else {
-                        # どちらか一つでも値が入っていたらTrue
-                        hasNormalRange <- TRUE
-                    }
-                    # 判定結果を変数に格納
-                    field_type_result <- NULL
-                    if (!hasNumericality && !hasNormalRange) {
-                        field_type_result <- "条件なし"
-                    } else if (hasNumericality && hasNormalRange) {
-                        field_type_result <- "数値・アラート有"
-                    } else if (hasNumericality && !hasNormalRange) {
-                        field_type_result <- "数値チェック有"
-                    } else if (!hasNumericality && hasNormalRange) {
-                        field_type_result <- "アラート設定有"
-                    }
-                    if (!is.null(field_type_result)) {
-                        return(list(
-                            field_id = target[["name"]],
-                            field_type = field_type_result
-                        ))
-                    } else {
-                        return(NULL)
-                    }
-                }) %>%
-                keep(~ !is.null(.) && length(.) > 0)
-            return(res)
-        }) |>
-        keep(~ length(.) > 0)
-
-    result <- CreateItemsByTargetTibble(
-        checkItems,
-        id_col = "field_id",
-        type_col = "field_type"
-    )
-    result[["numericality_normal_range_check"]] <- result[["field_type"]]
-    result <- result %>% select(-"field_type")
-    return(result)
-}
-EditItem_item_visit <- function(item_visit_jsonList, json) {
-    item_visit_jsonList$group <- item_visit_jsonList$alias_name %>%
-        str_remove("_[0-9]+$")
-    groups <- item_visit_jsonList$group %>%
+#' @date 2025.7.30
+CheckItemVisit <- function(json, sheetName, sheetList) {
+    sheet <- sheetList[[sheetName]]
+    jsonItemVisit <- json
+    jsonItemVisit[["alias_name_count"]] <- sapply(strsplit(jsonItemVisit[["alias_name"]], ","), length)
+    sheet_colnames <- sheet %>%
+        colnames() %>%
+        sort()
+    jsonItemVisit$jpname <- jsonItemVisit$jpname %>% str_replace_all(" +", ".")
+    jsonItemVisit[["group"]] <- str_remove(jsonItemVisit[["jpname"]], "\\((\\w|\\.|-)*\\)$")
+    json_jpnames <- jsonItemVisit$jpname %>%
+        unlist() %>%
+        str_remove("\\((\\w|\\.|-)*\\)$") %>%
         unique()
-    target_item_visit <- tibble()
-    for (i in 1:length(groups)) {
-        group <- groups[i]
-        temp <- item_visit_jsonList %>%
-            filter(group == groups[i])
-        alias_name_and_group <- list()
-        alias_name_text <- temp$alias_name %>%
-            paste0(collapse = ", ")
-        target_item_visit <- bind_rows(target_item_visit, temp[1, ])
-        target_item_visit[[i, "group_count"]] <- nrow(temp)
-        target_item_visit[[i, "alias_name_text"]] <- alias_name_text
+    json_colnames <- json_jpnames %>%
+        c(., "ラベル", "数値チェック・アラート条件の有無") %>%
+        sort()
+    colname_identical <- identical(sheet_colnames, json_colnames)
+    if (!colname_identical) {
+        stop(str_c("Column names in sheet '", sheetName, "' do not match with JSON."))
     }
-    json <- json %>% filter(alias_name %in% target_item_visit$alias_name)
-
-    kReferenceColnames <- c(
-        "presence_if_references",
-        "formula_if_references",
-        "references_after",
-        "references_before"
-    )
-    for (i in 1:nrow(target_item_visit)) {
-        group_count <- target_item_visit[i, "group_count"]
-        if (group_count == 1) {
-            next
-        }
-        aliasName <- target_item_visit[i, "alias_name", drop = TRUE]
-        group <- target_item_visit[i, "group", drop = TRUE]
-        alias_name_text <- target_item_visit[i, "alias_name_text", drop = TRUE]
-        target <- json %>%
-            filter(alias_name == aliasName)
-        non_target <- json %>%
-            filter(alias_name != aliasName)
-        target$alias_name <- alias_name_text
-        target$jpname <- target$jpname %>% str_remove("\\(.*\\)$")
-        json <- bind_rows(non_target, target)
-        for (j in 1:length(kReferenceColnames)) {
-            colname <- kReferenceColnames[j]
-            json[[colname]] <- json[[colname]] %>%
-                str_replace_all(aliasName, group)
-        }
+    sheet_labels <- sheet[["ラベル"]] %>%
+        unlist() %>%
+        sort()
+    json_labels <- jsonItemVisit[["label"]] %>%
+        unlist() %>%
+        unique() %>%
+        sort()
+    labels_identical <- identical(sheet_labels, json_labels)
+    if (!labels_identical) {
+        stop(str_c("Labels in sheet '", sheetName, "' do not match with JSON."))
     }
-    return(json)
-}
-GetItem_item_visit <- function(sheetList, jsonList, fieldItems, sheetName) {
-    varName <- "numericality_normal_range_check"
-    # sheet
-    sheet <- sheetName %>% GetItemFromSheet(sheetList, .)
-    # json
-    json_items <- GetItemFromJson(fieldItems, jsonList, sheet) %>%
-        select(-all_of(varName))
-    check_items <- GetItemVisitCheckItemsFromJson(fieldItems)
-    json <- EditOutputJsonItems(
-        target = check_items,
-        json = json_items,
-        colName = varName,
-        sheet_colnames = sheet |> colnames(),
-        na_convert_targets = c("option.name", "default_value")
-    )
-    item_visit_jsonList <- jsonList %>%
-        keep(~ .x[["category"]] == "visit") %>%
-        names() %>%
-        tibble(alias_name = .)
-    if (all(sheet %>% unlist() %>% is.na() | sheet %>% unlist() == "")) {
-        if (nrow(item_visit_jsonList) == 0) {
-            return(NULL)
+    json_tibble <- tibble()
+    for (col in json_colnames) {
+        json_tibble[[col]] <- NA
+    }
+    for (col in json_jpnames) {
+        for (row in 1:length(sheet_labels)) {
+            sheet_label <- sheet_labels[row]
+            json_values <- jsonItemVisit %>%
+                filter(label == sheet_label & group == col) %>%
+                select(alias_name_count) %>%
+                sum()
+            if (length(json_values) == 0) {
+                json_values <- 0
+            }
+            json_check <- jsonItemVisit %>%
+                filter(label == sheet_label) %>%
+                select(numericality_normal_range_check) %>%
+                unlist() %>%
+                unique()
+            json_tibble[row, "ラベル"] <- sheet_labels[row]
+            json_tibble[row, col] <- json_values
+            json_tibble[row, "数値チェック・アラート条件の有無"] <- ifelse(length(json_check) == 0, NA, json_check)
         }
     }
-    json <- EditItem_item_visit(item_visit_jsonList, json)
-    json <- json %>% arrange(alias_name, name)
-    sheet <- sheet %>% arrange(alias_name, name)
-    result <- list(
-        sheet = sheet,
-        json = json
+    result_json <- as.data.frame(
+        json_tibble %>%
+            select(all_of(sheet_colnames)) %>%
+            arrange(match(.[["ラベル"]], sheet_labels)) %>%
+            mutate(across(everything(), as.character))
     )
-    return(result)
+    result_sheet <- sheet %>%
+        select(all_of(sheet_colnames)) %>%
+        arrange(match(.[["ラベル"]], sheet_labels)) %>%
+        mutate(across(everything(), as.character))
+    return(CheckTarget(result_sheet, result_json))
 }

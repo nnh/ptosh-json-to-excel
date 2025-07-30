@@ -3,7 +3,7 @@
 #'
 #' @file edit_checklist_convert_column_name.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.1
+#' @date 2025.7.29
 renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     stopifnot(is.data.frame(df))
     stopifnot(is.character(nameMap), !is.null(names(nameMap)))
@@ -39,7 +39,7 @@ GetEngToJpnColumnMappings <- function() {
             images_count = "画像登録欄の数"
         ),
         item_old = itemColumnName,
-        item_visit = c(itemColumnName,
+        item_visit_old = c(itemColumnName,
             numericality_normal_range_check = "数値チェック・アラート条件の有無"
         ),
         item = c(itemColumnName, field_type = "フィールドタイプ"),
@@ -138,10 +138,10 @@ GetEngToJpnColumnMappings <- function() {
             name = "フィールドID",
             label = "ラベル",
             default_value = "デフォルト値",
-            validators.numericality.validate_numericality_less_than_or_equal_to = "バリデータ.数値.最小値",
-            validators.numericality.validate_numericality_greater_than_or_equal_to = "バリデータ.数値.最大値",
-            normal_range.less_than_or_equal_to = "アラート条件.未満の場合",
-            normal_range.greater_than_or_equal_to = "アラート条件.超える場合"
+            validators.numericality.validate_numericality_less_than_or_equal_to = "バリデータ.数値.最大値",
+            validators.numericality.validate_numericality_greater_than_or_equal_to = "バリデータ.数値.最小値",
+            normal_range.less_than_or_equal_to = "アラート条件.超える場合",
+            normal_range.greater_than_or_equal_to = "アラート条件.未満の場合"
         ),
         date = c(
             jpname = "シート名",
@@ -164,6 +164,8 @@ convertSheetColumnsToJapanese <- function(output_checklist) {
         if (sheetName %in% names(engToJpnColumnMappings)) {
             df <- renameColumnsFromEnglishToJapanese(output_checklist[[sheetName]], engToJpnColumnMappings[[sheetName]])
             res[[sheetName]] <- df
+        } else if (sheetName == kItemVisit) {
+            res[[sheetName]] <- output_checklist[[sheetName]]
         }
     }
     return(res)

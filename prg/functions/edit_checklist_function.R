@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.16
+#' @date 2025.7.29
 # ------ constants ------
 # ------ functions ------
 OutputChecklistSheet <- function(df_output, wb, sheet_name) {
@@ -16,7 +16,7 @@ OutputChecklistSheet <- function(df_output, wb, sheet_name) {
   setColWidths(wb = wb, sheet = sheet_name, cols = 1:ncol(df_output), widths = "auto")
   fontStyle <- setFontStyle()
   addStyle(wb = wb, sheet = sheet_name, style = fontStyle, rows = 1:(nrow(df_output) + 1), cols = 1:ncol(df_output), gridExpand = TRUE)
-  if (sheet_name == kItemVisit) {
+  if (sheet_name == kItemVisit_old || sheet_name == kItemVisit) {
     setColumnConditionalFormatting(
       wb = wb, sheetName = sheet_name,
       targetColName = kItemVisitConditionalFormattingColumnName,
@@ -67,6 +67,7 @@ GetFieldItems <- function(json_file) {
 
 source(here("prg", "functions", "edit_common.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_item.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_item_visit_old.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_item_visit.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_allocation.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_action.R"), encoding = "UTF-8")
