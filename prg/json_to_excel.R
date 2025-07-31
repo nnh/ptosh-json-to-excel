@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.29
+#' @date 2025.7.31
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -164,10 +164,10 @@ if (is_visit) {
         as.numeric()
       tibble::tibble(
         jpname = name, alias_name = alias_name,
-        name = visit, default_value = visit_num
+        name = visit_num, default_value = visit
       )
     })
-  sort_visit <- visit %>% arrange(default_value)
+  sort_visit <- visit %>% arrange(name)
   sheet_data_combine[[kVisit]] <- sort_visit
 }
 

@@ -3,7 +3,7 @@
 #'
 #' @file edit_checklist_convert_column_name.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.29
+#' @date 2025.7.31
 renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     stopifnot(is.data.frame(df))
     stopifnot(is.character(nameMap), !is.null(names(nameMap)))
@@ -57,6 +57,12 @@ GetEngToJpnColumnMappings <- function() {
             alias_name = kAliasNameJapaneseColumnName,
             name = "フィールドID",
             default_value = "デフォルト値"
+        ),
+        visit_to_visit = c(
+            jpname = "シート名",
+            alias_name = kAliasNameJapaneseColumnName,
+            name = "VISITNUM",
+            default_value = "VISIT"
         ),
         master = c(
             jpname = "シート名",
@@ -162,7 +168,11 @@ convertSheetColumnsToJapanese <- function(output_checklist) {
     res <- list()
     for (sheetName in sheetNames) {
         if (sheetName %in% names(engToJpnColumnMappings)) {
-            df <- renameColumnsFromEnglishToJapanese(output_checklist[[sheetName]], engToJpnColumnMappings[[sheetName]])
+            if (sheetName == kVisit && is_visit) {
+                df <- renameColumnsFromEnglishToJapanese(output_checklist[[sheetName]], engToJpnColumnMappings[["visit_to_visit"]])
+            } else {
+                df <- renameColumnsFromEnglishToJapanese(output_checklist[[sheetName]], engToJpnColumnMappings[[sheetName]])
+            }
             res[[sheetName]] <- df
         } else if (sheetName == kItemVisit) {
             res[[sheetName]] <- output_checklist[[sheetName]]
