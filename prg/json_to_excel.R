@@ -151,26 +151,11 @@ for (nm in names(sheet_data_combine)) {
   }
 }
 
+# VISIT対応シート
 if (is_visit) {
-  visit <- visit_json_files %>%
-    map_df(~ {
-      json_file <- GetJsonFile(.)
-      name <- json_file[["name"]]
-      alias_name <- json_file[["alias_name"]]
-      visit <- str_extract(name, "\\([^()]+\\)$") %>% str_remove_all("[()]")
-      visit_num <- alias_name %>%
-        str_extract("_\\d+$") %>%
-        str_remove("_") %>%
-        as.numeric()
-      tibble::tibble(
-        jpname = name, alias_name = alias_name,
-        name = visit_num, default_value = visit
-      )
-    })
-  sort_visit <- visit %>% arrange(name)
-  sheet_data_combine[[kVisit]] <- sort_visit
+  sheet_data_combine[[kVisit]] <- CreateVisitToVisitSheetData()
 }
-
+# 日本語列名に変換する
 output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
 output_checklist[[kItemVisit]] <- EditItemVisit(output_checklist[[kItemVisit_old]])

@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.28
+#' @date 2025.7.31
 CheckJsonVisitForVisit <- function(visitJson) {
     res <- visitJson %>%
         map_df(~ {
@@ -10,13 +10,13 @@ CheckJsonVisitForVisit <- function(visitJson) {
             res <- data.frame(
                 jpname = visit[["name"]],
                 alias_name = visit[["alias_name"]],
-                name = visit[["name"]] %>% str_remove("\\)$") %>% str_split("\\(") %>% map_chr(~ tail(.x, 1)),
-                default_value = visit[["alias_name"]] %>% str_split("_") %>% map_chr(~ tail(.x, 1)) %>% as.numeric()
+                name = visit[["alias_name"]] %>% str_split("_") %>% map_chr(~ tail(.x, 1)) %>% as.numeric(),
+                default_value = visit[["name"]] %>% str_remove("\\)$") %>% str_split("\\(") %>% map_chr(~ tail(.x, 1))
             )
             return(res)
         }) %>%
-        arrange(default_value)
-    res$default_value <- as.character(res$default_value)
+        arrange(name)
+    res$name <- as.character(res$name)
     return(res)
 }
 CheckVisit <- function(sheetList, jpNameAndAliasName, sheetName, jsonList) {
@@ -32,15 +32,18 @@ CheckVisit <- function(sheetList, jpNameAndAliasName, sheetName, jsonList) {
         print("allr23はVISITチェック処理をスキップします")
         return(NULL)
     }
-    sheet <- sheetList[[sheetName]] |>
-        rename(!!!engToJpnColumnMappings[[sheetName]])
-    sheet$default_value <- sheet$default_value %>% as.character()
     visitJson <- jsonList %>% keep(~ .[["category"]] == "visit")
     if (length(visitJson) == 0) {
         visit_fieldItems <- jsonList |> GetFieldItemsByJsonList()
         json <- GetVisitFromJson(visit_fieldItems, jpNameAndAliasName)
+        sheet <- sheetList[[sheetName]] |>
+            rename(!!!engToJpnColumnMappings[[sheetName]])
+        sheet$default_value <- sheet$default_value %>% as.character()
     } else {
         json <- CheckJsonVisitForVisit(visitJson)
+        sheet <- sheetList[[sheetName]] |>
+            rename(!!!engToJpnColumnMappings[["visit_to_visit"]])
+        sheet$name <- sheet$name %>% as.character()
     }
     return(CheckTarget(sheet, json))
 }
