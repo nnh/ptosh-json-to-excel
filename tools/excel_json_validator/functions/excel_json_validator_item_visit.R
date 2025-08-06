@@ -2,11 +2,10 @@
 #'
 #' @file excel_json_validator_item_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.30
+#' @date 2025.8.6
 CheckItemVisit <- function(json, sheetName, sheetList) {
     sheet <- sheetList[[sheetName]]
     jsonItemVisit <- json
-    jsonItemVisit[["alias_name_count"]] <- sapply(strsplit(jsonItemVisit[["alias_name"]], ","), length)
     sheet_colnames <- sheet %>%
         colnames() %>%
         sort()
@@ -43,8 +42,7 @@ CheckItemVisit <- function(json, sheetName, sheetList) {
             sheet_label <- sheet_labels[row]
             json_values <- jsonItemVisit %>%
                 filter(label == sheet_label & group == col) %>%
-                select(alias_name_count) %>%
-                sum()
+                nrow()
             if (length(json_values) == 0) {
                 json_values <- 0
             }

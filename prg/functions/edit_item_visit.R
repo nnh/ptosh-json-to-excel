@@ -5,15 +5,21 @@ EditItemVisit <- function(item_visit) {
     if (nrow(item_visit) == 0) {
         return(item_visit)
     }
+
     item_visit_by_group <- item_visit %>%
         mutate(group = GetGroupBySheetNames(.data[["シート名"]]))
 
-    label_count_by_sheet <- item_visit_by_group %>%
+    item_visit_by_group_unique <- item_visit_by_group %>%
+        select(c(group, フィールドID, ラベル, `数値チェック・アラート条件の有無`)) %>%
+        distinct()
+
+    label_count_by_sheet <- item_visit_by_group_unique %>%
         group_by(group, ラベル, `数値チェック・アラート条件の有無`) %>%
         summarise(
             ラベルの個数 = n(),
             .groups = "drop"
         )
+
     label_count_wide <- label_count_by_sheet %>%
         pivot_wider(
             names_from = group,
