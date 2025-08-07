@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.31
+#' @date 2025.8.7
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -86,53 +86,96 @@ visit_json_files <- json_files %>%
   keep(~ GetJsonFile(.)[["category"]] == kVisit)
 is_visit <- length(visit_json_files) > 0
 
-sheet_data_list <- json_files %>% map(~ {
+# VISITまとめ対象外のシート
+# name
+# item
+# allocation
+# display
+# master
+# visit
+sheet_data_list_no_group <- json_files %>% map(~ {
   json_file <- GetJsonFile(.)
   field_items <- json_file %>% GetFieldItems()
   if (json_file[["category"]] == kVisit) {
-    item_visit_old <- EditItem(field_items, json_file[["alias_name"]])
     item <- NULL
   } else {
-    item_visit_old <- NULL
     item <- EditItem(field_items, json_file[["alias_name"]])
   }
   allocation <- json_file %>% GetAllocation()
-  action <- field_items %>% GetAction(json_file[["alias_name"]])
   display <- field_items %>% GetDisplay()
-  option <- field_items %>% GetOptions()
-  comment <- field_items %>% GetComment("content")
-  explanation <- field_items %>% GetComment("description")
-  presence <- field_items %>% GetPresence(json_file)
   master <- field_items %>% GetComment("link_type")
   if (!is_visit) {
     visit <- field_items %>% GetVisit()
   } else {
     visit <- NULL
   }
+  name <- tibble(name = json_file[["name"]], alias_name = json_file[["alias_name"]], images_count = json_file[["images_count"]])
+  item <- JoinJpnameAndAliasNameAndSelectColumns("item", json_file)
+  allocation <- JoinJpnameAndAliasNameAndSelectColumns("allocation", json_file)
+  display <- JoinJpnameAndAliasNameAndSelectColumns("display", json_file)
+  master <- JoinJpnameAndAliasNameAndSelectColumns("master", json_file)
+  visit <- JoinJpnameAndAliasNameAndSelectColumns("visit", json_file)
+  res <- list(
+    name = name,
+    item = item,
+    allocation = allocation,
+    display = display,
+    master = master,
+    visit = visit,
+    item_visit = "item_visit"
+  )
+})
+# VISITまとめ対象のシート
+sheet_data_list_group <- json_files %>% map(~ {
+  json_file <- GetJsonFile(.)
+  field_items <- json_file %>% GetFieldItems()
+  if (json_file[["category"]] == kVisit) {
+    item_visit_old <- EditItem(field_items, json_file[["alias_name"]])
+  } else {
+    item_visit_old <- NULL
+  }
+  action <- field_items %>% GetAction(json_file[["alias_name"]])
+  option <- field_items %>% GetOptions()
+  comment <- field_items %>% GetComment("content")
+  explanation <- field_items %>% GetComment("description")
+  presence <- field_items %>% GetPresence(json_file)
   title <- field_items %>%
     GetTargetByType("FieldItem::Heading") %>%
     EditTitle()
   assigned <- field_items %>%
     GetTargetByType("FieldItem::Assigned") %>%
     EditAssigned()
-  name <- tibble(name = json_file[["name"]], alias_name = json_file[["alias_name"]], images_count = json_file[["images_count"]])
   limitation <- field_items %>%
     GetLimitation() %>%
     EditLimitation()
   date <- field_items %>%
     GetDate() %>%
     EditDate(json_file[["alias_name"]])
-  res <- kTargetSheetNames %>% map(~ {
-    if (.x == kItemVisit) {
-      return(kItemVisit)
-    } else {
-      JoinJpnameAndAliasNameAndSelectColumns(.x, json_file)
-    }
-  })
-  names(res) <- kTargetSheetNames
-  res[["name"]] <- name
-  return(res)
+  item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns("item_visit_old", json_file)
+  action <- JoinJpnameAndAliasNameAndSelectColumns("action", json_file)
+  option <- JoinJpnameAndAliasNameAndSelectColumns("option", json_file)
+  comment <- JoinJpnameAndAliasNameAndSelectColumns("comment", json_file)
+  explanation <- JoinJpnameAndAliasNameAndSelectColumns("explanation", json_file)
+  presence <- JoinJpnameAndAliasNameAndSelectColumns("presence", json_file)
+  title <- JoinJpnameAndAliasNameAndSelectColumns("title", json_file)
+  assigned <- JoinJpnameAndAliasNameAndSelectColumns("assigned", json_file)
+  limitation <- JoinJpnameAndAliasNameAndSelectColumns("limitation", json_file)
+  date <- JoinJpnameAndAliasNameAndSelectColumns("date", json_file)
+  return(list(
+    item_visit_old = item_visit_old,
+    action = action,
+    option = option,
+    comment = comment,
+    explanation = explanation,
+    presence = presence,
+    title = title,
+    assigned = assigned,
+    limitation = limitation,
+    date = date
+  ))
 })
+
+sheet_data_list <- map2(sheet_data_list_no_group, sheet_data_list_group, ~ c(.x, .y))
 
 targetSheetNames <- kTargetSheetNames %>% append("name", .)
 sheet_data_combine <- targetSheetNames %>%
