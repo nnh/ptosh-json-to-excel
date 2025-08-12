@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.16
+#' @date 2025.8.12
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -205,6 +205,37 @@ ExcelJsonValidator_item <- function(jsonSheetItemList, old_flag) {
     mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
   res <- CheckTarget(df_item_sheet, df_item_json)
   return(res)
+}
+GetIsVisit <- function(jsonList) {
+  isVisit_json <<- jsonList %>% keep(~ .x[["category"]] == "visit")
+  isVisit <<- length(isVisit_json) > 0
+  if (isVisit) {
+    visit_json_names <- isVisit_json %>% names()
+    group <- visit_json_names %>% str_remove("_[0-9]+$")
+    visitnum <- visit_json_names %>%
+      str_extract(("[0-9]+$")) %>%
+      as.numeric()
+    targets <- tibble(
+      group = group,
+      visitnum = visitnum,
+      visit_json_names = visit_json_names
+    ) %>%
+      group_by(group) %>%
+      filter(visitnum == min(visitnum)) %>%
+      ungroup()
+    visit_jsonList <- jsonList[names(jsonList) %in% targets$visit_json_names]
+    not_visit_jsonList <- jsonList %>% keep(~ .x[["category"]] != "visit")
+    visit_not_visit_jsonList <- c(visit_jsonList, not_visit_jsonList)
+    visit_fieldItems <- visit_jsonList |> GetFieldItemsByJsonList()
+    visit_not_visit_fieldItems <- visit_not_visit_jsonList |> GetFieldItemsByJsonList()
+  } else {
+    visit_not_visit_jsonList <- jsonList
+    visit_not_visit_fieldItems <- NULL
+  }
+  return(list(
+    visit_not_visit_jsonList = visit_not_visit_jsonList,
+    visit_not_visit_fieldItems = visit_not_visit_fieldItems
+  ))
 }
 # item
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_common.R"), encoding = "UTF-8")
