@@ -86,6 +86,12 @@ visit_json_files <- json_files %>%
   keep(~ GetJsonFile(.)[["category"]] == kVisit)
 is_visit <- length(visit_json_files) > 0
 
+if (is_visit) {
+  visit_json_files_group <- EditGroupVisit(json_files)
+} else {
+  visit_json_files_group <- json_files
+}
+
 # VISITまとめ対象外のシート
 # name
 # item
@@ -126,7 +132,7 @@ sheet_data_list_no_group <- json_files %>% map(~ {
   )
 })
 # VISITまとめ対象のシート
-sheet_data_list_group <- json_files %>% map(~ {
+sheet_data_list_group <- visit_json_files_group %>% map(~ {
   json_file <- GetJsonFile(.)
   field_items <- json_file %>% GetFieldItems()
   if (json_file[["category"]] == kVisit) {
@@ -175,7 +181,12 @@ sheet_data_list_group <- json_files %>% map(~ {
   ))
 })
 
-sheet_data_list <- map2(sheet_data_list_no_group, sheet_data_list_group, ~ c(.x, .y))
+all_names <- names(sheet_data_list_no_group)
+sheet_data_list_group_fixed <- set_names(
+  map(all_names, ~ sheet_data_list_group[[.x]] %||% NULL),
+  all_names
+)
+sheet_data_list <- map2(sheet_data_list_no_group, sheet_data_list_group_fixed, ~ c(.x, .y))
 
 targetSheetNames <- kTargetSheetNames %>% append("name", .)
 sheet_data_combine <- targetSheetNames %>%
@@ -204,7 +215,6 @@ output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
 output_checklist[[kItemVisit]] <- EditItemVisit(output_checklist[[kItemVisit_old]])
 item_visit_old <- EditItemVisitOld(output_checklist[[kItemVisit_old]])
 output_checklist[[kItemVisit_old]] <- item_visit_old
-
 
 # create output folder.
 output_folder_name <- Sys.time() %>%

@@ -2,11 +2,15 @@
 #'
 #' @file excel_json_validator_content.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.17
+#' @date 2025.8.12
 CheckContent <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     json <- GetContentFromJson(fieldItems, jpNameAndAliasName)
+    sheet <- sheet %>% arrange(alias_name, name)
+    json <- json %>% arrange(alias_name, name)
+    sheet$content <- sheet$content %>% CleanTextForComment()
+    json$content <- json$content %>% CleanTextForComment()
     return(CheckTarget(sheet, json))
 }
 GetContentFromJson <- function(fieldItems, jpNameAndAliasName) {

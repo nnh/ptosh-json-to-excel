@@ -2,11 +2,13 @@
 #'
 #' @file excel_json_validator_title.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.17
+#' @date 2025.8.12
 CheckTitle <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     json <- GetTitleFromJson(fieldItems, jpNameAndAliasName)
+    sheet <- sheet %>% arrange(alias_name, name)
+    json <- json %>% arrange(alias_name, name)
     return(CheckTarget(sheet, json))
 }
 GetTitleFromJson <- function(fieldItems, jpNameAndAliasName) {

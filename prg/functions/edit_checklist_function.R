@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.29
+#' @date 2025.8.7
 # ------ constants ------
 # ------ functions ------
 OutputChecklistSheet <- function(df_output, wb, sheet_name) {
@@ -64,6 +64,26 @@ GetJsonFile <- function(json_file) {
 GetFieldItems <- function(json_file) {
   return(json_file[["field_items"]])
 }
+EditGroupVisit <- function(json_files) {
+  no_visit_json_files <- json_files %>%
+    keep(~ GetJsonFile(.)[["category"]] != kVisit)
+  # グループ名ごとに最小の数値を持つ要素だけを残す
+  visit_names <- names(visit_json_files)
+  group_info <- tibble::tibble(
+    name = visit_names,
+    group = str_replace(visit_names, "_\\d+$", ""),
+    num = as.integer(str_extract(visit_names, "\\d+$"))
+  )
+  min_num_per_group <- group_info %>%
+    group_by(group) %>%
+    filter(num == min(num)) %>%
+    ungroup()
+  visit_json_files_group_group <- visit_json_files[min_num_per_group$name]
+  # visit_json_files_group_groupとno_visit_json_filesを結合
+  visit_json_files_group <- c(visit_json_files_group_group, no_visit_json_files)
+  return(visit_json_files_group)
+}
+
 
 source(here("prg", "functions", "edit_common.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_item.R"), encoding = "UTF-8")

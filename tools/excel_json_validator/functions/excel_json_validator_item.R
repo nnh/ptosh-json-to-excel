@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_item.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.17
+#' @date 2025.8.12
 GetItemFieldTypeFromJson <- function(fieldItems) {
     article <- fieldItems |> GetItemArticleFromFieldItems()
     fieldTypes <- article |>
@@ -43,7 +43,7 @@ GetItem_item <- function(sheetList, jsonList, fieldItems, sheetName) {
     field_types <- GetItemFieldTypeFromJson(fieldItems)
     json <- EditOutputJsonItems(
         target = field_types,
-        json = json_items,
+        json_items = json_items,
         colName = varName,
         sheet_colnames = sheet |> colnames(),
         na_convert_targets = c("option.name", "default_value")
