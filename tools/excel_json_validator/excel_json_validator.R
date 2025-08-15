@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.30
+#' @date 2025.8.12
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -22,16 +22,24 @@ ExecExcelJsonValidator <- function(trialName) {
   source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
   kOptions <- "options"
   jpNameAndAliasName <- jsonList |> GetNameAndAliasNameByJson()
+  fieldItems <- jsonList |> GetFieldItemsByJsonList()
   options_json <<- jsonList[[kOptions]]
   if (!is.null(options_json)) {
     jsonList <- jsonList[names(jsonList) != kOptions]
   }
+  temp <- GetIsVisit(jsonList)
+  visit_not_visit_jsonList <- temp$visit_not_visit_jsonList %>% setNames(names(temp$visit_not_visit_jsonList))
+  if (is.null(temp$visit_not_visit_fieldItems)) {
+    visit_not_visit_fieldItems <- fieldItems
+  } else {
+    visit_not_visit_fieldItems <- temp$visit_not_visit_fieldItems %>% setNames(names(temp$visit_not_visit_fieldItems))
+  }
+  rm(temp)
   checkChecklist <- list()
   ########
   # item #
   ########
   sheetName <- "item"
-  fieldItems <- jsonList |> GetFieldItemsByJsonList()
   jsonSheetItemList <- GetItem_item(sheetList, jsonList, fieldItems, sheetName)
   checkChecklist[[sheetName]] <- ExcelJsonValidator_item(jsonSheetItemList, old_flag = FALSE)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
@@ -39,11 +47,10 @@ ExecExcelJsonValidator <- function(trialName) {
   # item_visit_old #
   ##################
   sheetName <- "item_visit_old"
-  # if (trialName == "TAS0728-HER2" || trialName == "blin_b_all") {
   if (trialName == "TAS0728-HER2") {
     print(str_c("Skipping item_visit_old validation for trial: ", trialName))
   } else {
-    jsonSheetItemVisitList <- GetItem_item_visit_old(sheetList, jsonList, fieldItems, sheetName)
+    jsonSheetItemVisitList <- GetItem_item_visit_old(sheetList, visit_not_visit_fieldItems, visit_not_visit_jsonList, sheetName)
     if (is.null(jsonSheetItemVisitList)) {
       print(str_c("No item_visit_old data found for trial: ", trialName))
     } else {
@@ -111,10 +118,10 @@ ExecExcelJsonValidator <- function(trialName) {
     sheet <- sheetList[[sheetName]] |>
       rename(!!!engToJpnColumnMappings[[sheetName]])
     sheetAction <- sheet |> arrange(id, field_item_id, codes)
-    jsonAction <- GetActionFromJson(fieldItems, jpNameAndAliasName) |> arrange(id, field_item_id, codes)
+    jsonAction <- GetActionFromJson(visit_not_visit_fieldItems, jpNameAndAliasName) |> arrange(id, field_item_id, codes)
     checkChecklist[[sheetName]] <- CheckTarget(sheetAction, jsonAction)
   } else {
-    checkChecklist[[sheetName]] <- sheetList |> CheckAction(fieldItems, jpNameAndAliasName, sheetName)
+    checkChecklist[[sheetName]] <- sheetList |> CheckAction(visit_not_visit_fieldItems, jpNameAndAliasName, sheetName)
   }
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   ###########
@@ -133,63 +140,25 @@ ExecExcelJsonValidator <- function(trialName) {
   # option #
   ##########
   sheetName <- "option"
-  checkChecklist[[sheetName]] <- sheetList |> CheckOption(fieldItems, jpNameAndAliasName, sheetName)
+  checkChecklist[[sheetName]] <- sheetList |> CheckOption(visit_not_visit_fieldItems, jpNameAndAliasName, sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   ###########
   # comment #
   ###########
   sheetName <- "comment"
-  if (trialName == "TAS0728-HER2" || trialName == "blin_b_all") {
-    commentSheet <- sheetList[[sheetName]] |>
-      rename(!!!engToJpnColumnMappings[[sheetName]])
-    commentJson <- GetContentFromJson(fieldItems, jpNameAndAliasName)
-    if (trialName == "TAS0728-HER2") {
-      commentJson[2, "content"] <- commentJson[2, "content"] %>% CleanTextForComment()
-      commentSheet[2, "content"] <- commentSheet[2, "content"] %>% CleanTextForComment()
-      commentJson[3, "content"] <- commentJson[3, "content"] %>% CleanTextForComment()
-      commentSheet[3, "content"] <- commentSheet[3, "content"] %>% CleanTextForComment()
-    }
-    if (trialName == "blin_b_all") {
-      commentJson[1, "content"] <- commentJson[1, "content"] %>% CleanTextForComment()
-      commentSheet[1, "content"] <- commentSheet[1, "content"] %>% CleanTextForComment()
-      commentJson[14, "content"] <- commentJson[14, "content"] %>% CleanTextForComment()
-      commentSheet[14, "content"] <- commentSheet[14, "content"] %>% CleanTextForComment()
-    }
-    checkChecklist[[sheetName]] <- CheckTarget(commentSheet, commentJson)
-  } else {
-    checkChecklist[[sheetName]] <- sheetList |> CheckContent(fieldItems, jpNameAndAliasName, sheetName)
-  }
+  checkChecklist[[sheetName]] <- sheetList |> CheckContent(visit_not_visit_fieldItems, jpNameAndAliasName, sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   ###############
   # explanation #
   ###############
   sheetName <- "explanation"
-  if (trialName == "TAS0728-HER2") {
-    explanationSheet <- sheetList[[sheetName]] |>
-      rename(!!!engToJpnColumnMappings[[sheetName]])
-    explanationJson <- GetExplanationFromJson(fieldItems, jpNameAndAliasName)
-    targetRow <- 22
-    explanationSheet[targetRow, "description"] <- explanationSheet[targetRow, "description"] %>% CleanTextForComment()
-    explanationJson[targetRow, "description"] <- explanationJson[targetRow, "description"] %>% CleanTextForComment()
-    checkChecklist[[sheetName]] <- CheckTarget(explanationSheet, explanationJson)
-  } else {
-    checkChecklist[[sheetName]] <- sheetList |> CheckExplanation(fieldItems, jpNameAndAliasName, sheetName)
-  }
+  checkChecklist[[sheetName]] <- sheetList |> CheckExplanation(visit_not_visit_fieldItems, jpNameAndAliasName, sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   ############
   # presence #
   ############
   sheetName <- "presence"
-  if (trialName == "amld24") {
-    sheet <- sheetList[[sheetName]] |>
-      rename(!!!engToJpnColumnMappings[[sheetName]]) %>%
-      arrange(alias_name, name)
-    json <- GetPresenceFromJson(fieldItems, jpNameAndAliasName) %>%
-      arrange(alias_name, name)
-    checkChecklist[[sheetName]] <- CheckTarget(sheet, json)
-  } else {
-    checkChecklist[[sheetName]] <- sheetList |> CheckPresence(fieldItems, jpNameAndAliasName, sheetName)
-  }
+  checkChecklist[[sheetName]] <- sheetList |> CheckPresence(visit_not_visit_fieldItems, jpNameAndAliasName, sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   ##########
   # master #
@@ -207,25 +176,25 @@ ExecExcelJsonValidator <- function(trialName) {
   # title #
   #########
   sheetName <- "title"
-  checkChecklist[[sheetName]] <- sheetList |> CheckTitle(fieldItems, jpNameAndAliasName, sheetName)
+  checkChecklist[[sheetName]] <- sheetList |> CheckTitle(visit_not_visit_fieldItems, jpNameAndAliasName, sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   ############
   # assigned #
   ############
   sheetName <- "assigned"
-  checkChecklist[[sheetName]] <- sheetList |> CheckAssigned(fieldItems, jpNameAndAliasName, sheetName)
+  checkChecklist[[sheetName]] <- sheetList |> CheckAssigned(visit_not_visit_fieldItems, jpNameAndAliasName, sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   ##############
   # limitation #
   ##############
   sheetName <- "limitation"
-  checkChecklist[[sheetName]] <- CheckLimitation(sheetList, jsonList, sheetName)
+  checkChecklist[[sheetName]] <- CheckLimitation(sheetList, visit_not_visit_jsonList, sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   ########
   # date #
   ########
   sheetName <- "date"
-  checkChecklist[[sheetName]] <- CheckDate(sheetList, jsonList, sheetName)
+  checkChecklist[[sheetName]] <- CheckDate(sheetList, visit_not_visit_jsonList, sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   print(str_c("Validation completed for trial: ", trialName))
   return(checkChecklist)

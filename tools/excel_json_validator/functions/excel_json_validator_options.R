@@ -2,11 +2,13 @@
 #'
 #' @file excel_json_validator_options.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.17
+#' @date 2025.8.12
 CheckOption <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     json <- GetOptionFromJson(fieldItems, jpNameAndAliasName)
+    sheet <- sheet %>% arrange(alias_name, option.values_seq)
+    json <- json %>% arrange(alias_name, option.values_seq)
     return(CheckTarget(sheet, json))
 }
 GetOptionFromJson <- function(fieldItems, jpNameAndAliasName) {
