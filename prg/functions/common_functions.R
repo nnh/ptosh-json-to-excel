@@ -104,22 +104,19 @@ AddSlashIfMissing <- function(input_string) {
 #' @import ReadJsonFiles
 #' @export
 ExecReadJsonFiles <- function() {
-  # Get a list of JSON filenames in the specified folder
-  targetTrialFolder <- list.dirs(here(kInputFolderName), full.names = T, recursive = F)
-  if (length(targetTrialFolder) != 1) {
-    stop("inputフォルダの中に試験名略称のフォルダを一つだけ格納して再実行してください。")
-    return(NULL)
-  }
-  json_filenames <- list.files(targetTrialFolder, pattern = "*.json", full.names = F)
-  # Check if any JSON files were found
+  json_filenames <- list.files(kInputFolderName, pattern = "*.json", full.names = F)
   if (length(json_filenames) == 0) {
-    stop("No JSON files found.")
+    stop("inputフォルダの中にjsonファイルが存在しません。")
     return(NULL)
   }
-  json_files <- ReadJsonFiles(json_filenames, targetTrialFolder)
-  trialName <- targetTrialFolder %>% basename()
+  if (length(json_filenames) > 1) {
+    stop("inputフォルダの中にjsonファイルが複数存在します。jsonファイルを一つだけ格納して再実行してください。")
+    return(NULL)
+  }
+  json_file <- ReadJsonFiles(json_filenames, kInputFolderName)
+  trialName <- json_filenames %>% str_remove("_[0-9]{6}_[0-9]{4}\\.json$")
   res <- list()
-  res[["json_files"]] <- json_files
+  res[["json_files"]] <- json_file
   res[["trialName"]] <- trialName
   return(res)
 }
@@ -149,4 +146,15 @@ setFontStyle <- function() {
     fontColour = "#000000"
   )
   return(style)
+}
+GetNamesFromList <- function(target_list, target_col_name) {
+  res <- target_list %>% map_chr(~ .[[target_col_name]])
+  return(res)
+}
+GetListSetName <- function(input_list, target_name, target_col_name) {
+  target_list <- input_list[[target_name]]
+  targetNames <- GetNamesFromList(target_list, target_col_name)
+  res <- setNames(target_list, targetNames) 
+  return(res)
+  
 }

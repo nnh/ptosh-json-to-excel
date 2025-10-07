@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.8.7
+#' @date 2025.10.7
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -56,14 +56,15 @@ trialName <- temp[["trialName"]]
 json_files <- temp[["json_files"]]
 options_flag <- kOptions %in% names(json_files)
 if (options_flag) {
-  options_json <- json_files[[kOptions]] %>% GetJsonFile(.)
+  options_json <- GetListSetName(json_files, kOptions, "name")
   json_files <- json_files[names(json_files) != kOptions]
 }
 rm(temp)
+sheets <- GetListSetName(json_files, "sheets", "alias_name")
 
-field_list <- json_files %>%
+field_list <- sheets %>%
   map(~ {
-    json_file <- GetJsonFile(.)
+    json_file <- .
     field_items <- json_file %>% GetFieldItems()
     fields <- field_items %>%
       map(~ {
@@ -80,18 +81,42 @@ field_list <- json_files %>%
     return(fields)
   }) %>%
   bind_rows()
-
 # VISIT対応シートかどうか判定する
-visit_json_files <- json_files %>%
-  keep(~ GetJsonFile(.)[["category"]] == kVisit)
-is_visit <- length(visit_json_files) > 0
-
+visits <- json_files[["visits"]]
+is_visit <- !is.null(visits) && length(visits) > 0
 if (is_visit) {
-  visit_json_files_group <- EditGroupVisit(json_files)
+  visits_name_num <- tibble::tibble(
+    name = map_chr(visits, "name"),
+    num = map_chr(visits, "num")
+  )
+  temp_visit_groups <- GetListSetName(json_files, "visit_groups", "alias_name") %>%
+    map_dfr(function(group) {
+      map_dfr(group$visit_sheets, function(sheet) {
+        tibble(
+          name = group$name,
+          visit = group$alias_name,
+          alias_name = sheet$sheet_alias_name,
+          visitnum = sheet$visit_num %>% as.numeric()
+        )
+      })
+    })
+  visit_groups <- temp_visit_groups # %>%
+  #    left_join(visits_name_num, by = c("visitnum" = "num"))
+  visit_json_files_group <- EditGroupVisit(sheets)
 } else {
   visit_json_files_group <- json_files
+  visits_name_num <- NULL
+  visit_groups <- NULL
 }
-
+GetIsInVisitGroup <- function(sheet_alias_name) {
+  if (is_visit) {
+    # sheet[["alias_name"]]がvisit_groups[["sheet_alias_name"]]に存在するか判定
+    is_in_visit_group <- CheckExistenceOfVisitGroup(sheet_alias_name, visit_groups)
+  } else {
+    is_in_visit_group <- FALSE
+  }
+  return(is_in_visit_group)
+}
 # VISITまとめ対象外のシート
 # name
 # item
@@ -99,15 +124,16 @@ if (is_visit) {
 # display
 # master
 # visit
-sheet_data_list_no_group <- json_files %>% map(~ {
-  json_file <- GetJsonFile(.)
-  field_items <- json_file %>% GetFieldItems()
-  if (json_file[["category"]] == kVisit) {
+sheet_data_list_no_group <- sheets %>% map(~ {
+  sheet <- .
+  field_items <- sheet %>% GetFieldItems()
+  is_in_visit_group <- GetIsInVisitGroup(sheet[["alias_name"]])
+  if (is_in_visit_group) {
     item <- NULL
   } else {
-    item <- EditItem(field_items, json_file[["alias_name"]])
+    item <- EditItem(field_items, sheet[["alias_name"]])
   }
-  allocation <- json_file %>% GetAllocation()
+  allocation <- sheet %>% GetAllocation()
   display <- field_items %>% GetDisplay()
   master <- field_items %>% GetComment("link_type")
   if (!is_visit) {
@@ -115,12 +141,12 @@ sheet_data_list_no_group <- json_files %>% map(~ {
   } else {
     visit <- NULL
   }
-  name <- tibble(name = json_file[["name"]], alias_name = json_file[["alias_name"]], images_count = json_file[["images_count"]])
-  item <- JoinJpnameAndAliasNameAndSelectColumns("item", json_file)
-  allocation <- JoinJpnameAndAliasNameAndSelectColumns("allocation", json_file)
-  display <- JoinJpnameAndAliasNameAndSelectColumns("display", json_file)
-  master <- JoinJpnameAndAliasNameAndSelectColumns("master", json_file)
-  visit <- JoinJpnameAndAliasNameAndSelectColumns("visit", json_file)
+  name <- tibble(name = sheet[["name"]], alias_name = sheet[["alias_name"]], images_count = sheet[["images_count"]])
+  item <- JoinJpnameAndAliasNameAndSelectColumns("item", sheet)
+  allocation <- JoinJpnameAndAliasNameAndSelectColumns("allocation", sheet)
+  display <- JoinJpnameAndAliasNameAndSelectColumns("display", sheet)
+  master <- JoinJpnameAndAliasNameAndSelectColumns("master", sheet)
+  visit <- JoinJpnameAndAliasNameAndSelectColumns("visit", sheet)
   res <- list(
     name = name,
     item = item,
@@ -132,19 +158,21 @@ sheet_data_list_no_group <- json_files %>% map(~ {
   )
 })
 # VISITまとめ対象のシート
-sheet_data_list_group <- visit_json_files_group %>% map(~ {
-  json_file <- GetJsonFile(.)
-  field_items <- json_file %>% GetFieldItems()
-  if (json_file[["category"]] == kVisit) {
-    item_visit_old <- EditItem(field_items, json_file[["alias_name"]])
+sheet_data_list_group <- map2(sheets, names(sheets), ~ {
+  sheet <- .x
+  sheet_name <- .y
+  field_items <- sheet %>% GetFieldItems()
+  is_in_visit_group <- GetIsInVisitGroup(sheet[["alias_name"]])
+  if (is_in_visit_group) {
+    item_visit_old <- EditItem(field_items, sheet_name)
   } else {
     item_visit_old <- NULL
   }
-  action <- field_items %>% GetAction(json_file[["alias_name"]])
+  action <- field_items %>% GetAction(sheet_name)
   option <- field_items %>% GetOptions()
   comment <- field_items %>% GetComment("content")
   explanation <- field_items %>% GetComment("description")
-  presence <- field_items %>% GetPresence(json_file)
+  presence <- field_items %>% GetPresence(sheet)
   title <- field_items %>%
     GetTargetByType("FieldItem::Heading") %>%
     EditTitle()
@@ -156,17 +184,17 @@ sheet_data_list_group <- visit_json_files_group %>% map(~ {
     EditLimitation()
   date <- field_items %>%
     GetDate() %>%
-    EditDate(json_file[["alias_name"]])
-  item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns("item_visit_old", json_file)
-  action <- JoinJpnameAndAliasNameAndSelectColumns("action", json_file)
-  option <- JoinJpnameAndAliasNameAndSelectColumns("option", json_file)
-  comment <- JoinJpnameAndAliasNameAndSelectColumns("comment", json_file)
-  explanation <- JoinJpnameAndAliasNameAndSelectColumns("explanation", json_file)
-  presence <- JoinJpnameAndAliasNameAndSelectColumns("presence", json_file)
-  title <- JoinJpnameAndAliasNameAndSelectColumns("title", json_file)
-  assigned <- JoinJpnameAndAliasNameAndSelectColumns("assigned", json_file)
-  limitation <- JoinJpnameAndAliasNameAndSelectColumns("limitation", json_file)
-  date <- JoinJpnameAndAliasNameAndSelectColumns("date", json_file)
+    EditDate(sheet[["alias_name"]])
+  item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns("item_visit_old", sheet)
+  action <- JoinJpnameAndAliasNameAndSelectColumns("action", sheet)
+  option <- JoinJpnameAndAliasNameAndSelectColumns("option", sheet)
+  comment <- JoinJpnameAndAliasNameAndSelectColumns("comment", sheet)
+  explanation <- JoinJpnameAndAliasNameAndSelectColumns("explanation", sheet)
+  presence <- JoinJpnameAndAliasNameAndSelectColumns("presence", sheet)
+  title <- JoinJpnameAndAliasNameAndSelectColumns("title", sheet)
+  assigned <- JoinJpnameAndAliasNameAndSelectColumns("assigned", sheet)
+  limitation <- JoinJpnameAndAliasNameAndSelectColumns("limitation", sheet)
+  date <- JoinJpnameAndAliasNameAndSelectColumns("date", sheet)
   return(list(
     item_visit_old = item_visit_old,
     action = action,
@@ -177,7 +205,9 @@ sheet_data_list_group <- visit_json_files_group %>% map(~ {
     title = title,
     assigned = assigned,
     limitation = limitation,
-    date = date
+    date = date,
+    sheet_name = sheet_name,
+    sheet = sheet
   ))
 })
 

@@ -24,13 +24,14 @@ copyFoldersAndRunProgramMain <- function(targetRow) {
   dir.create(inputDirPath)
   targetTrialName <- basename(targetPath) |> str_remove("forTest_input_")
   targetTrialName |> write.table(here("temp", "targetTrialName"), sep = ",", col.names = F, row.names = F)
-  targetFiles <- targetPath |> list.files(full.names = T)
+  targetFiles <- list.files(targetPath, full.names = TRUE, recursive = FALSE)
+  targetFiles <- targetFiles[file.info(targetFiles)$isdir == FALSE]
   outputDirBef <- here("output") |> list.dirs(recursive = F)
   outputDirBef |> write.table(here("temp", "outputDirBef"), sep = ",", col.names = F, row.names = F)
-  trialPath <- file.path(inputDirPath, targetTrialName)
-  dir.create(trialPath)
+  #trialPath <- file.path(inputDirPath, targetTrialName)
+  #dir.create(trialPath)
   for (i in 1:length(targetFiles)) {
-    file.copy(targetFiles[i], trialPath)
+    file.copy(targetFiles[i], inputDirPath)
   }
   source(here("prg", "json_to_excel.R"), encoding = "UTF-8")
 

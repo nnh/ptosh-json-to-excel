@@ -15,7 +15,7 @@ GetOptionsValues <- function(option) {
 GetOptions <- function(field_items) {
     if (options_flag) {
         target <- field_items %>%
-            keep(~ !is.null(.x[["option_id"]]) && .x[["type"]] == "FieldItem::Article")
+            keep(~ !is.null(.x[["option_name"]]) && .x[["type"]] == "FieldItem::Article")
     } else {
         target <- field_items %>%
             keep(~ !is.null(.x[["option"]]) && .x[["type"]] == "FieldItem::Article")
@@ -27,20 +27,15 @@ GetOptions <- function(field_items) {
     options <- target %>%
         map(~ {
             if (options_flag) {
-                option_id <- .x[["option_id"]]
-                option <- options_json %>%
-                    keep(~ .x[["id"]] == option_id)
+                option_name <- .x[["option_name"]]
+                option <- options_json[[option_name]]
             } else {
                 option <- .x[["option"]]
             }
             if (length(option) == 0) {
                 stop(paste("Option ID", option_id, "not found in options JSON."))
             }
-            if (options_flag) {
-                df_option_values <- option %>% map_df(~ GetOptionsValues(.))
-            } else {
-                df_option_values <- option %>% GetOptionsValues(.)
-            }
+            df_option_values <- option %>% GetOptionsValues(.)
             return(df_option_values)
         }) %>%
         bind_rows() %>%

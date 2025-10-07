@@ -3,7 +3,7 @@
 #'
 #' @file edit_checklist_convert_column_name.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.31
+#' @date 2025.10.1
 renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     stopifnot(is.data.frame(df))
     stopifnot(is.character(nameMap), !is.null(names(nameMap)))
@@ -74,8 +74,6 @@ GetEngToJpnColumnMappings <- function() {
         action = c(
             jpname = "シート名",
             alias_name = kAliasNameJapaneseColumnName,
-            id = "-",
-            field_item_id = "--",
             field_item_id.name = "開閉のトリガーになるフィールドID",
             field_item_id.label = "開閉のトリガーになるラベル",
             codes = "開閉のトリガーになるコード",

@@ -23,9 +23,9 @@ GetVisit <- function(field_items) {
     return(res)
 }
 CreateVisitToVisitSheetData <- function() {
-    visit <- visit_json_files %>%
+    visit <- visit_json_files_group %>%
         map_df(~ {
-            json_file <- GetJsonFile(.)
+            json_file <- .
             name <- json_file[["name"]]
             alias_name <- json_file[["alias_name"]]
             visit <- str_extract(name, "\\([^()]+\\)$") %>% str_remove_all("[()]")
