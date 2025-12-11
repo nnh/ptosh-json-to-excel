@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.8
+#' @date 2025.12.11
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -58,32 +58,23 @@ for (name in names(temp)) {
 }
 rm(temp)
 
-sheets <- GetListSetName(json_files, "sheets", "alias_name")
+# sheets <- GetListSetName(json_files, "sheets", "alias_name")
 field_list <- GetFieldList(sheets)
 
-sheet_data_list_group <- map2(sheets, names(sheets), ~ {
+sheet_data_list_group <- sheets %>% map(~ {
   sheet <- .x
-  sheet_name <- .y
+  sheet_name <- sheet[["alias_name"]]
   field_items <- sheet %>% GetFieldItems()
-  temp <- EditItemAndItemVisit(field_items, sheet[["alias_name"]])
-  item <- temp$item
-  item_visit_old <- temp$item_visit
+  # temp <- EditItemAndItemVisit(field_items, sheet_name)
+  # item <- temp$item
+  # item_visit_old <- temp$item_visit
   allocation <- sheet %>% GetAllocation()
   display <- field_items %>% GetDisplay(sheet)
   master <- field_items %>% GetComment("link_type", sheet)
   if (!is_visit) {
     visit <- field_items %>% GetVisit(sheet)
   } else {
-    if (sheet$category != "visit") {
-      visit <- NULL
-    } else {
-      visit_name <- GetVisitVisitName(sheet$name)
-      visitnum <- GetVisitVisitNum(sheet$alias_name)
-      visit <- tibble::tibble(
-        jpname = sheet$name, alias_name = sheet$alias_name,
-        visitnum = visitnum, visit = visit_name
-      )
-    }
+    visit <- NULL
   }
   name <- tibble(name = sheet[["name"]], alias_name = sheet[["alias_name"]], images_count = sheet[["images_count"]])
   action <- field_items %>% GetAction(sheet_name, sheet)
@@ -94,17 +85,17 @@ sheet_data_list_group <- map2(sheets, names(sheets), ~ {
   title <- field_items %>% EditTitle(sheet)
   assigned <- field_items %>% EditAssigned(sheet)
   limitation <- field_items %>% EditLimitation(sheet)
-  date <- field_items %>% EditDate(sheet)
-  item <- JoinJpnameAndAliasNameAndSelectColumns("item", sheet)
-  item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns("item_visit_old", sheet)
+  # date <- field_items %>% EditDate(sheet)
+  # item <- JoinJpnameAndAliasNameAndSelectColumns("item", sheet)
+  # item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns("item_visit_old", sheet)
   return(list(
     name = name,
-    item = item,
+    # item = item,
     allocation = allocation,
     display = display,
     master = master,
     visit = visit,
-    item_visit_old = item_visit_old,
+    # item_visit_old = item_visit_old,
     action = action,
     option = option,
     comment = comment,
@@ -112,15 +103,18 @@ sheet_data_list_group <- map2(sheets, names(sheets), ~ {
     presence = presence,
     title = title,
     assigned = assigned,
-    limitation = limitation,
-    date = date,
-    sheet_name = sheet_name,
-    sheet = sheet
+    limitation = limitation # ,
+    # date = date,
+    # sheet_name = sheet_name,
+    # sheet = sheet
   ))
 })
-
 # シートデータを結合し、空データを補完する
 sheet_data_combine <- CombineSheetSafety(sheet_data_list_group)
+# VISIT対応シートを使用している試験のVISIT情報を格納する
+if (is_visit) {
+  sheet_data_combine[[kVisit]] <- GetVisitIsVisit()
+}
 # 日本語列名に変換する
 output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる

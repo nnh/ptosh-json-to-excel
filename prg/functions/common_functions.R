@@ -91,6 +91,76 @@ AddSlashIfMissing <- function(input_string) {
     return(input_string)
   }
 }
+GetSheetNamesAndSortOrderFromJson <- function(json_file) {
+  sheets <- json_file[["sheets"]] %>% map_df(~ {
+    res <- tibble::tibble(
+      sheet_name = .x[["name"]],
+      alias_name = .x[["alias_name"]],
+      category = .x[["category"]]
+    )
+    return(res)
+  })
+  sheet_groups <- json_file[["sheet_groups"]] %>% map_df(~ {
+    group_name <- .x[["name"]]
+    group_alias_name <- .x[["alias_name"]]
+    group_alocation_group <- .x[["allocation_group"]]
+    group_is_default <- .x[["is_default"]]
+    res <- .x[["sheets"]] %>% map_df(~ {
+      res <- tibble::tibble(
+        alias_name = .x[["alias_name"]],
+        group_name = group_name,
+        group_alias_name = group_alias_name,
+        allocation_group = group_alocation_group,
+        is_default = group_is_default
+      )
+      return(res)
+    })
+    return(res)
+  })
+  sheetsAndGroups <- sheets %>%
+    left_join(sheet_groups, by = c("alias_name" = "alias_name"))
+  sheet_orders <- json_file[["sheet_orders"]] %>% map_df(~ {
+    res <- tibble::tibble(
+      alias_name = .x[["sheet"]],
+      sort_order = .x[["seq"]] %>% as.numeric()
+    )
+    return(res)
+  })
+  sheet_info <- sheetsAndGroups %>%
+    left_join(sheet_orders, by = c("alias_name" = "alias_name")) %>%
+    arrange(sort_order)
+  sheets <- json_file[["sheets"]] %>% map(~ {
+    res <- .x
+    sheet_group_row <- sheet_groups %>% filter(alias_name == res$alias_name)
+    if (nrow(sheet_group_row) == 0) {
+      res[["sheet_groups"]] <- NA
+    } else {
+      res[["sheet_groups"]] <- sheet_group_row
+    }
+    sheet_order_row <- sheet_orders %>% filter(alias_name == res$alias_name)
+    if (nrow(sheet_order_row) == 0) {
+      res[["sort_order"]] <- NA
+    } else if (nrow(sheet_order_row) == 1) {
+      res[["sort_order"]] <- sheet_order_row$sort_order
+    } else {
+      stop(paste0("sheet_ordersに同じalias_nameが複数存在します: ", res$alias_name))
+    }
+    res[["stylesheet"]] <- NULL
+    res[["fax_stylesheet"]] <- NULL
+    res[["odm"]] <- NULL
+    res[["registration_config"]] <- NULL
+    res[["uuid"]] <- NULL
+    res[["digest"]] <- NULL
+    res[["lock_version"]] <- NULL
+    res[["created_at"]] <- NULL
+    res[["updated_at"]] <- NULL
+    return(res)
+  })
+  sheetNameList <- sheets %>% map_chr(~ .x[["alias_name"]])
+  names(sheets) <- sheetNameList
+  res <- list(sheets = sheets, sheet_info = sheet_info)
+  return(res)
+}
 #' Execute Reading JSON Files
 #'
 #' This function reads and processes JSON files from a specified folder.
@@ -115,34 +185,39 @@ ExecReadJsonFiles <- function() {
   }
   json_file <- ReadJsonFiles(json_filenames, kInputFolderName)
   trial_name <- json_filenames %>% str_remove("_[0-9]{6}_[0-9]{4}\\.json$")
-  sheet_names <- json_file$sheets %>%
-    map(~ c(sheet_alias_name = .x[["alias_name"]], group = .x[["alias_name"]])) %>%
-    bind_rows()
+  #  sheet_names <- json_file$sheets %>%
+  #    map(~ c(sheet_alias_name = .x[["alias_name"]], group = .x[["alias_name"]])) %>%
+  #    bind_rows()
   options_flag <- kOptions %in% names(json_file)
   if (options_flag) {
     options_json <- GetListSetName(json_file, kOptions, "name")
     json_file <- json_file[names(json_file) != kOptions]
   }
   is_visit <- !is.null(json_file[[kVisits]]) && length(json_file[[kVisits]]) > 0
-  visit_groups <- GetVisitGroups(is_visit, json_file)
+  visit_info <- GetVisitGroupAndVisitsFromJson(json_file)
+  # visit_groups <- GetVisitGroups(is_visit, json_file)
   # シート名、aliasname、参照先シートはVISITNUMの一番小さいものを出す
-  visit_groups_min <- visit_groups %>%
-    group_by(visit) %>%
-    filter(visitnum == min(visitnum)) %>%
-    ungroup()
+  # visit_groups_min <- visit_groups %>%
+  #  group_by(visit) %>%
+  #  filter(visitnum == min(visitnum)) %>%
+  #  ungroup()
   # visit非対応のシートとvisit対応シートの最小visitnumのシートを結合
-  visit_groups_min_and_no_visit <- sheet_names %>% left_join(visit_groups_min, by = c("sheet_alias_name" = "alias_name"))
-  visit_groups_min_and_no_visit$group <- ifelse(is.na(visit_groups_min_and_no_visit$visit), visit_groups_min_and_no_visit$sheet_alias_name, visit_groups_min_and_no_visit$visit)
-  visit_groups_min_and_no_visit <- visit_groups_min_and_no_visit %>% select(alias_name = sheet_alias_name, group)
+  # visit_groups_min_and_no_visit <- sheet_names %>% left_join(visit_groups_min, by = c("sheet_alias_name" = "alias_name"))
+  # visit_groups_min_and_no_visit$group <- ifelse(is.na(visit_groups_min_and_no_visit$visit), visit_groups_min_and_no_visit$sheet_alias_name, visit_groups_min_and_no_visit$visit)
+  # visit_groups_min_and_no_visit <- visit_groups_min_and_no_visit %>% select(alias_name = sheet_alias_name, group)
+  temp <- GetSheetNamesAndSortOrderFromJson(json_file)
   res <- list()
+  res[["sheets"]] <- temp$sheets
+  res[["sheet_info"]] <- temp$sheet_info
   res[["json_files"]] <- json_file
   res[["trialName"]] <- trial_name
   res[["options_flag"]] <- options_flag
   res[["options_json"]] <- options_json
   res[["is_visit"]] <- is_visit
-  res[["visit_groups"]] <- visit_groups
-  res[["visit_groups_min"]] <- visit_groups_min
-  res[["visit_groups_min_and_no_visit"]] <- visit_groups_min_and_no_visit
+  res[["visit_info"]] <- visit_info
+  # res[["visit_groups"]] <- visit_groups
+  # res[["visit_groups_min"]] <- visit_groups_min
+  # res[["visit_groups_min_and_no_visit"]] <- visit_groups_min_and_no_visit
   return(res)
 }
 #' Replace Text Function
