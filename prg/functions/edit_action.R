@@ -1,4 +1,9 @@
-GetAction <- function(field_items, alias_name) {
+#' edit_action.R
+#'
+#' @file edit_action.R
+#' @author Mariko Ohtsuka
+#' @date 2025.11.7
+GetAction <- function(field_items, alias_name, sheet) {
     target <- field_items %>%
         keep(~ !is.null(.x[["flip_flops"]]) && length(.x[["flip_flops"]]) > 0)
     if (length(target) == 0) {
@@ -22,7 +27,8 @@ GetAction <- function(field_items, alias_name) {
         flip_flops[["field_item_id.label"]] <- field_items[["label"]]
         return(flip_flops)
     })
-    res <- action %>%
+    action <- action %>%
         left_join(field_items_name_label, by = c("fields" = "name"))
+    res <- JoinJpnameAndAliasNameAndSelectColumns("action", sheet)
     return(res)
 }

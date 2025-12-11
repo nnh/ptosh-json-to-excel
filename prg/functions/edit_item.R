@@ -1,3 +1,27 @@
+#' edit_item.R
+#'
+#' @file edit_item.R
+#' @author Mariko Ohtsuka
+#' @date 2025.12.8
+EditItemAndItemVisit <- function(field_items, alias_name) {
+    is_in_visit_group <- GetIsInVisitGroup(alias_name)
+    if (is_in_visit_group) {
+        item <- NULL
+        is_visit_min <- alias_name %>% GetIsInVisitGroupMin()
+        if (is_visit_min) {
+            item_visit <- EditItem(field_items, alias_name)
+        } else {
+            item_visit <- NULL
+        }
+    } else {
+        item <- EditItem(field_items, alias_name)
+        item_visit <- NULL
+    }
+    return(list(
+        item = item,
+        item_visit = item_visit
+    ))
+}
 EditItem <- function(field_items, alias_name) {
     target_field_items <- field_items %>% GetTargetByType("FieldItem::Article")
     target <- target_field_items %>% map_df(~ {
@@ -38,7 +62,7 @@ EditItem <- function(field_items, alias_name) {
         res <- tibble::tibble(
             name = .x[["name"]],
             label = .x[["label"]],
-            option.name = .x[["option"]][["name"]] %||% NA,
+            option.name = .x[["option_name"]] %||% NA,
             default_value = .x[["default_value"]] %||% NA,
             validators.presence.validate_presence_if = .x[["validators"]][["presence"]][["validate_presence_if"]] %||% NA,
             presence_if_references = presence_if_references %||% NA,

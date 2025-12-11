@@ -2,7 +2,7 @@
 #'
 #' @file common_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2024.7.4
+#' @date 2024.12.8
 # ------ functions ------
 #' Remove specified elements from a list.
 #'
@@ -114,10 +114,35 @@ ExecReadJsonFiles <- function() {
     return(NULL)
   }
   json_file <- ReadJsonFiles(json_filenames, kInputFolderName)
-  trialName <- json_filenames %>% str_remove("_[0-9]{6}_[0-9]{4}\\.json$")
+  trial_name <- json_filenames %>% str_remove("_[0-9]{6}_[0-9]{4}\\.json$")
+  sheet_names <- json_file$sheets %>%
+    map(~ c(sheet_alias_name = .x[["alias_name"]], group = .x[["alias_name"]])) %>%
+    bind_rows()
+  options_flag <- kOptions %in% names(json_file)
+  if (options_flag) {
+    options_json <- GetListSetName(json_file, kOptions, "name")
+    json_file <- json_file[names(json_file) != kOptions]
+  }
+  is_visit <- !is.null(json_file[[kVisits]]) && length(json_file[[kVisits]]) > 0
+  visit_groups <- GetVisitGroups(is_visit, json_file)
+  # シート名、aliasname、参照先シートはVISITNUMの一番小さいものを出す
+  visit_groups_min <- visit_groups %>%
+    group_by(visit) %>%
+    filter(visitnum == min(visitnum)) %>%
+    ungroup()
+  # visit非対応のシートとvisit対応シートの最小visitnumのシートを結合
+  visit_groups_min_and_no_visit <- sheet_names %>% left_join(visit_groups_min, by = c("sheet_alias_name" = "alias_name"))
+  visit_groups_min_and_no_visit$group <- ifelse(is.na(visit_groups_min_and_no_visit$visit), visit_groups_min_and_no_visit$sheet_alias_name, visit_groups_min_and_no_visit$visit)
+  visit_groups_min_and_no_visit <- visit_groups_min_and_no_visit %>% select(alias_name = sheet_alias_name, group)
   res <- list()
   res[["json_files"]] <- json_file
-  res[["trialName"]] <- trialName
+  res[["trialName"]] <- trial_name
+  res[["options_flag"]] <- options_flag
+  res[["options_json"]] <- options_json
+  res[["is_visit"]] <- is_visit
+  res[["visit_groups"]] <- visit_groups
+  res[["visit_groups_min"]] <- visit_groups_min
+  res[["visit_groups_min_and_no_visit"]] <- visit_groups_min_and_no_visit
   return(res)
 }
 #' Replace Text Function
@@ -154,7 +179,6 @@ GetNamesFromList <- function(target_list, target_col_name) {
 GetListSetName <- function(input_list, target_name, target_col_name) {
   target_list <- input_list[[target_name]]
   targetNames <- GetNamesFromList(target_list, target_col_name)
-  res <- setNames(target_list, targetNames) 
+  res <- setNames(target_list, targetNames)
   return(res)
-  
 }

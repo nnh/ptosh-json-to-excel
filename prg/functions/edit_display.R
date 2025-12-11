@@ -1,4 +1,9 @@
-GetDisplay <- function(field_items) {
+#' edit_display.R
+#'
+#' @file edit_display.R
+#' @author Mariko Ohtsuka
+#' @date 2025.11.7
+GetDisplay <- function(field_items, sheet) {
     target <- field_items %>%
         keep(~ {
             if (is.null(.x[["type"]])) {
@@ -14,7 +19,7 @@ GetDisplay <- function(field_items) {
     if (length(target) == 0) {
         return(NULL)
     }
-    res <- target %>%
+    display <- target %>%
         map_df(~ {
             res <- tibble::tibble(
                 name = .x[["name"]],
@@ -22,5 +27,7 @@ GetDisplay <- function(field_items) {
             )
             return(res)
         })
+
+    res <- JoinJpnameAndAliasNameAndSelectColumns("display", sheet)
     return(res)
 }

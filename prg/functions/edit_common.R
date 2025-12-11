@@ -1,3 +1,8 @@
+#' edit_common.R
+#'
+#' @file edit_common.R
+#' @author Mariko Ohtsuka
+#' @date 2025.12.8
 GetTargetByType <- function(field_items, type) {
     target <- field_items %>%
         keep(~ {
@@ -16,7 +21,11 @@ GetTargetByType <- function(field_items, type) {
 }
 EditRefFieldTextVec <- function(df_sheet_field) {
     join_field_info <- dplyr::left_join(df_sheet_field, field_list, by = c("alias_name", "field_number"))
-    join_field_info[["text"]] <- paste(join_field_info[["alias_name"]], join_field_info[["name"]], join_field_info[["label"]], sep = ",") %>%
+    join_field_info <- join_field_info %>%
+        dplyr::left_join(visit_groups, by = "alias_name") %>%
+        dplyr::rename(visit_name = name.y, name = name.x)
+    join_field_info$output_alias_name <- ifelse(is.na(join_field_info$visit), join_field_info$alias_name, join_field_info$visit)
+    join_field_info[["text"]] <- paste(join_field_info[["output_alias_name"]], join_field_info[["name"]], join_field_info[["label"]], sep = ",") %>%
         paste0("(", ., ")")
     return(join_field_info)
 }
@@ -92,4 +101,45 @@ GetFieldText <- function(target, thisSheetName) {
     }
     res <- paste(res, collapse = "")
     return(res)
+}
+GetFieldList <- function(sheets) {
+    field_list <- sheets %>%
+        map(~ {
+            json_file <- .
+            field_items <- json_file %>% GetFieldItems()
+            fields <- field_items %>%
+                map(~ {
+                    res <- tibble::tibble(
+                        name = .x[["name"]],
+                        field_number = .x[["name"]] %>% str_extract("\\d+") %>% as.numeric(),
+                        label = .x[["label"]]
+                    )
+                    return(res)
+                }) %>%
+                bind_rows()
+            fields[["jpname"]] <- json_file[["name"]]
+            fields[["alias_name"]] <- json_file[["alias_name"]]
+            return(fields)
+        }) %>%
+        bind_rows()
+    return(field_list)
+}
+CombineSheetSafety <- function(sheet_data_list) {
+    targetSheetNames <- kTargetSheetNames %>% append("name", .)
+    sheet_data_combine <- targetSheetNames %>%
+        map(~ map(sheet_data_list, pluck, .x) %>%
+            compact() %>%
+            bind_rows()) %>%
+        set_names(targetSheetNames)
+    # 0行0列のデータフレームを補完
+    for (nm in names(sheet_data_combine)) {
+        df <- sheet_data_combine[[nm]]
+        if (is.data.frame(df) && nrow(df) == 0 && ncol(df) == 0) {
+            if (!is.null(kEngColumnNames[[nm]])) {
+                sheet_data_combine[[nm]] <- data.frame(matrix(ncol = length(kEngColumnNames[[nm]]), nrow = 0)) %>%
+                    setNames(kEngColumnNames[[nm]])
+            }
+        }
+    }
+    return(sheet_data_combine)
 }

@@ -1,3 +1,8 @@
+#' edit_presence.R
+#'
+#' @file edit_presence.R
+#' @author Mariko Ohtsuka
+#' @date 2025.11.7
 GetPresence <- function(field_items, json_file) {
     cdisc_sheet_configs <- json_file[["cdisc_sheet_configs"]]
     exclude_fields <- cdisc_sheet_configs %>%
@@ -34,6 +39,7 @@ GetPresence <- function(field_items, json_file) {
             )
             return(res)
         })
-    res <- res %>% dplyr::filter(!name %in% exclude_field_names)
+    presence <- res %>% dplyr::filter(!name %in% exclude_field_names)
+    res <- JoinJpnameAndAliasNameAndSelectColumns("presence", json_file)
     return(res)
 }

@@ -1,3 +1,8 @@
+#' edit_allocation.R
+#'
+#' @file edit_allocation.R
+#' @author Mariko Ohtsuka
+#' @date 2025.11.6
 GetAllocation <- function(json_file) {
     allocation <- json_file[["allocation"]]
     if (is.null(allocation)) {
@@ -53,5 +58,7 @@ GetAllocation <- function(json_file) {
         }
     }
     res[["formula_field_references"]] <- formula_field_str
+    allocation <- res
+    res <- JoinJpnameAndAliasNameAndSelectColumns("allocation", json_file)
     return(res)
 }

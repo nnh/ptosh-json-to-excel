@@ -1,3 +1,8 @@
+#' edit_date.R
+#'
+#' @file edit_date.R
+#' @author Mariko Ohtsuka
+#' @date 2025.11.6
 GetDate <- function(field_items) {
     target <- field_items %>% keep(
         ~ (
@@ -9,8 +14,10 @@ GetDate <- function(field_items) {
     }
     return(target)
 }
-EditDate <- function(field_items, alias_name) {
-    target <- field_items %>% map_df(~ {
+EditDate <- function(input_field_items, sheet) {
+    field_items <- input_field_items %>% GetDate()
+    alias_name <- sheet[["alias_name"]]
+    date <- field_items %>% map_df(~ {
         references_after <- GetFieldText(.x[["validators"]][["date"]][["validate_date_after_or_equal_to"]], alias_name)
         references_before <- GetFieldText(.x[["validators"]][["date"]][["validate_date_before_or_equal_to"]], alias_name)
         res <- tibble::tibble(
@@ -23,4 +30,6 @@ EditDate <- function(field_items, alias_name) {
         )
         return(res)
     })
+    res <- JoinJpnameAndAliasNameAndSelectColumns("date", sheet)
+    return(res)
 }
