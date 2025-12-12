@@ -5,6 +5,77 @@ csv_list <- lapply(csv_files, read.csv, stringsAsFactors = FALSE)
 csv_names <- gsub("\\.csv$", "", basename(csv_files)) %>% str_remove("AML224-FLT3-ITD_")
 names(csv_list) <- csv_names
 ### item_visit
+testItemVisit <- csv_list$item_visit
+outputItemVisit <- output_checklist$item_visit %>% as.data.frame()
+# シート名の一致を確認
+outputItemVisitLabels <- outputItemVisit %>%
+    colnames() %>%
+    setdiff("ラベル") %>%
+    setdiff("数値チェック・アラート条件の有無") %>%
+    sort()
+testItemVisitLabels <- testItemVisit$alias_name %>%
+    unique() %>%
+    sort()
+if (!identical(testItemVisitLabels, outputItemVisitLabels)) {
+    stop("item_visit sheet column names do not match")
+} else {
+    cat("item_visit sheet column names match.\n")
+}
+# ラベルの一致を確認
+outputItemVisitRowItems <- outputItemVisit$ラベル %>%
+    unique() %>%
+    sort()
+testItemVisitRowItems <- testItemVisit$label %>%
+    unique() %>%
+    sort()
+diff_labels <- setdiff(testItemVisitRowItems, outputItemVisitRowItems)
+if (length(diff_labels) > 0) {
+    cat("testItemVisitRowItems にあって outputItemVisitRowItems にない値:\n")
+    print(diff_labels)
+}
+diff_labels2 <- setdiff(outputItemVisitRowItems, testItemVisitRowItems)
+if (length(diff_labels2) > 0) {
+    cat("outputItemVisitRowItems にあって testItemVisitRowItems にない値:\n")
+    print(diff_labels2)
+}
+if (!identical(testItemVisitRowItems, outputItemVisitRowItems)) {
+    if (!identical(length(testItemVisitRowItems), length(outputItemVisitRowItems))) {
+        for (i in 1:max(length(testItemVisitRowItems), length(outputItemVisitRowItems))) {
+            if (i > length(testItemVisitRowItems)) {
+                stop(paste0(" Row ", i, ": testItemVisitRowItem = <none>, outputItemVisitRowItem = ", outputItemVisitRowItems[i]))
+            } else if (i > length(outputItemVisitRowItems)) {
+                stop(paste0(" Row ", i, ": testItemVisitRowItem = ", testItemVisitRowItems[i], ", outputItemVisitRowItem = <none>"))
+            } else if (!identical(testItemVisitRowItems[i], outputItemVisitRowItems[i])) {
+                stop(paste0(" Row ", i, ": testItemVisitRowItem = ", testItemVisitRowItems[i], ", outputItemVisitRowItem = ", outputItemVisitRowItems[i]))
+            }
+        }
+    }
+} else {
+    cat("item_visit sheet row labels match.\n")
+}
+# ラベル、シート名毎に値を比較
+for (row in 1:nrow(testItemVisit)) {
+    testRow <- testItemVisit[row, ]
+    sheet_name <- testRow$alias_name
+    label <- testRow$label
+    count <- testRow$count
+    flag <- testRow$flag
+    target <- outputItemVisit %>%
+        filter(ラベル == label) %>%
+        select(all_of(sheet_name))
+    output_count <- target[1, 1, drop = TRUE]
+    if (!identical(as.character(count), as.character(output_count))) {
+        stop(paste0(" Row ", row, ": sheet_name = ", sheet_name, ", label = ", label, ", test count = ", count, ", output count = ", output_count))
+    }
+    target <- outputItemVisit %>%
+        filter(ラベル == label) %>%
+        select(`数値チェック・アラート条件の有無`)
+    output_flag <- target[1, 1, drop = TRUE]
+    if (!identical(as.character(flag), as.character(output_flag))) {
+        stop(paste0(" Row ", row, ": sheet_name = ", sheet_name, ", label = ", label, ", test flag = ", flag, ", output flag = ", output_flag))
+    }
+}
+cat("item_visit sheet values match.\n")
 ### item_visit_old
 testItemVisit <- csv_list$item_visit_old
 outputItemVisit <- output_checklist$item_visit_old %>% as.data.frame()
