@@ -58,16 +58,15 @@ for (name in names(temp)) {
 }
 rm(temp)
 
-# sheets <- GetListSetName(json_files, "sheets", "alias_name")
 field_list <- GetFieldList(sheets)
 
 sheet_data_list_group <- sheets %>% map(~ {
   sheet <- .x
   sheet_name <- sheet[["alias_name"]]
   field_items <- sheet %>% GetFieldItems()
-  # temp <- EditItemAndItemVisit(field_items, sheet_name)
-  # item <- temp$item
-  # item_visit_old <- temp$item_visit
+  temp <- EditItemAndItemVisit(field_items, sheet_name)
+  item <- temp$item
+  item_visit_old <- temp$item_visit
   allocation <- sheet %>% GetAllocation()
   display <- field_items %>% GetDisplay(sheet)
   master <- field_items %>% GetComment("link_type", sheet)
@@ -86,16 +85,16 @@ sheet_data_list_group <- sheets %>% map(~ {
   assigned <- field_items %>% EditAssigned(sheet)
   limitation <- field_items %>% EditLimitation(sheet)
   # date <- field_items %>% EditDate(sheet)
-  # item <- JoinJpnameAndAliasNameAndSelectColumns("item", sheet)
-  # item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns("item_visit_old", sheet)
+  item <- JoinJpnameAndAliasNameAndSelectColumns("item", sheet)
+  item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns("item_visit_old", sheet)
   return(list(
     name = name,
-    # item = item,
+    item = item,
     allocation = allocation,
     display = display,
     master = master,
     visit = visit,
-    # item_visit_old = item_visit_old,
+    item_visit_old = item_visit_old,
     action = action,
     option = option,
     comment = comment,
@@ -104,19 +103,19 @@ sheet_data_list_group <- sheets %>% map(~ {
     title = title,
     assigned = assigned,
     limitation = limitation # ,
-    # date = date,
-    # sheet_name = sheet_name,
-    # sheet = sheet
+    # date = date
   ))
 })
 # シートデータを結合し、空データを補完する
 sheet_data_combine <- CombineSheetSafety(sheet_data_list_group)
+# VISIT情報を集約する
+summary_sheet_data <- SummarizeByVisit(sheet_data_combine)
 # VISIT対応シートを使用している試験のVISIT情報を格納する
 if (is_visit) {
-  sheet_data_combine[[kVisit]] <- GetVisitIsVisit()
+  summary_sheet_data[[kVisit]] <- GetVisitIsVisit()
 }
 # 日本語列名に変換する
-output_checklist <- convertSheetColumnsToJapanese(sheet_data_combine)
+output_checklist <- convertSheetColumnsToJapanese(summary_sheet_data)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
 output_checklist[[kItemVisit]] <- EditItemVisit(output_checklist[[kItemVisit_old]])
 

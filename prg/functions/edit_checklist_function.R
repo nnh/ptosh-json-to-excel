@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2025.10.1
+#' @date 2025.12.11
 # ------ constants ------
 # ------ functions ------
 OutputChecklistSheet <- function(df_output, wb, sheet_name) {
@@ -109,3 +109,5 @@ source(here("prg", "functions", "edit_checklist_convert_column_name.R"),
   encoding = "UTF-8"
 )
 source(here("prg", "functions", "set_items_sheet_settings.R"), encoding = "UTF-8")
+source(here("prg", "functions", "summarize_by_visit.R"), encoding = "UTF-8")
+source(here("prg", "functions", "replace_ref_text.R"), encoding = "UTF-8")

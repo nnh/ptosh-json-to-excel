@@ -2,19 +2,14 @@
 #'
 #' @file edit_item.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.8
-EditItemAndItemVisit <- function(field_items, alias_name) {
-    is_in_visit_group <- GetIsInVisitGroup(alias_name)
-    if (is_in_visit_group) {
+#' @date 2025.12.11
+EditItemAndItemVisit <- function(field_items, sheet_name) {
+    visit_group <- visit_info %>% filter(alias_name == sheet_name)
+    if (visit_group %>% nrow() == 1) {
         item <- NULL
-        is_visit_min <- alias_name %>% GetIsInVisitGroupMin()
-        if (is_visit_min) {
-            item_visit <- EditItem(field_items, alias_name)
-        } else {
-            item_visit <- NULL
-        }
+        item_visit <- EditItem(field_items, sheet_name)
     } else {
-        item <- EditItem(field_items, alias_name)
+        item <- EditItem(field_items, sheet_name)
         item_visit <- NULL
     }
     return(list(
