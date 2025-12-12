@@ -10,17 +10,17 @@ testItemVisit <- csv_list$item_visit_old
 outputItemVisit <- output_checklist$item_visit_old %>% as.data.frame()
 colnames(testItemVisit) <- outputItemVisit %>% colnames()
 if (!identical(testItemVisit, outputItemVisit)) {
-        for (col in colnames(testItemVisit)) {
-          if (!identical(testItemVisit[[col]], outputItemVisit[[col]])) {
-                for (i in 1:nrow(testItemVisit)) {
-                    if (!identical(testItemVisit[[col]][i], outputItemVisit[[col]][i])) {
-                        stop(paste0(" Row ", i, ": testItemVisit = ", testItemVisit[[col]][i], ", outputItemVisit = ", outputItemVisit[[col]][i]))
-                    }
+    for (col in colnames(testItemVisit)) {
+        if (!identical(testItemVisit[[col]], outputItemVisit[[col]])) {
+            for (i in 1:nrow(testItemVisit)) {
+                if (!identical(testItemVisit[[col]][i], outputItemVisit[[col]][i])) {
+                    stop(paste0(" Row ", i, ": testItemVisit = ", testItemVisit[[col]][i], ", outputItemVisit = ", outputItemVisit[[col]][i]))
                 }
             }
         }
+    }
 } else {
-  cat("item_visit_old sheet matches.\n")
+    cat("item_visit_old sheet matches.\n")
 }
 ### item
 testItem <- csv_list$item

@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.11
+#' @date 2025.12.12
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -84,7 +84,7 @@ sheet_data_list_group <- sheets %>% map(~ {
   title <- field_items %>% EditTitle(sheet)
   assigned <- field_items %>% EditAssigned(sheet)
   limitation <- field_items %>% EditLimitation(sheet)
-  # date <- field_items %>% EditDate(sheet)
+  date <- field_items %>% EditDate(sheet)
   item <- JoinJpnameAndAliasNameAndSelectColumns("item", sheet)
   item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns("item_visit_old", sheet)
   return(list(
@@ -102,8 +102,8 @@ sheet_data_list_group <- sheets %>% map(~ {
     presence = presence,
     title = title,
     assigned = assigned,
-    limitation = limitation # ,
-    # date = date
+    limitation = limitation,
+    date = date
   ))
 })
 # シートデータを結合し、空データを補完する
