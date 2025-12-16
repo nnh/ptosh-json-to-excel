@@ -2,11 +2,11 @@
 #'
 #' @file excel_json_validator_allocation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.30
-GetAllocation <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName, sheetName) {
+#' @date 2025.12.16
+GetAllocation <- function(sheetList, fieldItems, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetAllocationFromJson(jsonList, fieldItems, jpNameAndAliasName)
+    json <- GetAllocationFromJson(fieldItems)
     sheet[["groups.if_references"]] <- ifelse(is.na(sheet[["groups.if_references"]]), "", sheet[["groups.if_references"]])
     json[["groups.if_references"]] <- ifelse(is.na(json[["groups.if_references"]]), "", json[["groups.if_references"]])
     sheet[["formula_field_references"]] <- ifelse(is.na(sheet[["formula_field_references"]]), "", sheet[["formula_field_references"]])
@@ -17,19 +17,19 @@ GetAllocation <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName, s
     json[["formula_field"]] <- as.character(sheet[["formula_field"]])
     return(list(sheet = sheet, json = json))
 }
-CheckAllocation <- function(sheetList, jsonList, fieldItems, jpNameAndAliasName, sheetName) {
-    temp <- GetAllocation(sheetList, jsonList, fieldItems, jpNameAndAliasName, sheetName)
+CheckAllocation <- function(sheetList, fieldItems, sheetName) {
+    temp <- GetAllocation(sheetList, fieldItems, sheetName)
     sheet <- temp[["sheet"]]
     json <- temp[["json"]]
     return(CheckTarget(sheet, json))
 }
-GetAllocationFromJson <- function(jsonList, fieldItems, jpNameAndAliasName) {
+GetAllocationFromJson <- function(fieldItems) {
     allocationColnames <- c(
         "jpname", "alias_name", "is_zelen", "zelen_imbalance", "is_double_blinded",
         "double_blind_emails", "allocation_method", "groups.if", "groups.if_references", "groups.code", "groups.label",
         "groups.message", "formula_field", "formula_field_references"
     )
-    allocationList <- jsonList |>
+    allocationList <- target_json[["sheets"]] |>
         keep(~ .[["alias_name"]] |> str_detect("(?i)^allocation([0-9]+)?$"))
     if (length(allocationList) == 0) {
         df <- tibble(!!!setNames(vector("list", length(allocationColnames)), allocationColnames))

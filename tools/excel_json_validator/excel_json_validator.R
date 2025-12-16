@@ -100,24 +100,9 @@ ExecExcelJsonValidator <- function(trialName) {
   # ##############
   # # allocation #
   # ##############
-  # sheetName <- "allocation"
-  # if (trialName == "blin_b_all") {
-  #   allocation_sheet <- sheetList[[sheetName]] |>
-  #     rename(!!!engToJpnColumnMappings[[sheetName]])
-  #   allocation_json <- GetAllocationFromJson(jsonList, fieldItems, jpNameAndAliasName)
-  #   allocation_sheet[["groups.if_references"]] <- ifelse(is.na(allocation_sheet[["groups.if_references"]]), "", allocation_sheet[["groups.if_references"]])
-  #   allocation_sheet[["formula_field_references"]] <- allocation_sheet[["formula_field_references"]] |> str_remove_all(" ")
-  #   allocation_json[["formula_field_references"]] <- allocation_json[["formula_field_references"]] |> str_remove_all(" ")
-  #   allocation_json[["formula_field_references"]] <- ifelse(
-  #     allocation_json[["formula_field"]] == "ref('allocationfac_100', 16) =='SR'",
-  #     "(allocationfac_100,field16,NCI/Rome分類)=='SR'",
-  #     allocation_json[["formula_field_references"]]
-  #   )
-  #   checkChecklist[[sheetName]] <- CheckTarget(allocation_sheet, allocation_json)
-  # } else {
-  #   checkChecklist[[sheetName]] <- sheetList |> CheckAllocation(jsonList, fieldItems, jpNameAndAliasName, sheetName)
-  # }
-  # dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
+  sheetName <- "allocation"
+  checkChecklist[[sheetName]] <- sheetList |> CheckAllocation(fieldItems, sheetName)
+  dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   # ##########
   # # action #
   # ##########
@@ -187,9 +172,9 @@ ExecExcelJsonValidator <- function(trialName) {
   # ##############
   # # limitation #
   # ##############
-  # sheetName <- "limitation"
-  # checkChecklist[[sheetName]] <- CheckLimitation(sheetList, visit_not_visit_jsonList, sheetName)
-  # dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
+  sheetName <- "limitation"
+  checkChecklist[[sheetName]] <- sheetList |> CheckLimitation(sheetName)
+  dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   # ########
   # # date #
   # ########
