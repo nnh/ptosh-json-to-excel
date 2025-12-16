@@ -321,4 +321,6 @@ source(here("tools", "excel_json_validator", "functions", "excel_json_validator_
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_date.R"), encoding = "UTF-8")
 # visit_groups
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_visit_groups.R"), encoding = "UTF-8")
+# references
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_get_ref.R"), encoding = "UTF-8")
 # ------ main ------

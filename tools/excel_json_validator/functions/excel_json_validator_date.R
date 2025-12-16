@@ -2,146 +2,76 @@
 #'
 #' @file excel_json_validator_date.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.17
-CheckDate <- function(sheetList, jsonList, sheetName) {
+#' @date 2025.12.16
+CheckDate <- function(sheetList, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     outputValidators <- sheet %>% select(
         jpname, alias_name, name, label, validators.date.validate_date_after_or_equal_to, references_after, validators.date.validate_date_before_or_equal_to, references_before
     )
-
-    inputValidators <- GetValidatorsDateByTrial(jsonList)
-    inputValidatorsAndReferences <- inputValidators %>%
-        GetRefBefAft("date_before") %>%
-        GetRefBefAft("date_after")
-    checkValidators <- CheckValidatorsDate(inputValidatorsAndReferences, outputValidators)
-    if (is.null(inputValidators)) {
+    json <- CheckValidatorsDate()
+    if (is.null(json)) {
         res <- NULL
     } else {
-        res <- checkValidators
+        test1 <- arrange(sheet, alias_name, name)
+        test1 <- test1 %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
+        test2 <- arrange(json, alias_name, name)
+        test2 <- test2 %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
+        res <- CheckTarget(test1, test2)
     }
     return(res)
 }
-CheckValidatorsDate <- function(inputValidators, outputValidators) {
-    error_f <- FALSE
-    inputValidators <- inputValidators %>% arrange(alias_name, name)
-    inputValidators <- inputValidators %>%
-        filter(!is.na(date_before) | !is.na(date_after)) %>%
-        filter(date_before != "" | date_after != "")
-    outputValidators <- outputValidators %>%
-        arrange(alias_name, name) %>%
-        filter(!is.na(validators.date.validate_date_after_or_equal_to) | !is.na(validators.date.validate_date_before_or_equal_to)) %>%
-        filter(validators.date.validate_date_after_or_equal_to != "" | validators.date.validate_date_before_or_equal_to != "")
+CheckValidatorsDate <- function() {
+    date_json <- target_json
+    date_sheets <- date_json$sheets
+    sheetsIdx <- seq(length(date_sheets), 1)
+    data_tibble <- tibble()
+    for (sheetIdx in sheetsIdx) {
+        field_items <- date_sheets[[sheetIdx]]$field_items
+        if (is.null(field_items) || length(field_items) == 0) {
+            date_sheets[[sheetIdx]] <- NULL
+            next
+        }
+        fieldItems_idx <- seq(length(field_items), 1)
+        for (fieldItemIdx in fieldItems_idx) {
+            if (is.null(date_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$validators$date)) {
+                date_sheets[[sheetIdx]]$field_items[[fieldItemIdx]] <- NULL
+                next
+            }
+            if (length(date_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$validators$date) == 0) {
+                date_sheets[[sheetIdx]]$field_items[[fieldItemIdx]] <- NULL
+                next
+            }
+            if (is.null(date_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$validators$date$validate_date_before_or_equal_to)) {
+                date_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$validators$date$validate_date_before_or_equal_to <- ""
+            }
+            if (is.null(date_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$validators$date$validate_date_after_or_equal_to)) {
+                date_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$validators$date$validate_date_after_or_equal_to <- ""
+            }
+            temp <- tibble(
+                alias_name = date_sheets[[sheetIdx]]$alias_name,
+                name = date_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$name,
+                label = date_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$label,
+                validators.date.validate_date_before_or_equal_to = date_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$validators$date$validate_date_before_or_equal_to,
+                validators.date.validate_date_after_or_equal_to = date_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$validators$date$validate_date_after_or_equal_to
+            )
+            data_tibble <- bind_rows(data_tibble, temp)
+        }
+    }
+    for (row in 1:nrow(data_tibble)) {
+        data_tibble[row, "references_before"] <- ReplaceFieldForReference(
+            data_tibble[row, "validators.date.validate_date_before_or_equal_to"][[1]],
+            data_tibble[row, "alias_name"][[1]],
+            fieldInfoForGetReference
+        )
+        data_tibble[row, "references_after"] <- ReplaceFieldForReference(
+            data_tibble[row, "validators.date.validate_date_after_or_equal_to"][[1]],
+            data_tibble[row, "alias_name"][[1]],
+            fieldInfoForGetReference
+        )
+    }
+    df2 <- JoinVisitGroupsValidator(data_tibble, key = "alias_name", target = "group") %>% distinct()
+    res <- GetItemsSelectColnames(df2, c("jpname", "alias_name", "name", "label", "validators.date.validate_date_after_or_equal_to", "references_after", "validators.date.validate_date_before_or_equal_to", "references_before"), jpNameAndGroup)
 
-    if (nrow(inputValidators) != nrow(outputValidators)) {
-        error_f <- TRUE
-        print("!error! : Number of rows in input and output validators do not match.")
-    }
-    if (nrow(inputValidators) == 0) {
-        print("No validators to check.")
-        return(NULL)
-    }
-    for (row in 1:nrow(inputValidators)) {
-        inputRow <- inputValidators[row, ]
-        outputRow <- outputValidators[row, ]
-        if (inputRow[["jpname"]] != outputRow[["jpname"]]) {
-            error_f <- TRUE
-            print(paste("!error! : Japanese names do not match at row", row))
-        }
-        if (inputRow[["alias_name"]] != outputRow[["alias_name"]]) {
-            error_f <- TRUE
-            print(paste("!error! : Alias names do not match at row", row))
-        }
-        if (inputRow[["name"]] != outputRow[["name"]]) {
-            error_f <- TRUE
-            print(paste("!error! : Names do not match at row", row))
-        }
-        if (inputRow[["label"]] != outputRow[["label"]]) {
-            error_f <- TRUE
-            print(paste("!error! : Labels do not match at row", row))
-        }
-        if (is.na(outputRow[["validators.date.validate_date_before_or_equal_to"]])) {
-            if (!is.na(inputRow[["date_before"]])) {
-                error_f <- TRUE
-                print(paste("!error! : date before values do not match at row", row))
-            }
-        } else if (outputRow[["validators.date.validate_date_before_or_equal_to"]] == "") {
-            if (!is.na(inputRow[["date_before"]])) {
-                if (inputRow[["date_before"]] != "") {
-                    error_f <- TRUE
-                    print(paste("!error! : date before values do not match at row", row))
-                }
-            }
-        } else {
-            if (inputRow[["date_before"]] != outputRow[["validators.date.validate_date_before_or_equal_to"]]) {
-                error_f <- TRUE
-                print(paste("!error! : date before or equal to values do not match at row", row))
-            }
-        }
-        if (is.na(outputRow[["validators.date.validate_date_after_or_equal_to"]])) {
-            if (!is.na(inputRow[["date_after"]])) {
-                error_f <- TRUE
-                print(paste("!error! : date after values do not match at row", row))
-            }
-        } else if (outputRow[["validators.date.validate_date_after_or_equal_to"]] == "") {
-            if (!is.na(inputRow[["date_after"]]) && inputRow[["date_after"]] != "") {
-                error_f <- TRUE
-                print(paste("!error! : date after values do not match at row", row))
-            }
-        } else {
-            if (inputRow[["date_after"]] != outputRow[["validators.date.validate_date_after_or_equal_to"]]) {
-                error_f <- TRUE
-                print(paste("!error! : date after or equal to values do not match at row", row))
-            }
-        }
-    }
-    if (error_f) {
-        return(outputValidators)
-    } else {
-        return(NULL)
-    }
-}
-GetValidatorDates <- function(fieldItem) {
-    validators <- fieldItem %>%
-        map(~ {
-            field_item <- .x
-            if (is.null(field_item[["validators"]][["date"]])) {
-                return(NA)
-            }
-            if (length(field_item[["validators"]][["date"]]) == 0) {
-                return(NA)
-            }
-            date_before <- if (!is.null(field_item[["validators"]][["date"]][["validate_date_before_or_equal_to"]]) &&
-                !is.na(field_item[["validators"]][["date"]][["validate_date_before_or_equal_to"]])) {
-                field_item[["validators"]][["date"]][["validate_date_before_or_equal_to"]]
-            } else {
-                NA
-            }
-            date_after <- if (!is.null(field_item[["validators"]][["date"]][["validate_date_after_or_equal_to"]]) &&
-                !is.na(field_item[["validators"]][["date"]][["validate_date_after_or_equal_to"]])) {
-                field_item[["validators"]][["date"]][["validate_date_after_or_equal_to"]]
-            } else {
-                NA
-            }
-            return(list(
-                date_before = date_before, date_after = date_after, id = field_item[["id"]],
-                sheet_id = field_item[["sheet_id"]], name = field_item[["name"]], label = field_item[["label"]]
-            ))
-        }) %>%
-        keep(~ !(is.atomic(.x) && is.na(.x)))
-    return(validators)
-}
-GetValidatorsDateByTrial <- function(jsonList) {
-    jsons <- jsonList
-    jpnameAndAliasname <- jsons %>% map_df(~ list(sheet_id = .x[["id"]], jpname = .x[["name"]], alias_name = .x[["alias_name"]]))
-    fieldItems <- jsons %>% map(~ .x[["field_items"]])
-    df_validators <- fieldItems %>% map_df(~ GetValidatorDates(.x))
-
-    if (nrow(df_validators) == 0) {
-        validators <- df_validators
-    } else {
-        validators <- df_validators %>%
-            left_join(jpnameAndAliasname, by = c("sheet_id" = "sheet_id"))
-    }
-    return(validators)
+    return(res)
 }

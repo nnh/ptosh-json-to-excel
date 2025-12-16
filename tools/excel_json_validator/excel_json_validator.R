@@ -35,6 +35,8 @@ ExecExcelJsonValidator <- function(trialName) {
   fieldItems_not_in_visitGroups <<- fieldItems[!names(fieldItems) %in% visitGroups[["alias_name"]]]
   fieldItems_in_visitGroups <<- fieldItems[names(fieldItems) %in% visitGroups[["alias_name"]]]
   options_json <<- target_json[[kOptions]]
+  fieldInfoForGetReference <<- GetFieldInfoForGetRef()
+
   # temp <- GetIsVisit(target_json)
   # visit_not_visit_json <- temp$visit_not_visit_json %>% setNames(names(temp$visit_not_visit_json))
   # if (is.null(temp$visit_not_visit_fieldItems)) {
@@ -191,11 +193,11 @@ ExecExcelJsonValidator <- function(trialName) {
   # ########
   # # date #
   # ########
-  # sheetName <- "date"
-  # checkChecklist[[sheetName]] <- CheckDate(sheetList, visit_not_visit_jsonList, sheetName)
-  # dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
-  # print(str_c("Validation completed for trial: ", trialName))
-  # return(checkChecklist)
+  sheetName <- "date"
+  checkChecklist[[sheetName]] <- sheetList |> CheckDate(sheetName)
+  dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
+  print(str_c("Validation completed for trial: ", trialName))
+  return(checkChecklist)
 }
 # ------ main ------
 for (i in 1:length(kTrialNames)) {
