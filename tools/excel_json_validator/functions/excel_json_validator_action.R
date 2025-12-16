@@ -2,20 +2,16 @@
 #'
 #' @file excel_json_validator_action.R
 #' @author Mariko Ohtsuka
-#' @date 2025.8.12
-CheckAction <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
+#' @date 2025.12.15
+CheckAction <- function(sheetList, fieldItems, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    sheet[["id"]] <- sheet[["id"]] |> as.integer()
-    sheet[["field_item_id"]] <- sheet[["field_item_id"]] |> as.integer()
-    json <- GetActionFromJson(fieldItems, jpNameAndAliasName)
-    json[["id"]] <- json[["id"]] |> as.integer()
-    json[["field_item_id"]] <- json[["field_item_id"]] |> as.integer()
+    json <- GetActionFromJson(fieldItems)
     sheet <- sheet %>% arrange(alias_name, fields)
     json <- json %>% arrange(alias_name, fields)
     return(CheckTarget(sheet, json))
 }
-GetActionFromJson <- function(fieldItems, jpNameAndAliasName) {
+GetActionFromJson <- function(fieldItems) {
     action <- map2(fieldItems, names(fieldItems), ~ {
         fieldItem <- .x
         aliasName <- .y
@@ -52,11 +48,26 @@ GetActionFromJson <- function(fieldItems, jpNameAndAliasName) {
         keep(~ !is.null(.)) |>
         bind_rows()
     aliasnameAndFieldIdAndLabel <- GetAliasnameAndFieldIdAndLabel(fieldItems)
+    aliasnameAndFieldIdAndLabelGroups <- aliasnameAndFieldIdAndLabel %>% left_join(visitGroups, by = c("alias_name"))
+    for (row in 1:nrow(aliasnameAndFieldIdAndLabelGroups)) {
+        if (is.na(aliasnameAndFieldIdAndLabelGroups[row, "group"])) {
+            aliasnameAndFieldIdAndLabelGroups[row, "group"] <- aliasnameAndFieldIdAndLabelGroups[row, "alias_name"]
+        }
+    }
+    aliasnameAndFieldIdAndLabelGroups <- aliasnameAndFieldIdAndLabelGroups %>% select(-name, -visit_num, -visit_name)
     if (nrow(action) > 0) {
-        df <- action |> inner_join(aliasnameAndFieldIdAndLabel, by = c("alias_name", "fields"))
+        df <- action |> inner_join(aliasnameAndFieldIdAndLabelGroups, by = c("alias_name", "fields"))
+        df[["alias_name"]] <- df[["group"]]
+        df <- df %>%
+            select(-group) %>%
+            distinct()
     } else {
         df <- action
     }
-    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "id", "field_item_id", "field_item_id.name", "field_item_id.label", "codes", "fields", "fields.label"), jpNameAndAliasName)
+    res <- GetItemsSelectColnames(
+        df,
+        c("jpname", "alias_name", "field_item_id.name", "field_item_id.label", "codes", "fields", "fields.label"),
+        jpNameAndGroup
+    )
     return(res)
 }

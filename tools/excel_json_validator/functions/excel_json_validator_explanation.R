@@ -2,18 +2,18 @@
 #'
 #' @file excel_json_validator_explanation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.8.12
-CheckExplanation <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
+#' @date 2025.12.15
+CheckExplanation <- function(sheetList, fieldItems, sheetName) {
   sheet <- sheetList[[sheetName]] |>
     rename(!!!engToJpnColumnMappings[[sheetName]])
-  json <- GetExplanationFromJson(fieldItems, jpNameAndAliasName)
+  json <- GetExplanationFromJson(fieldItems)
   sheet <- sheet %>% arrange(alias_name, name)
   json <- json %>% arrange(alias_name, name)
   sheet$description <- sheet$description %>% CleanTextForComment()
   json$description <- json$description %>% CleanTextForComment()
   return(CheckTarget(sheet, json))
 }
-GetExplanationFromJson <- function(fieldItems, jpNameAndAliasName) {
+GetExplanationFromJson <- function(fieldItems) {
   df <- map2(fieldItems, names(fieldItems), ~ {
     fieldItem <- .x
     aliasName <- .y
@@ -24,6 +24,7 @@ GetExplanationFromJson <- function(fieldItems, jpNameAndAliasName) {
   }) |>
     bind_rows() |>
     filter(description != "")
-  res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "description"), jpNameAndAliasName)
+  df2 <- JoinVisitGroupsValidator(df, key = "alias_name", target = "group") %>% distinct()
+  res <- GetItemsSelectColnames(df2, c("jpname", "alias_name", "name", "label", "description"), jpNameAndGroup)
   return(res)
 }
