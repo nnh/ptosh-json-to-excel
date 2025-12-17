@@ -42,41 +42,14 @@ ExecExcelJsonValidator <- function(trialName) {
   # # item #
   # ########
   sheetName <- "item"
-  checkChecklist[[sheetName]] <- sheetList |> CheckItemNonVisit()(sheetName)
-  # jsonSheetItemList <- GetItem_item(sheetList, jsonList, fieldItems, sheetName)
-  # checkChecklist[[sheetName]] <- ExcelJsonValidator_item(jsonSheetItemList, old_flag = FALSE)
-  # dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
+  checkChecklist[[sheetName]] <- sheetList |> CheckItemNonVisit(sheetName)
+  dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   # ##################
   # # item_visit_old #
   # ##################
-  # sheetName <- "item_visit_old"
-  # if (trialName == "TAS0728-HER2") {
-  #   print(str_c("Skipping item_visit_old validation for trial: ", trialName))
-  # } else {
-  #   jsonSheetItemVisitList <- GetItem_item_visit_old(sheetList, visit_not_visit_fieldItems, visit_not_visit_jsonList, sheetName)
-  #   if (is.null(jsonSheetItemVisitList)) {
-  #     print(str_c("No item_visit_old data found for trial: ", trialName))
-  #   } else {
-  #     checkChecklist[[sheetName]] <- ExcelJsonValidator_item(jsonSheetItemVisitList, old_flag = FALSE)
-  #     if (trialName == "blin_b_all") {
-  #       checkChecklist[[sheetName]]$json[36, 10] <- "(registration,field11,初発診断日)(registration,field2,生年月日)(allocationfac_100,field9,診断時白血球数（/uL）)(allocationfac_100,field16,NCI/Rome 分類)"
-  #       checkChecklist[[sheetName]]$json[362, 10] <- "(registration,field3,性別)(lab4_3000,field2,妊娠可能な被験者である)"
-  #       checkChecklist[[sheetName]]$json[472, 10] <- "(registration,field3,性別)(screening1_100,field200,妊娠可能な被験者である)"
-  #       check_blin_b_all_item_visit <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
-  #       if (check_blin_b_all_item_visit) {
-  #         checkChecklist[[sheetName]] <- NULL
-  #       }
-  #     } else if (trialName == "AML224-PIF") {
-  #       checkChecklist[[sheetName]]$json[48, 10] <- "(allocationfac1_110,field11,AML診断時(初回寛解導入療法前)骨髄中芽球（%）)(allocationfac2_150,field7,初回治療が無効と判断した際の骨髄検査時の骨髄中芽球（%）)(allocationfac2_150,field2,骨髄芽球減少率)"
-  #       check_aml224_pif_item_visit <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
-  #       if (check_aml224_pif_item_visit) {
-  #         checkChecklist[[sheetName]] <- NULL
-  #       }
-  #     } else {
-  #       dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
-  #     }
-  #   }
-  # }
+  sheetName <- "item_visit_old"
+  checkChecklist[[sheetName]] <- sheetList |> CheckItemVisitOld(sheetName)
+  dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   # ##############
   # # item_visit #
   # ##############
