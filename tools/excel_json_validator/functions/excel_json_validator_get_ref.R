@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_get_ref.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.16
+#' @date 2025.12.17
 GetFieldInfoForGetRef <- function() {
     fieldInfo <- target_json$sheets %>%
         map(~ {
@@ -23,10 +23,10 @@ GetFieldInfoForGetRef <- function() {
     return(res)
 }
 ReplaceFieldForReference <- function(targetText, targetSheetName, fieldInfoForGetReference) {
-    fieldList <- targetText %>%
-        str_extract_all("field[0-9]+") %>%
+    fieldList <- str_extract_all(targetText, "(field|f)[0-9]+") %>%
         unlist() %>%
         unique()
+    fieldList <- str_replace_all(fieldList, "^f([0-9]+)$", "field\\1")
     refText <- fieldList %>%
         map_chr(~ {
             fieldId <- .x
@@ -38,6 +38,6 @@ ReplaceFieldForReference <- function(targetText, targetSheetName, fieldInfoForGe
                 return(str_c("(", temp$group, ",", fieldId, ",", temp$label, ")"))
             }
         }) %>%
-        str_c(collapse = ", ")
+        str_c(collapse = "")
     return(refText)
 }
