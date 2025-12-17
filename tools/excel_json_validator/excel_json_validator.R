@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.12
+#' @date 2025.12.17
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -11,7 +11,7 @@ kAliasNameJapaneseColumnName <- "シート名英数字別名"
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
 # ------ constants ------
 keep_objects <- c("keep_objects", "target_json", "sheetList", "trialName", "kTrialNames", "kAliasNameJapaneseColumnName")
-kTrialNames <- c("AML224-FLT3-ITD")
+kTrialNames <- c("Bev-FOLFOX-SBC", "AML224-FLT3-ITD")
 # ------ functions ------
 ExecExcelJsonValidator <- function(trialName) {
   if (exists("keep_objects")) {
@@ -24,10 +24,14 @@ ExecExcelJsonValidator <- function(trialName) {
   sheetOrders <<- target_json[["sheet_orders"]] %>%
     map(~ tibble(sheet = .x[["sheet"]], seq = .x[["seq"]])) %>%
     bind_rows()
-  visit <<- target_json[["visits"]] %>%
-    map(~ tibble(visit_num = .x[["num"]] %>% as.numeric(), visit_name = .x[["name"]])) %>%
-    bind_rows() %>%
-    arrange(visit_num)
+  if (length(target_json[["visits"]]) > 0) {
+    visit <<- target_json[["visits"]] %>%
+      map(~ tibble(visit_num = .x[["num"]] %>% as.numeric(), visit_name = .x[["name"]])) %>%
+      bind_rows() %>%
+      arrange(visit_num)
+  } else {
+    visit <<- tibble(visit_num = numeric(), visit_name = character())
+  }
   visitGroups <<- GetVisitGroupsValidator(target_json, sheetOrders, visit)
   jpNameAndAliasName <<- target_json |> GetNameAndAliasNameByJson()
   jpNameAndGroup <<- GetNameAndGroupByJson()
@@ -114,7 +118,7 @@ ExecExcelJsonValidator <- function(trialName) {
   # # visit #
   # #########
   sheetName <- "visit"
-  checkChecklist[[sheetName]] <- sheetList |> CheckVisit(sheetName, target_json)
+  checkChecklist[[sheetName]] <- sheetList |> CheckVisit(sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   # #########
   # # title #

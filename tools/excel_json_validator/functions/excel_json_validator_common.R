@@ -219,20 +219,34 @@ ExcelJsonValidator_item <- function(jsonSheetItemList, old_flag) {
 }
 
 GetVisitGroupsValidator <- function(target_json, sheetOrders, visit) {
-  temp <- target_json[["visit_groups"]] %>%
-    map(~ {
-      name <- .x[["name"]]
-      aliasName <- .x[["alias_name"]]
-      res <- .x[["visit_sheets"]] %>% map(~ {
+  if (length(target_json[["visit_groups"]]) == 0) {
+    temp <- target_json$sheets %>%
+      map(~ {
         res <- tibble(
-          name = name,
-          alias_name = .x[["sheet_alias_name"]],
-          visit_num = .x[["visit_num"]] %>% as.numeric(),
-          group = aliasName
+          name = .x[["name"]],
+          alias_name = .x[["alias_name"]],
+          visit_num = NA,
+          group = NA
         )
-      })
-    }) %>%
-    bind_rows()
+        return(res)
+      }) %>%
+      bind_rows()
+  } else {
+    temp <- target_json[["visit_groups"]] %>%
+      map(~ {
+        name <- .x[["name"]]
+        aliasName <- .x[["alias_name"]]
+        res <- .x[["visit_sheets"]] %>% map(~ {
+          res <- tibble(
+            name = name,
+            alias_name = .x[["sheet_alias_name"]],
+            visit_num = .x[["visit_num"]] %>% as.numeric(),
+            group = aliasName
+          )
+        })
+      }) %>%
+      bind_rows()
+  }
   visitGroups <<- temp %>%
     left_join(sheetOrders, by = c("alias_name" = "sheet")) %>%
     left_join(visit, by = "visit_num") %>%

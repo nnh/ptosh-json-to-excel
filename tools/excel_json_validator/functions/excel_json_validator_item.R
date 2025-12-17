@@ -14,6 +14,28 @@ CheckItemVisitOld <- function(sheetList, sheetName) {
 }
 GetItemVisitOldFromJson <- function() {
     item_json <- target_json[["sheets"]] %>% keep(~ .x[["category"]] == "visit")
+    if (length(item_json) == 0) {
+        res <- data.frame(
+            jpname = "",
+            alias_name = "",
+            name = "",
+            label = "",
+            option.name = "",
+            default_value = "",
+            validators.presence.validate_presence_if = "",
+            presence_if_references = "",
+            validators.formula.validate_formula_if = "",
+            formula_if_references = "",
+            validators.formula.validate_formula_message = "",
+            validators.date.validate_date_after_or_equal_to = "",
+            references_after = "",
+            validators.date.validate_date_before_or_equal_to = "",
+            references_before = "",
+            numericality_normal_range_check = "",
+            stringsAsFactors = FALSE
+        )
+        return(res)
+    }
     alert <- item_json %>%
         map(~ {
             aliasName <- .x[["alias_name"]]

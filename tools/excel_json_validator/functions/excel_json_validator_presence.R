@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_presence.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.16
+#' @date 2025.12.17
 CheckPresence <- function(sheetList, target_json, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
@@ -43,12 +43,13 @@ GetPresenceFromJson <- function(target_json) {
                 prefix <- .x$prefix
 
                 stat_fields <- .x$table %>%
-                    keep(~ .x == "STAT") %>%
+                  keep(~ identical(.x, "STAT")) %>%
                     names()
 
                 orres_fields <- .x$table %>%
-                    keep(~ .x == "ORRES" & prefix == "IE") %>%
-                    names()
+                  keep(~ identical(.x, "ORRES") && identical(prefix, "IE")) %>%
+                  names()
+                
 
                 c(stat_fields, orres_fields)
             }) %>%

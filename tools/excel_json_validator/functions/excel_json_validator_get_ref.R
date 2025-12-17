@@ -23,6 +23,7 @@ GetFieldInfoForGetRef <- function() {
     return(res)
 }
 ReplaceFieldForReference <- function(targetText, targetSheetName, fieldInfoForGetReference) {
+    targetText <- targetText %>% str_replace_all("\\s+", "")
     fieldList <- str_extract_all(targetText, "((field|f)[0-9]+|ref\\('[A-Za-z0-9]+',[0-9]+\\))") %>%
         unlist() %>%
         unique()
