@@ -218,50 +218,6 @@ ExcelJsonValidator_item <- function(jsonSheetItemList, old_flag) {
   return(res)
 }
 
-# GetIsVisit <- function(target_json) {
-#   isVisit_json <<- target_json$sheets %>% keep(~ .x[["category"]] == "visit")
-#   isVisit <<- length(isVisit_json) > 0
-#   if (isVisit) {
-#     df_isVisit_json <- isVisit_json %>%
-#       map(~ {
-#         name <- .x$name
-#         alias_name <- .x$alias_name
-#         visitnum <- alias_name %>%
-#           str_extract(("[0-9]+$")) %>%
-#           as.numeric()
-#         visit <- str_extract(name, "\\([^()]*\\)$") %>%
-#           str_remove_all("\\(|\\)")
-#         return(tibble(name = name, alias_name = alias_name, visitnum = visitnum, visit = visit))
-#       }) %>%
-#       bind_rows()
-#     df_isVisit_sort <- df_isVisit_json %>%
-#       left_join(sheetOrders, by = c("alias_name" = "sheet")) %>%
-#       arrange(visitnum, seq) %>%
-#       select(-seq)
-#     # jsonのvisit_groupsと照合
-#
-#     targets <- tibble(
-#       group = group,
-#       visitnum = visitnum,
-#       visit_json_names = visit_json_names
-#     ) %>%
-#       group_by(group) %>%
-#       filter(visitnum == min(visitnum)) %>%
-#       ungroup()
-#     visit_jsonList <- isVisit_json
-#     not_visit_jsonList <- json$sheets %>% keep(~ .x[["category"]] != "visit")
-#     visit_not_visit_jsonList <- c(visit_jsonList, not_visit_jsonList)
-#     visit_fieldItems <- visit_jsonList |> GetFieldItemsByJsonList()
-#     visit_not_visit_fieldItems <- visit_not_visit_jsonList |> GetFieldItemsByJsonList()
-#   } else {
-#     visit_not_visit_jsonList <- json$sheets
-#     visit_not_visit_fieldItems <- NULL
-#   }
-#   return(list(
-#     visit_not_visit_json = visit_not_visit_jsonList,
-#     visit_not_visit_fieldItems = visit_not_visit_fieldItems
-#   ))
-# }
 GetVisitGroupsValidator <- function(target_json, sheetOrders, visit) {
   temp <- target_json[["visit_groups"]] %>%
     map(~ {

@@ -37,19 +37,12 @@ ExecExcelJsonValidator <- function(trialName) {
   options_json <<- target_json[[kOptions]]
   fieldInfoForGetReference <<- GetFieldInfoForGetRef()
 
-  # temp <- GetIsVisit(target_json)
-  # visit_not_visit_json <- temp$visit_not_visit_json %>% setNames(names(temp$visit_not_visit_json))
-  # if (is.null(temp$visit_not_visit_fieldItems)) {
-  #  visit_not_visit_fieldItems <- fieldItems
-  # } else {
-  #  visit_not_visit_fieldItems <- temp$visit_not_visit_fieldItems %>% setNames(names(temp$visit_not_visit_fieldItems))
-  # }
-  # rm(temp)
   checkChecklist <- list()
   # ########
   # # item #
   # ########
-  # sheetName <- "item"
+  sheetName <- "item"
+  checkChecklist[[sheetName]] <- sheetList |> CheckItemNonVisit()(sheetName)
   # jsonSheetItemList <- GetItem_item(sheetList, jsonList, fieldItems, sheetName)
   # checkChecklist[[sheetName]] <- ExcelJsonValidator_item(jsonSheetItemList, old_flag = FALSE)
   # dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
