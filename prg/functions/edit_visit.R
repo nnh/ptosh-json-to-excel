@@ -69,11 +69,12 @@ GetVisitGroupAndVisitsFromJson <- function(json_files) {
 GetVisitIsVisit <- function() {
     visit <- visit_info %>%
         select(visit_group_name, alias_name, visitnum, visit_name)
-    colnames(visit) <- c("jpname", "alias_name", "name", "default_value")
     res <- visit %>%
         left_join(sheet_info, by = c("alias_name" = "alias_name")) %>%
         arrange(name, sort_order) %>%
-        select("jpname", "alias_name", "name", "default_value") %>%
+        select("sheet_name", "alias_name", "visitnum", "visit_name") %>%
         distinct()
+    colnames(res) <- c("jpname", "alias_name", "name", "default_value")
+
     return(res)
 }

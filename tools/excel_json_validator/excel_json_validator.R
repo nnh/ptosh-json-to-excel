@@ -53,16 +53,9 @@ ExecExcelJsonValidator <- function(trialName) {
   # ##############
   # # item_visit #
   # ##############
-  # sheetName <- "item_visit"
-  # if (trialName == "TAS0728-HER2") {
-  #   print(str_c("Skipping item_visit_old validation for trial: ", trialName))
-  #   jsonSheetItemVisitList <- NULL
-  # }
-  # if (is.null(jsonSheetItemVisitList)) {
-  #   checkChecklist[[sheetName]] <- NULL
-  # } else {
-  #   checkChecklist[[sheetName]] <- CheckItemVisit(jsonSheetItemVisitList[["json"]], sheetName, sheetList)
-  # }
+  sheetName <- "item_visit"
+  checkChecklist[[sheetName]] <- sheetList |> CheckItemVisit(sheetName)
+  dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   # ##############
   # # allocation #
   # ##############

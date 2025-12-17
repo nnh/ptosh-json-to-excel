@@ -7,6 +7,7 @@ CheckItemVisitOld <- function(sheetList, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     json <- GetItemVisitOldFromJson()
+    itemVisitData <<- json
     sheet <- sheet %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
     json <- json %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
     return(CheckTarget(sheet, json))

@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.15
+#' @date 2025.12.17
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -245,7 +245,6 @@ GetVisitGroupsValidator <- function(target_json, sheetOrders, visit) {
 # item
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_common.R"), encoding = "UTF-8")
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item.R"), encoding = "UTF-8")
-source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_visit_old.R"), encoding = "UTF-8")
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_visit.R"), encoding = "UTF-8")
 # allocation
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_allocation.R"), encoding = "UTF-8")
