@@ -2,12 +2,26 @@
 #'
 #' @file excel_json_validator_limitation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.16
+#' @date 2025.12.18
 CheckLimitation <- function(sheetList, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
     sheet <- sheet %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
     json <- GetLimitationFromJson()
+    if (is.null(json) || nrow(json) == 0) {
+        json <- data.frame(
+            jpname = "",
+            alias_name = "",
+            name = "",
+            label = "",
+            default_value = "",
+            normal_range.less_than_or_equal_to = "",
+            normal_range.greater_than_or_equal_to = "",
+            validators.numericality.validate_numericality_less_than_or_equal_to = "",
+            validators.numericality.validate_numericality_greater_than_or_equal_to = "",
+            stringsAsFactors = FALSE
+        )
+    }
     sheet <- sheet %>% arrange(alias_name, name)
     sheet[["normal_range.less_than_or_equal_to"]] <- ifelse(sheet[["normal_range.less_than_or_equal_to"]] == "1e+06", "1000000", sheet[["normal_range.less_than_or_equal_to"]])
     json <- json %>% arrange(alias_name, name)

@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.17
+#' @date 2025.12.18
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -11,7 +11,7 @@ kAliasNameJapaneseColumnName <- "シート名英数字別名"
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_common.R"), encoding = "UTF-8")
 # ------ constants ------
 keep_objects <- c("keep_objects", "target_json", "sheetList", "trialName", "kTrialNames", "kAliasNameJapaneseColumnName")
-kTrialNames <- c("Bev-FOLFOX-SBC", "AML224-FLT3-ITD")
+kTrialNames <- c("Bev-FOLFOX-SBC", "AML224-FLT3-ITD", "ALL-B19")
 # ------ functions ------
 ExecExcelJsonValidator <- function(trialName) {
   if (exists("keep_objects")) {

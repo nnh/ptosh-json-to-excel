@@ -2,34 +2,36 @@
 #'
 #' @file excel_json_validator_item_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.17
+#' @date 2025.12.18
 CheckItemVisit <- function(sheetList, sheetName) {
     sheet <- sheetList[[sheetName]]
     json_sheetNames <- itemVisitData[["jpname"]] %>%
         unlist() %>%
         unique()
-    if (json_sheetNames == "") {
-        json <- data.frame(
-            `シート名` = "",
-            `シート名英数字別名` = "",
-            `フィールドID` = "",
-            `ラベル` = "",
-            `オプション名` = "",
-            `デフォルト値` = "",
-            `バリデータ.必須がON.条件` = "",
-            `条件の参照先情報` = "",
-            `バリデータ.論理式.論理式` = "",
-            `論理式の参照先情報` = "",
-            `バリデータ.論理式.エラーメッセージ` = "",
-            `バリデータ.日付.最小値` = "",
-            `最小値の参照先情報` = "",
-            `バリデータ.日付.最大値` = "",
-            `最大値の参照先情報` = "",
-            `数値チェック.アラート条件の有無` = "",
-            stringsAsFactors = FALSE
-        )
-        colnames(json) <- colnames(sheet)
-        return(CheckTarget(json, sheet))
+    if (length(json_sheetNames) == 1) {
+        if (json_sheetNames == "") {
+            json <- data.frame(
+                `シート名` = "",
+                `シート名英数字別名` = "",
+                `フィールドID` = "",
+                `ラベル` = "",
+                `オプション名` = "",
+                `デフォルト値` = "",
+                `バリデータ.必須がON.条件` = "",
+                `条件の参照先情報` = "",
+                `バリデータ.論理式.論理式` = "",
+                `論理式の参照先情報` = "",
+                `バリデータ.論理式.エラーメッセージ` = "",
+                `バリデータ.日付.最小値` = "",
+                `最小値の参照先情報` = "",
+                `バリデータ.日付.最大値` = "",
+                `最大値の参照先情報` = "",
+                `数値チェック.アラート条件の有無` = "",
+                stringsAsFactors = FALSE
+            )
+            colnames(json) <- colnames(sheet)
+            return(CheckTarget(json, sheet))
+        }
     }
     json_labels <- itemVisitData[["label"]] %>%
         unique()
