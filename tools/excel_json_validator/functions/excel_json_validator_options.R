@@ -2,74 +2,62 @@
 #'
 #' @file excel_json_validator_options.R
 #' @author Mariko Ohtsuka
-#' @date 2025.8.12
-CheckOption <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
+#' @date 2025.12.15
+CheckOption <- function(sheetList, fieldItems, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetOptionFromJson(fieldItems, jpNameAndAliasName)
-    sheet <- sheet %>% arrange(alias_name, option.values_seq)
-    json <- json %>% arrange(alias_name, option.values_seq)
+    json <- GetOptionFromJson(fieldItems)
+    sheet <- sheet %>% arrange(alias_name, option.name, option.values_seq)
+    json <- json %>% arrange(alias_name, option.name, option.values_seq)
+    json$option.values_seq <- json$option.values_seq %>% as.integer()
+    sheet$option.values_seq <- sheet$option.values_seq %>% as.integer()
     return(CheckTarget(sheet, json))
 }
-GetOptionFromJson <- function(fieldItems, jpNameAndAliasName) {
-    df <- map2(fieldItems, names(fieldItems), ~ {
-        fieldItem <- .x
-        aliasName <- .y
-        res <- fieldItem |>
-            map(~ {
-                item <- .
-                if (item[["type"]] != "FieldItem::Article") {
-                    return(NULL)
-                }
-                if (is.null(options_json)) {
-                    option <- item[["option"]]
-                } else {
-                    option_id <- item[["option_id"]]
-                    if (is.null(option_id)) {
-                        return(NULL)
-                    }
-                    option <- options_json %>%
-                        keep(~ .[["id"]] == option_id) %>%
-                        first()
-                    if (is.null(option)) {
-                        stop(str_c("Option with id ", option_id, " not found in options_json."))
-                    }
-                }
-                if (is.null(option)) {
-                    return(NULL)
-                }
-                option[["values"]] <- option[["values"]] |> keep(~ .[["is_usable"]])
-                optionName <- option[["name"]]
-                optionValues <- option[["values"]] |> map(
-                    ~ list(
-                        option.name = optionName,
-                        option.values_name = .[["name"]],
-                        option.values_seq = .[["seq"]],
-                        option.values_code = .[["code"]],
-                        option.values_is_usable = .[["is_usable"]]
-                    )
-                )
-                return(optionValues)
-            }) |>
-            keep(~ !is.null(.)) |>
-            map_df(~.)
-        res[["alias_name"]] <- aliasName
-        return(res)
-    }) |>
-        bind_rows() |>
-        distinct()
-    if (nrow(df) == 0) {
-        return(data.frame(
-            jpname = "",
-            alias_name = "",
-            option.name = "",
-            option.values_name = "",
-            option.values_seq = "",
-            option.values_code = "",
-            option.values_is_usable = ""
-        ))
+GetOptionFromJson <- function(fieldItems) {
+    dummy_res <- data.frame(
+        jpname = "",
+        alias_name = "",
+        option_name = "",
+        name = "",
+        seq = "",
+        code = "",
+        is_usable = ""
+    )
+    if (length(fieldItems) == 0) {
+        return(dummy_res)
     }
-    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "option.name", "option.values_name", "option.values_seq", "option.values_code", "option.values_is_usable"), jpNameAndAliasName)
-    res <- res |> mutate(option.values_seq = as.numeric(option.values_seq))
+    option_fieldItems <- fieldItems
+    options <- tibble()
+    for (i in seq_along(option_fieldItems)) {
+        if (length(option_fieldItems[[i]]) == 0) {
+            next
+        }
+        aliasName <- names(option_fieldItems)[i]
+        fieldItem_idx <- seq(length(option_fieldItems[[i]]), 1)
+        for (j in fieldItem_idx) {
+            if (option_fieldItems[[i]][[j]][["type"]] != "FieldItem::Article") {
+                option_fieldItems[[i]][[j]] <- NULL
+                next
+            }
+            if (is.null(option_fieldItems[[i]][[j]][["option_name"]])) {
+                option_fieldItems[[i]][[j]] <- NULL
+                next
+            }
+            target_options <- options_json %>% keep(~ .x[["name"]] %in% option_fieldItems[[i]][[j]][["option_name"]])
+            if (length(target_options) == 0) {
+                stop(str_c("Option with name ", option_fieldItems[[i]][[j]][["option_name"]], " not found in options_json."))
+            }
+            option_values <- target_options[[1]][["values"]] |>
+                keep(~ .x[["is_usable"]]) %>%
+                bind_rows()
+            option_values$option_name <- option_fieldItems[[i]][[j]][["option_name"]]
+            option_values$alias_name <- aliasName
+            options <- bind_rows(options, option_values)
+        }
+    }
+    df2 <- JoinVisitGroupsValidator(options, key = "alias_name", target = "group")
+    res <- GetItemsSelectColnames(df2, c("jpname", "alias_name", "option_name", "name", "seq", "code", "is_usable"), jpNameAndGroup)
+    colnames(res) <- engToJpnColumnMappings$option %>% names()
+
     return(res)
 }

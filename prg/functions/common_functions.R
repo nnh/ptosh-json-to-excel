@@ -2,7 +2,7 @@
 #'
 #' @file common_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2024.7.4
+#' @date 2024.12.17
 # ------ functions ------
 #' Remove specified elements from a list.
 #'
@@ -91,6 +91,76 @@ AddSlashIfMissing <- function(input_string) {
     return(input_string)
   }
 }
+GetSheetNamesAndSortOrderFromJson <- function(json_file) {
+  sheets <- json_file[["sheets"]] %>% map_df(~ {
+    res <- tibble::tibble(
+      sheet_name = .x[["name"]],
+      alias_name = .x[["alias_name"]],
+      category = .x[["category"]]
+    )
+    return(res)
+  })
+  sheet_groups <- json_file[["sheet_groups"]] %>% map_df(~ {
+    group_name <- .x[["name"]]
+    group_alias_name <- .x[["alias_name"]]
+    group_alocation_group <- .x[["allocation_group"]]
+    group_is_default <- .x[["is_default"]]
+    res <- .x[["sheets"]] %>% map_df(~ {
+      res <- tibble::tibble(
+        alias_name = .x[["alias_name"]],
+        group_name = group_name,
+        group_alias_name = group_alias_name,
+        allocation_group = group_alocation_group,
+        is_default = group_is_default
+      )
+      return(res)
+    })
+    return(res)
+  })
+  sheetsAndGroups <- sheets %>%
+    left_join(sheet_groups, by = c("alias_name" = "alias_name"))
+  sheet_orders <- json_file[["sheet_orders"]] %>% map_df(~ {
+    res <- tibble::tibble(
+      alias_name = .x[["sheet"]],
+      sort_order = .x[["seq"]] %>% as.numeric()
+    )
+    return(res)
+  })
+  sheet_info <- sheetsAndGroups %>%
+    left_join(sheet_orders, by = c("alias_name" = "alias_name")) %>%
+    arrange(sort_order)
+  sheets <- json_file[["sheets"]] %>% map(~ {
+    res <- .x
+    sheet_group_row <- sheet_groups %>% filter(alias_name == res$alias_name)
+    if (nrow(sheet_group_row) == 0) {
+      res[["sheet_groups"]] <- NA
+    } else {
+      res[["sheet_groups"]] <- sheet_group_row
+    }
+    sheet_order_row <- sheet_orders %>% filter(alias_name == res$alias_name)
+    if (nrow(sheet_order_row) == 0) {
+      res[["sort_order"]] <- NA
+    } else if (nrow(sheet_order_row) == 1) {
+      res[["sort_order"]] <- sheet_order_row$sort_order
+    } else {
+      stop(paste0("sheet_ordersに同じalias_nameが複数存在します: ", res$alias_name))
+    }
+    res[["stylesheet"]] <- NULL
+    res[["fax_stylesheet"]] <- NULL
+    res[["odm"]] <- NULL
+    res[["registration_config"]] <- NULL
+    res[["uuid"]] <- NULL
+    res[["digest"]] <- NULL
+    res[["lock_version"]] <- NULL
+    res[["created_at"]] <- NULL
+    res[["updated_at"]] <- NULL
+    return(res)
+  })
+  sheetNameList <- sheets %>% map_chr(~ .x[["alias_name"]])
+  names(sheets) <- sheetNameList
+  res <- list(sheets = sheets, sheet_info = sheet_info)
+  return(res)
+}
 #' Execute Reading JSON Files
 #'
 #' This function reads and processes JSON files from a specified folder.
@@ -104,23 +174,45 @@ AddSlashIfMissing <- function(input_string) {
 #' @import ReadJsonFiles
 #' @export
 ExecReadJsonFiles <- function() {
-  # Get a list of JSON filenames in the specified folder
-  targetTrialFolder <- list.dirs(here(kInputFolderName), full.names = T, recursive = F)
-  if (length(targetTrialFolder) != 1) {
-    stop("inputフォルダの中に試験名略称のフォルダを一つだけ格納して再実行してください。")
-    return(NULL)
-  }
-  json_filenames <- list.files(targetTrialFolder, pattern = "*.json", full.names = F)
-  # Check if any JSON files were found
+  json_filenames <- list.files(kInputFolderName, pattern = "*.json", full.names = F)
   if (length(json_filenames) == 0) {
-    stop("No JSON files found.")
+    stop("inputフォルダの中にjsonファイルが存在しません。")
     return(NULL)
   }
-  json_files <- ReadJsonFiles(json_filenames, targetTrialFolder)
-  trialName <- targetTrialFolder %>% basename()
+  if (length(json_filenames) > 1) {
+    stop("inputフォルダの中にjsonファイルが複数存在します。jsonファイルを一つだけ格納して再実行してください。")
+    return(NULL)
+  }
+  json_file <- ReadJsonFiles(json_filenames, kInputFolderName)
+  trial_name <- json_filenames %>% str_remove("_[0-9]{6}_[0-9]{4}\\.json$")
+  options_flag <- kOptions %in% names(json_file)
+  if (options_flag) {
+    options_json <- GetListSetName(json_file, kOptions, "name")
+    json_file <- json_file[names(json_file) != kOptions]
+  }
+  is_visit <- !is.null(json_file[[kVisits]]) && length(json_file[[kVisits]]) > 0
+  if (is_visit) {
+    visit_info <- GetVisitGroupAndVisitsFromJson(json_file)
+  } else {
+    visit_info <- tibble(
+      visit_group_name = character(),
+      visit_group      = character(),
+      alias_name       = character(),
+      visitnum         = numeric(),
+      reference_sheet  = character(),
+      visit_name       = character()
+    )
+  }
+  temp <- GetSheetNamesAndSortOrderFromJson(json_file)
   res <- list()
-  res[["json_files"]] <- json_files
-  res[["trialName"]] <- trialName
+  res[["sheets"]] <- temp$sheets
+  res[["sheet_info"]] <- temp$sheet_info
+  res[["json_files"]] <- json_file
+  res[["trialName"]] <- trial_name
+  res[["options_flag"]] <- options_flag
+  res[["options_json"]] <- options_json
+  res[["is_visit"]] <- is_visit
+  res[["visit_info"]] <- visit_info
   return(res)
 }
 #' Replace Text Function
@@ -149,4 +241,14 @@ setFontStyle <- function() {
     fontColour = "#000000"
   )
   return(style)
+}
+GetNamesFromList <- function(target_list, target_col_name) {
+  res <- target_list %>% map_chr(~ .[[target_col_name]])
+  return(res)
+}
+GetListSetName <- function(input_list, target_name, target_col_name) {
+  target_list <- input_list[[target_name]]
+  targetNames <- GetNamesFromList(target_list, target_col_name)
+  res <- setNames(target_list, targetNames)
+  return(res)
 }

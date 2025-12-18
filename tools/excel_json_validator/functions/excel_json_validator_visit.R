@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.31
+#' @date 2025.12.17
 CheckJsonVisitForVisit <- function(visitJson) {
     res <- visitJson %>%
         map_df(~ {
@@ -19,26 +19,58 @@ CheckJsonVisitForVisit <- function(visitJson) {
     res$name <- as.character(res$name)
     return(res)
 }
-CheckVisit <- function(sheetList, jpNameAndAliasName, sheetName, jsonList) {
-    if (trialName == "TAS0728-HER2") {
-        print("TAS0728-HER2はVISITチェック処理をスキップします")
-        return(NULL)
+CheckJsonVisitForNonVisit <- function() {
+    visit_sheets <- target_json$sheets
+    sheetsIdx <- seq(length(visit_sheets), 1)
+    for (sheetIdx in sheetsIdx) {
+        aliasName <- visit_sheets[[sheetIdx]]$alias_name
+        field_items <- visit_sheets[[sheetIdx]]$field_items
+        if (is.null(field_items) || length(field_items) == 0) {
+            visit_sheets[[sheetIdx]] <- NULL
+            next
+        }
+        fieldItems_idx <- seq(length(field_items), 1)
+        for (fieldItemIdx in fieldItems_idx) {
+            if (visit_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$label != "Visit Number") {
+                visit_sheets[[sheetIdx]]$field_items[[fieldItemIdx]] <- NULL
+                next
+            }
+        }
+        if (is.null(visit_sheets[[sheetIdx]]$field_items) || length(visit_sheets[[sheetIdx]]$field_items) == 0) {
+            visit_sheets[[sheetIdx]] <- NULL
+            next
+        }
     }
-    if (trialName == "gpower") {
-        print("gpowerはVISITチェック処理をスキップします")
-        return(NULL)
-    }
-    if (trialName == "allr23") {
-        print("allr23はVISITチェック処理をスキップします")
-        return(NULL)
-    }
-    visitJson <- jsonList %>% keep(~ .[["category"]] == "visit")
+    visit_sheets <- visit_sheets %>% keep(~ !is.null(.x$field_items) && length(.x$field_items) > 0)
+    res <- visit_sheets %>%
+        map(~ {
+            jpName <- .x$name
+            aliasName <- .x$alias_name
+            field_items <- .x$field_items
+            res <- field_items %>%
+                map(~ {
+                    list(
+                        jpname = jpName,
+                        alias_name = aliasName,
+                        name = .x$name,
+                        default_value = .x$default_value
+                    )
+                }) %>%
+                bind_rows()
+            return(res)
+        }) %>%
+        bind_rows()
+    res <- res %>% data.frame()
+    return(res)
+}
+CheckVisit <- function(sheetList, sheetName) {
+    visitJson <- target_json[["sheets"]] %>% keep(~ .[["category"]] == "visit")
     if (length(visitJson) == 0) {
-        visit_fieldItems <- jsonList |> GetFieldItemsByJsonList()
-        json <- GetVisitFromJson(visit_fieldItems, jpNameAndAliasName)
+        json <- CheckJsonVisitForNonVisit()
         sheet <- sheetList[[sheetName]] |>
             rename(!!!engToJpnColumnMappings[[sheetName]])
-        sheet$default_value <- sheet$default_value %>% as.character()
+        json <- json %>% arrange(alias_name, name)
+        sheet <- sheet %>% arrange(alias_name, name)
     } else {
         json <- CheckJsonVisitForVisit(visitJson)
         sheet <- sheetList[[sheetName]] |>
@@ -46,16 +78,4 @@ CheckVisit <- function(sheetList, jpNameAndAliasName, sheetName, jsonList) {
         sheet$name <- sheet$name %>% as.character()
     }
     return(CheckTarget(sheet, json))
-}
-GetVisitFromJson <- function(fieldItems, jpNameAndAliasName) {
-    df <- map2(fieldItems, names(fieldItems), ~ {
-        fieldItem <- .x
-        aliasName <- .y
-        res <- fieldItem |> keep(~ .[["label"]] == "Visit Number")
-        visit <- res |> map_df(~ list(name = .[["name"]], default_value = .[["default_value"]]))
-        visit[["alias_name"]] <- aliasName
-        return(visit)
-    }) |> bind_rows()
-    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "default_value"), jpNameAndAliasName)
-    return(res)
 }

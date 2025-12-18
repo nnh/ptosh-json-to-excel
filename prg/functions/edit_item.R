@@ -1,3 +1,22 @@
+#' edit_item.R
+#'
+#' @file edit_item.R
+#' @author Mariko Ohtsuka
+#' @date 2025.12.11
+EditItemAndItemVisit <- function(field_items, sheet_name) {
+    visit_group <- visit_info %>% filter(alias_name == sheet_name)
+    if (visit_group %>% nrow() == 1) {
+        item <- NULL
+        item_visit <- EditItem(field_items, sheet_name)
+    } else {
+        item <- EditItem(field_items, sheet_name)
+        item_visit <- NULL
+    }
+    return(list(
+        item = item,
+        item_visit = item_visit
+    ))
+}
 EditItem <- function(field_items, alias_name) {
     target_field_items <- field_items %>% GetTargetByType("FieldItem::Article")
     target <- target_field_items %>% map_df(~ {
@@ -38,7 +57,7 @@ EditItem <- function(field_items, alias_name) {
         res <- tibble::tibble(
             name = .x[["name"]],
             label = .x[["label"]],
-            option.name = .x[["option"]][["name"]] %||% NA,
+            option.name = .x[["option_name"]] %||% NA,
             default_value = .x[["default_value"]] %||% NA,
             validators.presence.validate_presence_if = .x[["validators"]][["presence"]][["validate_presence_if"]] %||% NA,
             presence_if_references = presence_if_references %||% NA,

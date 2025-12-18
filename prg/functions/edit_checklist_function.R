@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2025.8.7
+#' @date 2025.12.11
 # ------ constants ------
 # ------ functions ------
 OutputChecklistSheet <- function(df_output, wb, sheet_name) {
@@ -57,16 +57,21 @@ JoinJpnameAndAliasNameAndSelectColumns <- function(df_name, json_file) {
   df <- SelectColumns(df, kEngColumnNames[[df_name]])
   return(df)
 }
-GetJsonFile <- function(json_file) {
-  json_file <- json_file[["rawJson"]]
-  return(json_file)
-}
 GetFieldItems <- function(json_file) {
   return(json_file[["field_items"]])
 }
-EditGroupVisit <- function(json_files) {
-  no_visit_json_files <- json_files %>%
-    keep(~ GetJsonFile(.)[["category"]] != kVisit)
+CheckExistenceOfVisitGroup <- function(sheet_alias_name, visit_groups) {
+  if (is.null(visit_groups)) {
+    return(FALSE)
+  }
+  return(sheet_alias_name %in% visit_groups[["alias_name"]])
+}
+
+EditGroupVisit <- function(sheets) {
+  visit_json_files <- sheets %>%
+    keep(~ CheckExistenceOfVisitGroup(.x[["alias_name"]], visit_groups))
+  no_visit_json_files <- sheets %>%
+    discard(~ CheckExistenceOfVisitGroup(.x[["alias_name"]], visit_groups))
   # グループ名ごとに最小の数値を持つ要素だけを残す
   visit_names <- names(visit_json_files)
   group_info <- tibble::tibble(
@@ -104,3 +109,5 @@ source(here("prg", "functions", "edit_checklist_convert_column_name.R"),
   encoding = "UTF-8"
 )
 source(here("prg", "functions", "set_items_sheet_settings.R"), encoding = "UTF-8")
+source(here("prg", "functions", "summarize_by_visit.R"), encoding = "UTF-8")
+source(here("prg", "functions", "replace_ref_text.R"), encoding = "UTF-8")

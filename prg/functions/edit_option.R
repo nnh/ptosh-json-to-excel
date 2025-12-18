@@ -1,3 +1,8 @@
+#' edit_option.R
+#'
+#' @file edit_option.R
+#' @author Mariko Ohtsuka
+#' @date 2025.11.6
 GetOptionsValues <- function(option) {
     option_name <- option[["name"]]
     option_values <- option[["values"]]
@@ -12,10 +17,10 @@ GetOptionsValues <- function(option) {
     return(df_option_values)
 }
 
-GetOptions <- function(field_items) {
+GetOptions <- function(field_items, sheet) {
     if (options_flag) {
         target <- field_items %>%
-            keep(~ !is.null(.x[["option_id"]]) && .x[["type"]] == "FieldItem::Article")
+            keep(~ !is.null(.x[["option_name"]]) && .x[["type"]] == "FieldItem::Article")
     } else {
         target <- field_items %>%
             keep(~ !is.null(.x[["option"]]) && .x[["type"]] == "FieldItem::Article")
@@ -24,27 +29,24 @@ GetOptions <- function(field_items) {
     if (length(target) == 0) {
         return(NULL)
     }
-    options <- target %>%
+    option <- target %>%
         map(~ {
             if (options_flag) {
-                option_id <- .x[["option_id"]]
-                option <- options_json %>%
-                    keep(~ .x[["id"]] == option_id)
+                option_name <- .x[["option_name"]]
+                option <- options_json[[option_name]]
             } else {
                 option <- .x[["option"]]
             }
             if (length(option) == 0) {
                 stop(paste("Option ID", option_id, "not found in options JSON."))
             }
-            if (options_flag) {
-                df_option_values <- option %>% map_df(~ GetOptionsValues(.))
-            } else {
-                df_option_values <- option %>% GetOptionsValues(.)
-            }
+            df_option_values <- option %>% GetOptionsValues(.)
             return(df_option_values)
         }) %>%
         bind_rows() %>%
         distinct() %>%
         filter(option.values_is_usable == TRUE)
-    return(options)
+    res <- JoinJpnameAndAliasNameAndSelectColumns("option", sheet)
+
+    return(res)
 }

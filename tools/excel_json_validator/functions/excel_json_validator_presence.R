@@ -2,113 +2,85 @@
 #'
 #' @file excel_json_validator_presence.R
 #' @author Mariko Ohtsuka
-#' @date 2025.8.12
-CheckPresence <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
+#' @date 2025.12.17
+CheckPresence <- function(sheetList, target_json, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetPresenceFromJson(fieldItems, jpNameAndAliasName)
+    json <- GetPresenceFromJson(target_json)
     sheet <- sheet %>% arrange(alias_name, name)
     json <- json %>% arrange(alias_name, name)
     return(CheckTarget(sheet, json))
 }
-
-GetPresenceFromJson <- function(fieldItems, jpNameAndAliasName) {
-    jpnameAndAliasnameAndSheetId <- jsonList %>% map_df(~ list(sheet_id = .x[["id"]], jpname = .x[["name"]], alias_name = .x[["alias_name"]]))
-    articles <- fieldItems %>%
-        map(~ keep(.x, ~ .x[["type"]] == "FieldItem::Article"))
-    no_validators_presence <- articles %>%
-        list_c() %>%
-        keep(~ is.null(.x[["validators"]][["presence"]]))
-    df_no_validators_presence <- no_validators_presence %>%
-        map_df(~ {
-            sheet_id <- .x[["sheet_id"]]
-            name <- .x[["name"]]
-            label <- .x[["label"]]
-            return(data.frame(sheet_id = sheet_id, name = name, label = label))
-        })
-    if (nrow(df_no_validators_presence) == 0) {
-        df_no_validators_presence_jpname_aliasname <- data.frame(
-            sheet_id = character(),
-            name = character(),
-            label = character(),
-            jpname = character(),
-            alias_name = character(),
-            stringsAsFactors = FALSE
-        )
-    } else {
-        df_no_validators_presence_jpname_aliasname <- df_no_validators_presence %>%
-            inner_join(jpnameAndAliasnameAndSheetId, by = c("sheet_id" = "sheet_id")) %>%
-            arrange(alias_name, sheet_id)
-    }
-    cdiscSheetConfigs <- jsonList %>%
-        map(~ .x[["cdisc_sheet_configs"]])
-    excludeTargetsStat <- cdiscSheetConfigs %>%
-        list_c() %>%
-        map_df(~ {
-            prefix <- .x[["prefix"]]
-            sheet_id <- .x[["sheet_id"]]
-            table <- .x[["table"]]
-            fields <- NULL
-            for (i in seq_along(table)) {
-                if (is.null(table[[i]])) {
-                    next
-                }
-                if (table[[i]] != "STAT") {
-                    next
-                }
-                fields <- list(name = names(table)[[i]], value = table[[i]])
+GetPresenceFromJson <- function(target_json) {
+    presence_sheets <- target_json$sheets
+    sheetsIdx <- seq(length(presence_sheets), 1)
+    for (sheetIdx in sheetsIdx) {
+        aliasName <- presence_sheets[[sheetIdx]]$alias_name
+        field_items <- presence_sheets[[sheetIdx]]$field_items
+        if (is.null(field_items) || length(field_items) == 0) {
+            presence_sheets[[sheetIdx]] <- NULL
+            next
+        }
+        fieldItems_idx <- seq(length(field_items), 1)
+        for (fieldItemIdx in fieldItems_idx) {
+            if (presence_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$type != "FieldItem::Article") {
+                presence_sheets[[sheetIdx]]$field_items[[fieldItemIdx]] <- NULL
+                next
             }
-            res <- fields %>% map_df(~.x)
-            res[["prefix"]] <- prefix
-            res[["sheet_id"]] <- sheet_id
-            return(res)
-        })
-
-    excludeTargetsIe <- cdiscSheetConfigs %>%
-        map(~ keep(.x, ~ .x[["prefix"]] == "IE")) %>%
-        keep(~ length(.x) > 0) %>%
-        list_c()
-    excludeTargetsIeorres <- excludeTargetsIe %>%
-        map_df(~ {
-            prefix <- .x[["prefix"]]
-            sheet_id <- .x[["sheet_id"]]
-            table <- .x[["table"]]
-            fields <- NULL
-            for (i in seq_along(table)) {
-                if (is.null(table[[i]])) {
-                    next
-                }
-                if (table[[i]] != "ORRES") {
-                    next
-                }
-                fields <- list(name = names(table)[[i]], value = table[[i]])
+            if (!is.null(presence_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$validators$presence)) {
+                presence_sheets[[sheetIdx]]$field_items[[fieldItemIdx]] <- NULL
+                next
             }
-            res <- fields %>% map_df(~.x)
-            res[["prefix"]] <- prefix
-            res[["sheet_id"]] <- sheet_id
-            return(res)
-        })
-    excludeTargets <- excludeTargetsIeorres %>%
-        bind_rows(excludeTargetsStat) %>%
-        inner_join(jpnameAndAliasnameAndSheetId, by = c("sheet_id" = "sheet_id")) %>%
-        arrange(alias_name, sheet_id)
-    if (nrow(df_no_validators_presence_jpname_aliasname) == 0) {
-        presenceExcludeTargets <- NULL
-    } else {
-        presenceExcludeTargets <- df_no_validators_presence_jpname_aliasname %>%
-            anti_join(excludeTargets, by = c("sheet_id" = "sheet_id", "name" = "name")) %>%
-            select(c("jpname", "alias_name", "name", "label"))
+        }
+        field_items <- presence_sheets[[sheetIdx]]$field_items
+        if (is.null(field_items) || length(field_items) == 0) {
+            presence_sheets[[sheetIdx]] <- NULL
+            next
+        }
+        # 除外対象となるcdisc_sheet_configのフィールドを抽出する
+        exclude_fields <- presence_sheets[[sheetIdx]]$cdisc_sheet_configs %>%
+            map(~ {
+                prefix <- .x$prefix
+
+                stat_fields <- .x$table %>%
+                  keep(~ identical(.x, "STAT")) %>%
+                    names()
+
+                orres_fields <- .x$table %>%
+                  keep(~ identical(.x, "ORRES") && identical(prefix, "IE")) %>%
+                  names()
+                
+
+                c(stat_fields, orres_fields)
+            }) %>%
+            unlist()
+
+        if (length(exclude_fields) == 0) {
+            next
+        }
+        fieldItems_idx <- seq(length(field_items), 1)
+        for (fieldItemIdx in fieldItems_idx) {
+            field_id <- presence_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$name
+            if (field_id %in% exclude_fields) {
+                presence_sheets[[sheetIdx]]$field_items[[fieldItemIdx]] <- NULL
+            }
+        }
     }
-    if (is.null(presenceExcludeTargets) || nrow(presenceExcludeTargets) == 0) {
-        res <- data.frame(
-            jpname = "",
-            alias_name = "",
-            name = "",
-            label = "",
-            stringsAsFactors = FALSE
-        )
-    } else {
-        res <- presenceExcludeTargets
+    target_presences <- presence_sheets %>%
+        keep(~ length(.x$field_items) > 0)
+
+    presences <- tibble()
+    for (i in seq_along(target_presences)) {
+        aliasName <- target_presences[[i]]$alias_name
+        res <- target_presences[[i]]$field_items %>%
+            map(~ tibble(
+                alias_name = aliasName,
+                name = .x$name,
+                label = .x$label
+            )) %>%
+            bind_rows()
+        presences <- bind_rows(presences, res)
     }
-    return(res)
+    df2 <- JoinVisitGroupsValidator(presences, key = "alias_name", target = "group") %>% distinct()
+    res <- GetItemsSelectColnames(df2, c("jpname", "alias_name", "name", "label"), jpNameAndGroup)
 }

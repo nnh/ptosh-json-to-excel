@@ -2,14 +2,14 @@
 #'
 #' @file excel_json_validator_display.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.17
-CheckDisplay <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
+#' @date 2025.12.15
+CheckDisplay <- function(sheetList, fieldItems, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetDisplayFromJson(fieldItems, jpNameAndAliasName)
+    json <- GetDisplayFromJson(fieldItems)
     return(CheckTarget(sheet, json))
 }
-GetDisplayFromJson <- function(fieldItems, jpNameAndAliasName) {
+GetDisplayFromJson <- function(fieldItems) {
     df <- map2(fieldItems, names(fieldItems), ~ {
         fieldItem <- .x
         aliasName <- .y

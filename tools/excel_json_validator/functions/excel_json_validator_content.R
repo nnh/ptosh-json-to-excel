@@ -2,18 +2,18 @@
 #'
 #' @file excel_json_validator_content.R
 #' @author Mariko Ohtsuka
-#' @date 2025.8.12
-CheckContent <- function(sheetList, fieldItems, jpNameAndAliasName, sheetName) {
+#' @date 2025.12.15
+CheckContent <- function(sheetList, fieldItems, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetContentFromJson(fieldItems, jpNameAndAliasName)
+    json <- GetContentFromJson(fieldItems)
     sheet <- sheet %>% arrange(alias_name, name)
     json <- json %>% arrange(alias_name, name)
     sheet$content <- sheet$content %>% CleanTextForComment()
     json$content <- json$content %>% CleanTextForComment()
     return(CheckTarget(sheet, json))
 }
-GetContentFromJson <- function(fieldItems, jpNameAndAliasName) {
+GetContentFromJson <- function(fieldItems) {
     df <- map2(fieldItems, names(fieldItems), ~ {
         fieldItem <- .x
         aliasName <- .y
@@ -25,6 +25,7 @@ GetContentFromJson <- function(fieldItems, jpNameAndAliasName) {
         content[["alias_name"]] <- aliasName
         return(content)
     }) |> bind_rows()
-    res <- GetItemsSelectColnames(df, c("jpname", "alias_name", "name", "label", "content"), jpNameAndAliasName)
+    df2 <- JoinVisitGroupsValidator(df, key = "alias_name", target = "group") %>% distinct()
+    res <- GetItemsSelectColnames(df2, c("jpname", "alias_name", "name", "label", "content"), jpNameAndGroup)
     return(res)
 }

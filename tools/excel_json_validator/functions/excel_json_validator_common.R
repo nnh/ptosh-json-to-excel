@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.8.12
+#' @date 2025.12.17
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -46,8 +46,8 @@ GetTargetFolder <- function(trialName) {
 GetJsonAndSheet <- function(trialName) {
   targetFolder <- GetTargetFolder(trialName)
   sheetList <- targetFolder |> ReadChecklist(trialName)
-  jsonList <- here(str_c("forTest_input_", trialName)) |> LoadJsonList()
-  return(list(sheetList = sheetList, jsonList = jsonList))
+  json <- here(str_c("forTest_input_", trialName)) |> LoadJsonList()
+  return(list(sheetList = sheetList, json = json))
 }
 ReadChecklist <- function(inputFolder, trialName) {
   checklistFile <- here("output", inputFolder, "list") |>
@@ -71,20 +71,31 @@ GetAliasnameAndFieldIdAndLabel <- function(fieldItems) {
   }) |> bind_rows()
   return(res)
 }
-GetNameAndAliasNameByJson <- function(json_list) {
-  res <- json_list |> map_df(~ list(jpname = .[["name"]], alias_name = .[["alias_name"]]))
+GetNameAndAliasNameByJson <- function(json) {
+  res <- json$sheets |> map_df(~ list(jpname = .[["name"]], alias_name = .[["alias_name"]]))
   return(res)
 }
+GetNameAndGroupByJson <- function() {
+  jpNameAndGroup <- left_join(jpNameAndAliasName, visitGroups, by = "alias_name")
+  for (row in 1:nrow(jpNameAndGroup)) {
+    if (!is.na(jpNameAndGroup[row, "group"])) {
+      jpNameAndGroup[row, "alias_name"] <- jpNameAndGroup[row, "group"]
+      jpNameAndGroup[row, "jpname"] <- jpNameAndGroup[row, "name"]
+    }
+  }
+  jpNameAndGroup <- jpNameAndGroup %>% select(c("jpname", "alias_name"))
+  jpNameAndGroup <- jpNameAndGroup %>% distinct()
+  return(jpNameAndGroup)
+}
+
 LoadJsonList <- function(input_path) {
   target_Path <- input_path |> list.files(pattern = "*.json", full.names = T)
-  jsonList <- target_Path |> map(~ read_json(.))
-  names(jsonList) <- target_Path |>
-    basename() |>
-    str_remove(".json")
+  jsonList <- target_Path |> read_json()
   return(jsonList)
 }
-GetFieldItemsByJsonList <- function(json_list) {
-  res <- json_list |> map(~ .[["field_items"]])
+GetFieldItemsByJsonList <- function(json) {
+  res <- json[["sheets"]] |> map(~ .[["field_items"]])
+  names(res) <- json[["sheets"]] |> map_chr(~ .[["alias_name"]])
   return(res)
 }
 GetItemsSelectColnames <- function(input_tibble, target_colnames, jpNameAndAliasName) {
@@ -206,41 +217,48 @@ ExcelJsonValidator_item <- function(jsonSheetItemList, old_flag) {
   res <- CheckTarget(df_item_sheet, df_item_json)
   return(res)
 }
-GetIsVisit <- function(jsonList) {
-  isVisit_json <<- jsonList %>% keep(~ .x[["category"]] == "visit")
-  isVisit <<- length(isVisit_json) > 0
-  if (isVisit) {
-    visit_json_names <- isVisit_json %>% names()
-    group <- visit_json_names %>% str_remove("_[0-9]+$")
-    visitnum <- visit_json_names %>%
-      str_extract(("[0-9]+$")) %>%
-      as.numeric()
-    targets <- tibble(
-      group = group,
-      visitnum = visitnum,
-      visit_json_names = visit_json_names
-    ) %>%
-      group_by(group) %>%
-      filter(visitnum == min(visitnum)) %>%
-      ungroup()
-    visit_jsonList <- jsonList[names(jsonList) %in% targets$visit_json_names]
-    not_visit_jsonList <- jsonList %>% keep(~ .x[["category"]] != "visit")
-    visit_not_visit_jsonList <- c(visit_jsonList, not_visit_jsonList)
-    visit_fieldItems <- visit_jsonList |> GetFieldItemsByJsonList()
-    visit_not_visit_fieldItems <- visit_not_visit_jsonList |> GetFieldItemsByJsonList()
+
+GetVisitGroupsValidator <- function(target_json, sheetOrders, visit) {
+  if (length(target_json[["visit_groups"]]) == 0) {
+    temp <- target_json$sheets %>%
+      map(~ {
+        res <- tibble(
+          name = .x[["name"]],
+          alias_name = .x[["alias_name"]],
+          visit_num = NA,
+          group = NA
+        )
+        return(res)
+      }) %>%
+      bind_rows()
   } else {
-    visit_not_visit_jsonList <- jsonList
-    visit_not_visit_fieldItems <- NULL
+    temp <- target_json[["visit_groups"]] %>%
+      map(~ {
+        name <- .x[["name"]]
+        aliasName <- .x[["alias_name"]]
+        res <- .x[["visit_sheets"]] %>% map(~ {
+          res <- tibble(
+            name = name,
+            alias_name = .x[["sheet_alias_name"]],
+            visit_num = .x[["visit_num"]] %>% as.numeric(),
+            group = aliasName
+          )
+        })
+      }) %>%
+      bind_rows()
   }
-  return(list(
-    visit_not_visit_jsonList = visit_not_visit_jsonList,
-    visit_not_visit_fieldItems = visit_not_visit_fieldItems
-  ))
+  visitGroups <<- temp %>%
+    left_join(sheetOrders, by = c("alias_name" = "sheet")) %>%
+    left_join(visit, by = "visit_num") %>%
+    arrange(visit_num, seq) %>%
+    select(-seq)
+  # 整合性チェック
+  dummy <- CheckVisitGroupValidator(target_json)
+  return(visitGroups)
 }
 # item
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_common.R"), encoding = "UTF-8")
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item.R"), encoding = "UTF-8")
-source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_visit_old.R"), encoding = "UTF-8")
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_visit.R"), encoding = "UTF-8")
 # allocation
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_allocation.R"), encoding = "UTF-8")
@@ -270,4 +288,8 @@ source(here("tools", "excel_json_validator", "functions", "excel_json_validator_
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_limitation.R"), encoding = "UTF-8")
 # limitation
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_date.R"), encoding = "UTF-8")
+# visit_groups
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_visit_groups.R"), encoding = "UTF-8")
+# references
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_get_ref.R"), encoding = "UTF-8")
 # ------ main ------

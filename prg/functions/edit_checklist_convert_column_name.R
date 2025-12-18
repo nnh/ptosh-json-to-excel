@@ -3,7 +3,7 @@
 #'
 #' @file edit_checklist_convert_column_name.R
 #' @author Mariko Ohtsuka
-#' @date 2025.7.31
+#' @date 2025.12.8
 renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     stopifnot(is.data.frame(df))
     stopifnot(is.character(nameMap), !is.null(names(nameMap)))
@@ -74,8 +74,6 @@ GetEngToJpnColumnMappings <- function() {
         action = c(
             jpname = "シート名",
             alias_name = kAliasNameJapaneseColumnName,
-            id = "-",
-            field_item_id = "--",
             field_item_id.name = "開閉のトリガーになるフィールドID",
             field_item_id.label = "開閉のトリガーになるラベル",
             codes = "開閉のトリガーになるコード",
@@ -144,10 +142,10 @@ GetEngToJpnColumnMappings <- function() {
             name = "フィールドID",
             label = "ラベル",
             default_value = "デフォルト値",
-            validators.numericality.validate_numericality_less_than_or_equal_to = "バリデータ.数値.最大値",
-            validators.numericality.validate_numericality_greater_than_or_equal_to = "バリデータ.数値.最小値",
             normal_range.less_than_or_equal_to = "アラート条件.超える場合",
-            normal_range.greater_than_or_equal_to = "アラート条件.未満の場合"
+            normal_range.greater_than_or_equal_to = "アラート条件.未満の場合",
+            validators.numericality.validate_numericality_less_than_or_equal_to = "バリデータ.数値.最大値",
+            validators.numericality.validate_numericality_greater_than_or_equal_to = "バリデータ.数値.最小値"
         ),
         date = c(
             jpname = "シート名",

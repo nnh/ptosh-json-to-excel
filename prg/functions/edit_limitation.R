@@ -1,3 +1,8 @@
+#' edit_limitation.R
+#'
+#' @file edit_limitation.R
+#' @author Mariko Ohtsuka
+#' @date 2025.11.6
 GetLimitation <- function(field_items) {
     target <- field_items %>% keep(
         ~ (
@@ -22,8 +27,9 @@ GetLimitation <- function(field_items) {
     }
     return(target)
 }
-EditLimitation <- function(field_items) {
-    target <- field_items %>% map_df(~ {
+EditLimitation <- function(input_field_items, sheet) {
+    field_items <- input_field_items %>% GetLimitation()
+    limitation <- field_items %>% map_df(~ {
         res <- tibble::tibble(
             name = .x[["name"]],
             label = .x[["label"]],
@@ -35,4 +41,6 @@ EditLimitation <- function(field_items) {
         )
         return(res)
     })
+    res <- JoinJpnameAndAliasNameAndSelectColumns("limitation", sheet)
+    return(res)
 }
