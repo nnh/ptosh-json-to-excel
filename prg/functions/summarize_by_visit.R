@@ -2,11 +2,11 @@
 #'
 #' @file summarize_by_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.11
+#' @date 2025.12.19
 #
 SummarizeByVisit <- function(sheet_data_combine) {
     res <- sheet_data_combine
-    summarize_target_sheet_names <- c(kItemVisit_old, "action", "option", "comment", "explanation", "presence", "title", "assigned", "limitation", "date")
+    summarize_target_sheet_names <- c("option", "assigned", "limitation", "date")
     for (sheet_name in summarize_target_sheet_names) {
         if (nrow(res[[sheet_name]]) == 0) {
             next

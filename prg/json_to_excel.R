@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.12
+#' @date 2025.12.19
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -50,7 +50,7 @@ kItemVisit <- "item_visit"
 kItemVisit_old <- "item_visit_old"
 kVisit <- "visit"
 kVisits <- "visits"
-kTargetSheetNames <- c(kItemVisit, kItemVisit_old, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
+kTargetSheetNames <- c(kItemVisit, kItemVisit_old, "item", "allocation", "option", "master", "visit", "assigned", "limitation", "date")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 for (name in names(temp)) {
@@ -68,7 +68,6 @@ sheet_data_list_group <- sheets %>% map(~ {
   item <- temp$item
   item_visit_old <- temp$item_visit
   allocation <- sheet %>% GetAllocation()
-  display <- field_items %>% GetDisplay(sheet)
   master <- field_items %>% GetComment("link_type", sheet)
   if (!is_visit) {
     visit <- field_items %>% GetVisit(sheet)
@@ -76,12 +75,7 @@ sheet_data_list_group <- sheets %>% map(~ {
     visit <- NULL
   }
   name <- tibble(name = sheet[["name"]], alias_name = sheet[["alias_name"]], images_count = sheet[["images_count"]])
-  action <- field_items %>% GetAction(sheet_name, sheet)
   option <- field_items %>% GetOptions(sheet)
-  comment <- field_items %>% GetComment("content", sheet)
-  explanation <- field_items %>% GetComment("description", sheet)
-  presence <- field_items %>% GetPresence(sheet)
-  title <- field_items %>% EditTitle(sheet)
   assigned <- field_items %>% EditAssigned(sheet)
   limitation <- field_items %>% EditLimitation(sheet)
   date <- field_items %>% EditDate(sheet)
@@ -91,16 +85,10 @@ sheet_data_list_group <- sheets %>% map(~ {
     name = name,
     item = item,
     allocation = allocation,
-    display = display,
     master = master,
     visit = visit,
     item_visit_old = item_visit_old,
-    action = action,
     option = option,
-    comment = comment,
-    explanation = explanation,
-    presence = presence,
-    title = title,
     assigned = assigned,
     limitation = limitation,
     date = date
@@ -118,6 +106,8 @@ if (is_visit) {
 output_checklist <- convertSheetColumnsToJapanese(summary_sheet_data)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
 output_checklist[[kItemVisit]] <- EditItemVisit(output_checklist[[kItemVisit_old]])
+# remove item_visit_old sheet
+output_checklist[[kItemVisit_old]] <- NULL
 
 # create output folder.
 output_folder_name <- Sys.time() %>%

@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.17
+#' @date 2025.12.19
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -256,32 +256,38 @@ GetVisitGroupsValidator <- function(target_json, sheetOrders, visit) {
   dummy <- CheckVisitGroupValidator(target_json)
   return(visitGroups)
 }
+CheckSheetNotExists <- function(sheetList, sheetName) {
+  if (!is.null(sheetList[[sheetName]])) {
+    stop(str_c("Error: sheetList[[", sheetName, "]] exists."), call. = FALSE)
+  }
+  invisible(TRUE)
+}
+JoinVisitGroupsValidator <- function(df, key = "alias_name", target = "group") {
+  joinVisitGroups <- left_join(df, visitGroups[, c(key, target)], by = key)
+  for (row in 1:nrow(joinVisitGroups)) {
+    if (!is.na(joinVisitGroups[row, target])) {
+      joinVisitGroups[row, key] <- joinVisitGroups[row, target]
+    }
+  }
+  distinctJoinVisitGroups <- joinVisitGroups %>% distinct()
+  res <- distinctJoinVisitGroups %>% select(-all_of(target))
+  return(res)
+}
+
 # item
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_common.R"), encoding = "UTF-8")
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item.R"), encoding = "UTF-8")
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_item_visit.R"), encoding = "UTF-8")
 # allocation
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_allocation.R"), encoding = "UTF-8")
-# action
-source(here("tools", "excel_json_validator", "functions", "excel_json_validator_action.R"), encoding = "UTF-8")
-# display
-source(here("tools", "excel_json_validator", "functions", "excel_json_validator_display.R"), encoding = "UTF-8")
 # name
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_name.R"), encoding = "UTF-8")
 # options
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_options.R"), encoding = "UTF-8")
-# content
-source(here("tools", "excel_json_validator", "functions", "excel_json_validator_content.R"), encoding = "UTF-8")
-# explanation
-source(here("tools", "excel_json_validator", "functions", "excel_json_validator_explanation.R"), encoding = "UTF-8")
-# presence
-source(here("tools", "excel_json_validator", "functions", "excel_json_validator_presence.R"), encoding = "UTF-8")
 # master
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_master.R"), encoding = "UTF-8")
 # visit
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_visit.R"), encoding = "UTF-8")
-# title
-source(here("tools", "excel_json_validator", "functions", "excel_json_validator_title.R"), encoding = "UTF-8")
 # assigned
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_assign.R"), encoding = "UTF-8")
 # limitation
