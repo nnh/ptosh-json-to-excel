@@ -8,14 +8,13 @@ CheckJsonVisitForVisit <- function(visitJson) {
         map_df(~ {
             visit <- .x
             res <- data.frame(
-                jpname = visit[["name"]],
-                alias_name = visit[["alias_name"]],
                 name = visit[["alias_name"]] %>% str_split("_") %>% map_chr(~ tail(.x, 1)) %>% as.numeric(),
                 default_value = visit[["name"]] %>% str_remove("\\)$") %>% str_split("\\(") %>% map_chr(~ tail(.x, 1))
             )
             return(res)
         }) %>%
-        arrange(name)
+        arrange(name) %>%
+        distinct()
     res$name <- as.character(res$name)
     return(res)
 }

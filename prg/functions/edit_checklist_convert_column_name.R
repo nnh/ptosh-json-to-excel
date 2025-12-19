@@ -59,8 +59,6 @@ GetEngToJpnColumnMappings <- function() {
             default_value = "デフォルト値"
         ),
         visit_to_visit = c(
-            jpname = "シート名",
-            alias_name = kAliasNameJapaneseColumnName,
             name = "VISITNUM",
             default_value = "VISIT"
         ),
