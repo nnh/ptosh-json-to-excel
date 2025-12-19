@@ -50,7 +50,8 @@ kItemVisit <- "item_visit"
 kItemVisit_old <- "item_visit_old"
 kVisit <- "visit"
 kVisits <- "visits"
-kTargetSheetNames <- c(kItemVisit, kItemVisit_old, "item_nonvisit", "allocation", "option", "master", "visit", "assigned", "limitation", "date")
+kTargetSheetNames <- c(kItemVisit, kItemVisit_old, "item_nonvisit", "visit", "allocation", "limitation", "date", "option", "master", "assigned")
+kSortOrderSheetNames <- c(kItemVisit, "item_nonvisit", "visit", "allocation", "limitation", "date", "option", "name", "master", "assigned")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 for (name in names(temp)) {
@@ -108,6 +109,8 @@ output_checklist <- convertSheetColumnsToJapanese(summary_sheet_data)
 output_checklist[[kItemVisit]] <- EditItemVisit(output_checklist[[kItemVisit_old]])
 # remove item_visit_old sheet
 output_checklist[[kItemVisit_old]] <- NULL
+# シート出力順の変更
+sort_output_checklist <- output_checklist[kSortOrderSheetNames]
 
 # create output folder.
 output_folder_name <- Sys.time() %>%
@@ -119,5 +122,5 @@ output_file_ymd <- Sys.time() %>%
 kOutputChecklistName <- str_c(trialName, " eCRF Spec ", output_file_ymd, ".xlsx")
 output_checklist_path <- CreateOutputFolder("list", output_folder_path)
 cat(str_c("フォルダ", output_checklist_path, "を作成しました\n"))
-OutputChecklistXlsx(output_checklist, output_checklist_path)
+OutputChecklistXlsx(sort_output_checklist, output_checklist_path)
 cat("処理が終了しました。")
