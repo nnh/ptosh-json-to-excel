@@ -45,7 +45,7 @@ ExecExcelJsonValidator <- function(trialName) {
   # ########
   # # item #
   # ########
-  sheetName <- "item"
+  sheetName <- "item_nonvisit"
   checkChecklist[[sheetName]] <- sheetList |> CheckItemNonVisit(sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   # ##################

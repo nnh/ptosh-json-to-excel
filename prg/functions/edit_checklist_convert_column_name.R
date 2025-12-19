@@ -42,7 +42,7 @@ GetEngToJpnColumnMappings <- function() {
         item_visit_old = c(itemColumnName,
             numericality_normal_range_check = "数値チェック・アラート条件の有無"
         ),
-        item = c(itemColumnName, field_type = "フィールドタイプ"),
+        item_nonvisit = c(itemColumnName, field_type = "フィールドタイプ"),
         option = c(
             jpname = "シート名",
             alias_name = kAliasNameJapaneseColumnName,

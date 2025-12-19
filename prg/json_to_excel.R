@@ -50,7 +50,7 @@ kItemVisit <- "item_visit"
 kItemVisit_old <- "item_visit_old"
 kVisit <- "visit"
 kVisits <- "visits"
-kTargetSheetNames <- c(kItemVisit, kItemVisit_old, "item", "allocation", "option", "master", "visit", "assigned", "limitation", "date")
+kTargetSheetNames <- c(kItemVisit, kItemVisit_old, "item_nonvisit", "allocation", "option", "master", "visit", "assigned", "limitation", "date")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 for (name in names(temp)) {
@@ -65,7 +65,7 @@ sheet_data_list_group <- sheets %>% map(~ {
   sheet_name <- sheet[["alias_name"]]
   field_items <- sheet %>% GetFieldItems()
   temp <- EditItemAndItemVisit(field_items, sheet_name)
-  item <- temp$item
+  item_nonvisit <- temp$item
   item_visit_old <- temp$item_visit
   allocation <- sheet %>% GetAllocation()
   master <- field_items %>% GetComment("link_type", sheet)
@@ -79,11 +79,11 @@ sheet_data_list_group <- sheets %>% map(~ {
   assigned <- field_items %>% EditAssigned(sheet)
   limitation <- field_items %>% EditLimitation(sheet)
   date <- field_items %>% EditDate(sheet)
-  item <- JoinJpnameAndAliasNameAndSelectColumns("item", sheet)
+  item_nonvisit <- JoinJpnameAndAliasNameAndSelectColumns("item_nonvisit", sheet)
   item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns("item_visit_old", sheet)
   return(list(
     name = name,
-    item = item,
+    item_nonvisit = item_nonvisit,
     allocation = allocation,
     master = master,
     visit = visit,
