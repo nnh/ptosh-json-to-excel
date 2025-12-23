@@ -3,7 +3,7 @@
 #'
 #' @file edit_checklist_convert_column_name.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.19
+#' @date 2025.12.23
 renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     stopifnot(is.data.frame(df))
     stopifnot(is.character(nameMap), !is.null(names(nameMap)))
@@ -50,7 +50,9 @@ GetEngToJpnColumnMappings <- function() {
             option.values_name = "ラベル",
             option.values_seq = "-",
             option.values_code = "コード",
-            option.values_is_usable = "表示"
+            option.values_is_usable = "表示",
+            sheet.seq = "sheet.seq",
+            field_item.seq = "field_item.seq"
         ),
         visit = c(
             jpname = "シート名",

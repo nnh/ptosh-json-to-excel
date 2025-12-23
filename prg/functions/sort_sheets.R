@@ -2,7 +2,7 @@
 #'
 #' @file sort_sheets.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.19
+#' @date 2025.12.23
 SortSheetAndField <- function(df, sheet_sort_info, field_sort_info) {
     df %>%
         left_join(
@@ -38,8 +38,12 @@ SortSheetsMain <- function(output_checklist) {
     target <- "date"
     temp[[target]] <- output_checklist[[target]] %>% SortSheetAndField(., sheet_sort_info, field_sort_info)
     # option
-    # field_itemsを再取得してソート、複数あれば最も小さいseqを採用
-
+    target <- "option"
+    temp[[target]] <- output_checklist[[target]] %>%
+        arrange(sheet.seq, field_item.seq) %>%
+        select(-sheet.seq, -field_item.seq) %>%
+        distinct()
+    # visit
     # name
     sort_name <- output_checklist[["name"]] %>%
         left_join(
