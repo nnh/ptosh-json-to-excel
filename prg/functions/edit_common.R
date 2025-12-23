@@ -2,7 +2,7 @@
 #'
 #' @file edit_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.11
+#' @date 2025.12.19
 GetTargetByType <- function(field_items, type) {
     target <- field_items %>%
         keep(~ {
@@ -29,7 +29,8 @@ GetFieldList <- function(sheets) {
                     res <- tibble::tibble(
                         name = .x[["name"]],
                         field_number = .x[["name"]] %>% str_extract("\\d+") %>% as.numeric(),
-                        label = .x[["label"]]
+                        label = .x[["label"]],
+                        field_seq = .x[["seq"]]
                     )
                     return(res)
                 }) %>%

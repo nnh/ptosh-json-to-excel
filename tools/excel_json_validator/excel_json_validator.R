@@ -12,6 +12,7 @@ source(here("tools", "excel_json_validator", "functions", "excel_json_validator_
 # ------ constants ------
 keep_objects <- c("keep_objects", "target_json", "sheetList", "trialName", "kTrialNames", "kAliasNameJapaneseColumnName")
 kTrialNames <- c("Bev-FOLFOX-SBC", "AML224-FLT3-ITD", "ALL-B19")
+kTrialNames <- c("ALL-B19")
 # ------ functions ------
 ExecExcelJsonValidator <- function(trialName) {
   if (exists("keep_objects")) {
@@ -23,7 +24,29 @@ ExecExcelJsonValidator <- function(trialName) {
   kOptions <- "options"
   sheetOrders <<- target_json[["sheet_orders"]] %>%
     map(~ tibble(sheet = .x[["sheet"]], seq = .x[["seq"]])) %>%
-    bind_rows()
+    bind_rows() %>%
+    arrange(seq)
+  fieldOrders <- target_json[["sheets"]] %>%
+    map(~ {
+      aliasName <- .x[["alias_name"]]
+      field_items <- .x[["field_items"]]
+      if (is.null(field_items) || length(field_items) == 0) {
+        return(tibble())
+      }
+      res <- field_items %>%
+        map(~ tibble(name = .x[["name"]], label = .x[["label"]], seq = .x[["seq"]])) %>%
+        bind_rows() %>%
+        mutate(alias_name = aliasName) %>%
+        select(alias_name, name, label, seq)
+      return(res)
+    }) %>%
+    bind_rows() %>%
+    arrange(alias_name, seq)
+  colnames(fieldOrders) <- c("alias_name", "field_id", "field_label", "field_seq")
+  fieldOrders <<- fieldOrders
+  sheetAndFieldOrders <<- fieldOrders %>%
+    left_join(sheetOrders, by = c("alias_name" = "sheet")) %>%
+    arrange(seq, field_seq)
   if (length(target_json[["visits"]]) > 0) {
     visit <<- target_json[["visits"]] %>%
       map(~ tibble(visit_num = .x[["num"]] %>% as.numeric(), visit_name = .x[["name"]])) %>%

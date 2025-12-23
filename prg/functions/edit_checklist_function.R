@@ -107,3 +107,4 @@ source(here("prg", "functions", "edit_checklist_convert_column_name.R"),
 source(here("prg", "functions", "set_items_sheet_settings.R"), encoding = "UTF-8")
 source(here("prg", "functions", "summarize_by_visit.R"), encoding = "UTF-8")
 source(here("prg", "functions", "replace_ref_text.R"), encoding = "UTF-8")
+source(here("prg", "functions", "sort_sheets.R"), encoding = "UTF-8")

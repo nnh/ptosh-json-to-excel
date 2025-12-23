@@ -109,8 +109,8 @@ output_checklist <- convertSheetColumnsToJapanese(summary_sheet_data)
 output_checklist[[kItemVisit]] <- EditItemVisit(output_checklist[[kItemVisit_old]])
 # remove item_visit_old sheet
 output_checklist[[kItemVisit_old]] <- NULL
-# シート出力順の変更
-sort_output_checklist <- output_checklist[kSortOrderSheetNames]
+# シート出力順、各シートの行順の変更
+sort_output_checklist <- SortSheetsMain(output_checklist)
 
 # create output folder.
 output_folder_name <- Sys.time() %>%
