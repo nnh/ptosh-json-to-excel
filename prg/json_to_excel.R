@@ -75,7 +75,7 @@ sheet_data_list_group <- sheets %>% map(~ {
   } else {
     visit <- NULL
   }
-  name <- tibble(name = sheet[["name"]], alias_name = sheet[["alias_name"]], images_count = sheet[["images_count"]])
+  name <- tibble(name = sheet[["name"]], alias_name = sheet_name, images_count = sheet[["images_count"]])
   option <- field_items %>% GetOptions(sheet)
   assigned <- field_items %>% EditAssigned(sheet)
   limitation <- field_items %>% EditLimitation(sheet)

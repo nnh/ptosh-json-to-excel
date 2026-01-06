@@ -30,7 +30,9 @@ GetEngToJpnColumnMappings <- function() {
         validators.date.validate_date_after_or_equal_to = "バリデータ.日付.最小値",
         references_after = "最小値の参照先情報",
         validators.date.validate_date_before_or_equal_to = "バリデータ.日付.最大値",
-        references_before = "最大値の参照先情報"
+        references_before = "最大値の参照先情報",
+        sheet.seq = "sheet.seq",
+        field_item.seq = "field_item.seq"
     )
     engToJpnColumnMappings <- list(
         name = c(
