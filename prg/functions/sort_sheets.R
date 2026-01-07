@@ -2,8 +2,11 @@
 #'
 #' @file sort_sheets.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.6
+#' @date 2026.1.7
 SortSheetAndField <- function(df, sheet_sort_info, field_sort_info) {
+    if (nrow(df) == 0) {
+        return(df)
+    }
     res <- df %>%
         left_join(
             field_sort_info,
