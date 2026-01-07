@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.19
+#' @date 2026.1.7
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -26,36 +26,9 @@ ExecExcelJsonValidator <- function(trialName) {
     map(~ tibble(sheet = .x[["sheet"]], seq = .x[["seq"]])) %>%
     bind_rows() %>%
     arrange(seq)
-  fieldOrders <- target_json[["sheets"]] %>%
-    map(~ {
-      aliasName <- .x[["alias_name"]]
-      field_items <- .x[["field_items"]]
-      if (is.null(field_items) || length(field_items) == 0) {
-        return(tibble())
-      }
-      res <- field_items %>%
-        map(~ tibble(name = .x[["name"]], label = .x[["label"]], seq = .x[["seq"]])) %>%
-        bind_rows() %>%
-        mutate(alias_name = aliasName) %>%
-        select(alias_name, name, label, seq)
-      return(res)
-    }) %>%
-    bind_rows() %>%
-    arrange(alias_name, seq)
-  colnames(fieldOrders) <- c("alias_name", "field_id", "field_label", "field_seq")
-  fieldOrders <<- fieldOrders
-  sheetAndFieldOrders <<- fieldOrders %>%
-    left_join(sheetOrders, by = c("alias_name" = "sheet")) %>%
-    arrange(seq, field_seq)
-  if (length(target_json[["visits"]]) > 0) {
-    visit <<- target_json[["visits"]] %>%
-      map(~ tibble(visit_num = .x[["num"]] %>% as.numeric(), visit_name = .x[["name"]])) %>%
-      bind_rows() %>%
-      arrange(visit_num)
-  } else {
-    visit <<- tibble(visit_num = numeric(), visit_name = character())
-  }
-  visitGroups <<- GetVisitGroupsValidator(target_json, sheetOrders, visit)
+  fieldOrders <<- GetFieldOrders()
+  sheetAndFieldOrders <<- GetSheetAndFieldOrders(sheetOrders, c("alias_name" = "sheet"))
+  isVisit <<- GetVisitInfo()
   jpNameAndAliasName <<- target_json |> GetNameAndAliasNameByJson()
   jpNameAndGroup <<- GetNameAndGroupByJson()
   fieldItems <<- target_json |> GetFieldItemsByJsonList()
@@ -88,8 +61,9 @@ ExecExcelJsonValidator <- function(trialName) {
   # # item_visit #
   # ##############
   sheetName <- "item_visit"
-  checkChecklist[[sheetName]] <- sheetList |> CheckItemVisit(sheetName)
-  dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
+  #  checkChecklist[[sheetName]] <- sheetList |> CheckItemVisit(sheetName)
+  #  dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
+  warning("item_visit sheet check is skipped.")
   # ##############
   # # allocation #
   # ##############

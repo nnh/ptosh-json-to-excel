@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.19
+#' @date 2026.1.7
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -218,7 +218,7 @@ ExcelJsonValidator_item <- function(jsonSheetItemList, old_flag) {
   return(res)
 }
 
-GetVisitGroupsValidator <- function(target_json, sheetOrders, visit) {
+GetVisitGroupsValidator <- function(target_json, sheetOrders, visit, isVisit) {
   if (length(target_json[["visit_groups"]]) == 0) {
     temp <- target_json$sheets %>%
       map(~ {
@@ -253,7 +253,7 @@ GetVisitGroupsValidator <- function(target_json, sheetOrders, visit) {
     arrange(visit_num, seq) %>%
     select(-seq)
   # 整合性チェック
-  dummy <- CheckVisitGroupValidator(target_json)
+  dummy <- CheckVisitGroupValidator(target_json, isVisit)
   return(visitGroups)
 }
 CheckSheetNotExists <- function(sheetList, sheetName) {
@@ -272,6 +272,82 @@ JoinVisitGroupsValidator <- function(df, key = "alias_name", target = "group") {
   distinctJoinVisitGroups <- joinVisitGroups %>% distinct()
   res <- distinctJoinVisitGroups %>% select(-all_of(target))
   return(res)
+}
+RemoveSheetFieldSeqColumnFromVec <- function(vec) {
+  res <- vec %>%
+    discard(~ .x %in% c("sheet.seq", "field_item.seq"))
+  return(res)
+}
+
+GefVisitGroupsMinAndSortOrder <- function() {
+  visitGroupsMin <- visitGroups %>%
+    group_by(group) %>%
+    slice_min(order_by = visit_num, n = 1, with_ties = FALSE) %>%
+    ungroup()
+  nonVisitSheets <- sheetOrders %>% anti_join(visitGroups, by = c("sheet" = "alias_name"))
+  nonVisitSheets$name <- NA
+  nonVisitSheets$group <- nonVisitSheets$sheet
+  nonVisitSheets$alias_name <- nonVisitSheets$sheet
+  nonVisitSheets$sheet <- NULL
+  visitGroupsMinSortOrder <- visitGroupsMin %>%
+    inner_join(sheetOrders, by = c("alias_name" = "sheet")) %>%
+    select(c("name", "group", "alias_name", "seq"))
+  res <- bind_rows(visitGroupsMinSortOrder, nonVisitSheets) %>%
+    arrange(seq)
+  return(res)
+}
+GetSheetAndFieldOrders <- function(targetSheets, join_by) {
+  res <- fieldOrders %>%
+    left_join(targetSheets, by = join_by) %>%
+    arrange(seq, field_seq)
+  return(res)
+}
+GetFieldOrders <- function() {
+  fieldOrders <- target_json[["sheets"]] %>%
+    map(~ {
+      aliasName <- .x[["alias_name"]]
+      field_items <- .x[["field_items"]]
+      if (is.null(field_items) || length(field_items) == 0) {
+        return(tibble())
+      }
+      res <- field_items %>%
+        map(~ tibble(name = .x[["name"]], label = .x[["label"]], seq = .x[["seq"]])) %>%
+        bind_rows() %>%
+        mutate(alias_name = aliasName) %>%
+        select(alias_name, name, label, seq)
+      return(res)
+    }) %>%
+    bind_rows() %>%
+    arrange(alias_name, seq)
+  colnames(fieldOrders) <- c("alias_name", "field_id", "field_label", "field_seq")
+  return(fieldOrders)
+}
+GetVisitInfo <- function() {
+  if (length(target_json[["visits"]]) > 0) {
+    visit <<- target_json[["visits"]] %>%
+      map(~ tibble(visit_num = .x[["num"]] %>% as.numeric(), visit_name = .x[["name"]])) %>%
+      bind_rows() %>%
+      arrange(visit_num)
+    isVisit_json <<- target_json$sheets %>% keep(~ .x[["category"]] == "visit")
+    isNonVisit_json <<- target_json$sheets %>% keep(~ .x[["category"]] != "visit")
+  } else {
+    visit <<- tibble(visit_num = numeric(), visit_name = character())
+    isVisit_json <<- list()
+    isNonVisit_json <<- target_json$sheets
+  }
+  isVisit <- length(isVisit_json) > 0
+  visitGroups <<- GetVisitGroupsValidator(target_json, sheetOrders, visit, isVisit)
+  if (isVisit) {
+    visitGroupsMin <- GefVisitGroupsMinAndSortOrder()
+    visitGroupSheetAndFieldOrders <- GetSheetAndFieldOrders(visitGroupsMin, c("alias_name" = "alias_name"))
+    visitGroupSheetAndFieldOrders$alias_name <- visitGroupSheetAndFieldOrders$group
+    visitGroupSheetAndFieldOrders <- visitGroupSheetAndFieldOrders %>% select(all_of(colnames(sheetAndFieldOrders)))
+    visitGroupSheetAndFieldOrders <<- visitGroupSheetAndFieldOrders
+  } else {
+    visitGroupSheetAndFieldOrders <<- sheetAndFieldOrders
+  }
+
+  return(isVisit)
 }
 
 # item

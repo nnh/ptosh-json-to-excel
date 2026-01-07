@@ -2,12 +2,10 @@
 #'
 #' @file excel_json_validator_visit_groups.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.15
+#' @date 2026.1.7
 #'
 #'
-CheckVisitGroupValidator <- function(target_json) {
-    isVisit_json <<- target_json$sheets %>% keep(~ .x[["category"]] == "visit")
-    isVisit <<- length(isVisit_json) > 0
+CheckVisitGroupValidator <- function(target_json, isVisit) {
     if (!isVisit) {
         return(TRUE)
     }

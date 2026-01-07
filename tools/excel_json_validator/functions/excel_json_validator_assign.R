@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_assign.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.19
+#' @date 2026.1.7
 CheckAssigned <- function(sheetList, fieldItems, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
@@ -21,7 +21,7 @@ GetAssignedFromJson <- function(fieldItems) {
     df2 <- JoinVisitGroupsValidator(df, key = "alias_name", target = "group") %>% distinct()
     df3 <- GetItemsSelectColnames(df2, c("jpname", "alias_name", "name", "label", "default_value"), jpNameAndGroup)
     res <- df3 |>
-        left_join(sheetAndFieldOrders, by = c("alias_name", "name" = "field_id")) |>
+        left_join(visitGroupSheetAndFieldOrders, by = c("alias_name" = "alias_name", "name" = "field_id")) |>
         arrange(seq, field_seq) |>
         select(-seq, -field_seq, -field_label)
     return(res)
