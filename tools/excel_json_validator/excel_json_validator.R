@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.7
+#' @date 2026.1.8
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -12,7 +12,6 @@ source(here("tools", "excel_json_validator", "functions", "excel_json_validator_
 # ------ constants ------
 keep_objects <- c("keep_objects", "target_json", "sheetList", "trialName", "kTrialNames", "kAliasNameJapaneseColumnName")
 kTrialNames <- c("Bev-FOLFOX-SBC", "AML224-FLT3-ITD", "ALL-B19")
-kTrialNames <- c("ALL-B19")
 # ------ functions ------
 ExecExcelJsonValidator <- function(trialName) {
   if (exists("keep_objects")) {
@@ -61,9 +60,8 @@ ExecExcelJsonValidator <- function(trialName) {
   # # item_visit #
   # ##############
   sheetName <- "item_visit"
-  #  checkChecklist[[sheetName]] <- sheetList |> CheckItemVisit(sheetName)
-  #  dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
-  warning("item_visit sheet check is skipped.")
+  checkChecklist[[sheetName]] <- sheetList |> CheckItemVisit(sheetName)
+  dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
   # ##############
   # # allocation #
   # ##############
