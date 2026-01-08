@@ -2,16 +2,7 @@
 #'
 #' @file excel_json_validator_item.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.17
-CheckItemVisitOld <- function(sheetList, sheetName) {
-    sheet <- sheetList[[sheetName]] |>
-        rename(!!!engToJpnColumnMappings[[sheetName]])
-    json <- GetItemVisitOldFromJson()
-    itemVisitData <<- json
-    sheet <- sheet %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
-    json <- json %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
-    return(CheckTarget(sheet, json))
-}
+#' @date 2025.12.23
 GetItemVisitOldFromJson <- function() {
     item_json <- target_json[["sheets"]] %>% keep(~ .x[["category"]] == "visit")
     if (length(item_json) == 0) {
@@ -126,8 +117,8 @@ GetItemVisitOldFromJson <- function() {
     return(res)
 }
 CheckItemNonVisit <- function(sheetList, sheetName) {
-    sheet <- sheetList[[sheetName]] |>
-        rename(!!!engToJpnColumnMappings[[sheetName]])
+    target_colnames <- engToJpnColumnMappings[[sheetName]] %>% RemoveSheetFieldSeqColumnFromVec()
+    sheet <- sheetList[[sheetName]] |> rename(all_of(target_colnames))
     json <- GetItemNonVisitFromJson()
     sheet <- sheet %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
     json <- json %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))

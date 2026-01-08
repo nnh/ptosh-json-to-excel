@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.12
+#' @date 2025.12.19
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -50,7 +50,8 @@ kItemVisit <- "item_visit"
 kItemVisit_old <- "item_visit_old"
 kVisit <- "visit"
 kVisits <- "visits"
-kTargetSheetNames <- c(kItemVisit, kItemVisit_old, "item", "allocation", "action", "display", "option", "comment", "explanation", "presence", "master", "visit", "title", "assigned", "limitation", "date")
+kTargetSheetNames <- c(kItemVisit, kItemVisit_old, "item_nonvisit", "visit", "allocation", "limitation", "date", "option", "master", "assigned")
+kSortOrderSheetNames <- c(kItemVisit, "item_nonvisit", "visit", "allocation", "limitation", "date", "option", "name", "master", "assigned")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 for (name in names(temp)) {
@@ -65,42 +66,30 @@ sheet_data_list_group <- sheets %>% map(~ {
   sheet_name <- sheet[["alias_name"]]
   field_items <- sheet %>% GetFieldItems()
   temp <- EditItemAndItemVisit(field_items, sheet_name)
-  item <- temp$item
+  item_nonvisit <- temp$item
   item_visit_old <- temp$item_visit
   allocation <- sheet %>% GetAllocation()
-  display <- field_items %>% GetDisplay(sheet)
   master <- field_items %>% GetComment("link_type", sheet)
   if (!is_visit) {
     visit <- field_items %>% GetVisit(sheet)
   } else {
     visit <- NULL
   }
-  name <- tibble(name = sheet[["name"]], alias_name = sheet[["alias_name"]], images_count = sheet[["images_count"]])
-  action <- field_items %>% GetAction(sheet_name, sheet)
+  name <- tibble(name = sheet[["name"]], alias_name = sheet_name, images_count = sheet[["images_count"]])
   option <- field_items %>% GetOptions(sheet)
-  comment <- field_items %>% GetComment("content", sheet)
-  explanation <- field_items %>% GetComment("description", sheet)
-  presence <- field_items %>% GetPresence(sheet)
-  title <- field_items %>% EditTitle(sheet)
   assigned <- field_items %>% EditAssigned(sheet)
   limitation <- field_items %>% EditLimitation(sheet)
   date <- field_items %>% EditDate(sheet)
-  item <- JoinJpnameAndAliasNameAndSelectColumns("item", sheet)
+  item_nonvisit <- JoinJpnameAndAliasNameAndSelectColumns("item_nonvisit", sheet)
   item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns("item_visit_old", sheet)
   return(list(
     name = name,
-    item = item,
+    item_nonvisit = item_nonvisit,
     allocation = allocation,
-    display = display,
     master = master,
     visit = visit,
     item_visit_old = item_visit_old,
-    action = action,
     option = option,
-    comment = comment,
-    explanation = explanation,
-    presence = presence,
-    title = title,
     assigned = assigned,
     limitation = limitation,
     date = date
@@ -118,6 +107,10 @@ if (is_visit) {
 output_checklist <- convertSheetColumnsToJapanese(summary_sheet_data)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
 output_checklist[[kItemVisit]] <- EditItemVisit(output_checklist[[kItemVisit_old]])
+# remove item_visit_old sheet
+output_checklist[[kItemVisit_old]] <- NULL
+# シート出力順、各シートの行順の変更
+sort_output_checklist <- SortSheetsMain(output_checklist)
 
 # create output folder.
 output_folder_name <- Sys.time() %>%
@@ -129,5 +122,5 @@ output_file_ymd <- Sys.time() %>%
 kOutputChecklistName <- str_c(trialName, " eCRF Spec ", output_file_ymd, ".xlsx")
 output_checklist_path <- CreateOutputFolder("list", output_folder_path)
 cat(str_c("フォルダ", output_checklist_path, "を作成しました\n"))
-OutputChecklistXlsx(output_checklist, output_checklist_path)
+OutputChecklistXlsx(sort_output_checklist, output_checklist_path)
 cat("処理が終了しました。")

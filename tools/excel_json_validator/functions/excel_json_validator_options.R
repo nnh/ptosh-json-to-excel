@@ -2,10 +2,12 @@
 #'
 #' @file excel_json_validator_options.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.15
+#' @date 2025.12.23
+
 CheckOption <- function(sheetList, fieldItems, sheetName) {
+    target_colnames <- engToJpnColumnMappings[[sheetName]] %>% RemoveSheetFieldSeqColumnFromVec()
     sheet <- sheetList[[sheetName]] |>
-        rename(!!!engToJpnColumnMappings[[sheetName]])
+        rename(all_of(target_colnames))
     json <- GetOptionFromJson(fieldItems)
     sheet <- sheet %>% arrange(alias_name, option.name, option.values_seq)
     json <- json %>% arrange(alias_name, option.name, option.values_seq)
@@ -57,7 +59,10 @@ GetOptionFromJson <- function(fieldItems) {
     }
     df2 <- JoinVisitGroupsValidator(options, key = "alias_name", target = "group")
     res <- GetItemsSelectColnames(df2, c("jpname", "alias_name", "option_name", "name", "seq", "code", "is_usable"), jpNameAndGroup)
-    colnames(res) <- engToJpnColumnMappings$option %>% names()
+    target_colnames <- engToJpnColumnMappings[["option"]] %>%
+        RemoveSheetFieldSeqColumnFromVec() %>%
+        names()
+    colnames(res) <- target_colnames
 
     return(res)
 }

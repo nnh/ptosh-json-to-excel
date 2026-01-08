@@ -3,7 +3,7 @@
 #'
 #' @file edit_checklist_convert_column_name.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.8
+#' @date 2025.12.23
 renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     stopifnot(is.data.frame(df))
     stopifnot(is.character(nameMap), !is.null(names(nameMap)))
@@ -30,7 +30,9 @@ GetEngToJpnColumnMappings <- function() {
         validators.date.validate_date_after_or_equal_to = "バリデータ.日付.最小値",
         references_after = "最小値の参照先情報",
         validators.date.validate_date_before_or_equal_to = "バリデータ.日付.最大値",
-        references_before = "最大値の参照先情報"
+        references_before = "最大値の参照先情報",
+        sheet.seq = "sheet.seq",
+        field_item.seq = "field_item.seq"
     )
     engToJpnColumnMappings <- list(
         name = c(
@@ -42,7 +44,7 @@ GetEngToJpnColumnMappings <- function() {
         item_visit_old = c(itemColumnName,
             numericality_normal_range_check = "数値チェック・アラート条件の有無"
         ),
-        item = c(itemColumnName, field_type = "フィールドタイプ"),
+        item_nonvisit = c(itemColumnName, field_type = "フィールドタイプ"),
         option = c(
             jpname = "シート名",
             alias_name = kAliasNameJapaneseColumnName,
@@ -50,7 +52,9 @@ GetEngToJpnColumnMappings <- function() {
             option.values_name = "ラベル",
             option.values_seq = "-",
             option.values_code = "コード",
-            option.values_is_usable = "表示"
+            option.values_is_usable = "表示",
+            sheet.seq = "sheet.seq",
+            field_item.seq = "field_item.seq"
         ),
         visit = c(
             jpname = "シート名",
@@ -59,8 +63,6 @@ GetEngToJpnColumnMappings <- function() {
             default_value = "デフォルト値"
         ),
         visit_to_visit = c(
-            jpname = "シート名",
-            alias_name = kAliasNameJapaneseColumnName,
             name = "VISITNUM",
             default_value = "VISIT"
         ),
@@ -70,15 +72,6 @@ GetEngToJpnColumnMappings <- function() {
             name = "フィールドID",
             label = "ラベル",
             link_type = "保存先のマスタ"
-        ),
-        action = c(
-            jpname = "シート名",
-            alias_name = kAliasNameJapaneseColumnName,
-            field_item_id.name = "開閉のトリガーになるフィールドID",
-            field_item_id.label = "開閉のトリガーになるラベル",
-            codes = "開閉のトリガーになるコード",
-            fields = "開閉するフィールドID",
-            fields.label = "開閉するラベル"
         ),
         allocation = c(
             jpname = "シート名",
@@ -95,39 +88,6 @@ GetEngToJpnColumnMappings <- function() {
             groups.message = "割付グループ.エラーメッセージ",
             formula_field = "調整因子フィールド.式",
             formula_field_references = "調整因子フィールド.式の参照先情報"
-        ),
-        comment = c(
-            jpname = "シート名",
-            alias_name = kAliasNameJapaneseColumnName,
-            name = "フィールドID",
-            label = "ラベル",
-            content = "フリーコメント"
-        ),
-        explanation = c(
-            jpname = "シート名",
-            alias_name = kAliasNameJapaneseColumnName,
-            name = "フィールドID",
-            label = "ラベル",
-            description = "説明"
-        ),
-        display = c(
-            jpname = "シート名",
-            alias_name = kAliasNameJapaneseColumnName,
-            name = "フィールドID",
-            label = "ラベル"
-        ),
-        presence = c(
-            jpname = "シート名",
-            alias_name = kAliasNameJapaneseColumnName,
-            name = "フィールドID",
-            label = "ラベル"
-        ),
-        title = c(
-            jpname = "シート名",
-            alias_name = kAliasNameJapaneseColumnName,
-            name = "フィールドID",
-            label = "ラベル",
-            level = "見出し"
         ),
         assigned = c(
             jpname = "シート名",

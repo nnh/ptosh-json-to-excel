@@ -2,7 +2,7 @@
 #'
 #' @file edit_option.R
 #' @author Mariko Ohtsuka
-#' @date 2025.11.6
+#' @date 2025.12.23
 GetOptionsValues <- function(option) {
     option_name <- option[["name"]]
     option_values <- option[["values"]]
@@ -40,12 +40,15 @@ GetOptions <- function(field_items, sheet) {
             if (length(option) == 0) {
                 stop(paste("Option ID", option_id, "not found in options JSON."))
             }
+            field_item_seq <- .x[["seq"]]
             df_option_values <- option %>% GetOptionsValues(.)
+            df_option_values[["field_item.seq"]] <- field_item_seq
             return(df_option_values)
         }) %>%
         bind_rows() %>%
         distinct() %>%
         filter(option.values_is_usable == TRUE)
+    option[["sheet.seq"]] <- sheet[["sort_order"]]
     res <- JoinJpnameAndAliasNameAndSelectColumns("option", sheet)
 
     return(res)

@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.11
+#' @date 2025.12.23
 # ------ constants ------
 # ------ functions ------
 OutputChecklistSheet <- function(df_output, wb, sheet_name) {
@@ -89,19 +89,13 @@ EditGroupVisit <- function(sheets) {
   return(visit_json_files_group)
 }
 
-
 source(here("prg", "functions", "edit_common.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_item.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_item_visit_old.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_item_visit.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_allocation.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_action.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_display.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_option.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_comment.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_presence.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_visit.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_title.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_assigned.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_limitation.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_date.R"), encoding = "UTF-8")
@@ -111,3 +105,4 @@ source(here("prg", "functions", "edit_checklist_convert_column_name.R"),
 source(here("prg", "functions", "set_items_sheet_settings.R"), encoding = "UTF-8")
 source(here("prg", "functions", "summarize_by_visit.R"), encoding = "UTF-8")
 source(here("prg", "functions", "replace_ref_text.R"), encoding = "UTF-8")
+source(here("prg", "functions", "sort_sheets.R"), encoding = "UTF-8")

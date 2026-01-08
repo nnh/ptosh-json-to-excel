@@ -2,10 +2,10 @@
 #'
 #' @file replace_ref_text.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.11
+#' @date 2025.12.19
 #
 EditRefFieldTextVec <- function(df_sheet_field) {
-    join_field_info <- dplyr::left_join(df_sheet_field, field_list, by = c("alias_name", "field_number"))
+    join_field_info <- dplyr::left_join(df_sheet_field, field_list, by = c("alias_name", "field_number")) %>% select(-field_seq)
     join_field_info <- join_field_info %>%
         dplyr::left_join(visit_info, by = "alias_name")
     join_field_info$output_alias_name <- ifelse(is.na(join_field_info$visit_group), join_field_info$alias_name, join_field_info$visit_group)

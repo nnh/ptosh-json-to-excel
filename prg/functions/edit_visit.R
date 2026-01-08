@@ -2,7 +2,7 @@
 #'
 #' @file edit_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.12
+#' @date 2025.12.19
 GetVisit <- function(field_items, sheet) {
     target <- field_items %>%
         keep(~ {
@@ -68,13 +68,9 @@ GetVisitGroupAndVisitsFromJson <- function(json_files) {
 }
 GetVisitIsVisit <- function() {
     visit <- visit_info %>%
-        select(visit_group_name, alias_name, visitnum, visit_name)
-    res <- visit %>%
-        left_join(sheet_info, by = c("alias_name" = "alias_name")) %>%
-        arrange(name, sort_order) %>%
-        select("sheet_name", "alias_name", "visitnum", "visit_name") %>%
+        select(visitnum, visit_name) %>%
+        arrange(visitnum) %>%
         distinct()
-    colnames(res) <- c("jpname", "alias_name", "name", "default_value")
-
-    return(res)
+    colnames(visit) <- c("name", "default_value")
+    return(visit)
 }

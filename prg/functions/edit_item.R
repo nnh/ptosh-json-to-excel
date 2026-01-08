@@ -2,7 +2,7 @@
 #'
 #' @file edit_item.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.11
+#' @date 2025.12.23
 EditItemAndItemVisit <- function(field_items, sheet_name) {
     visit_group <- visit_info %>% filter(alias_name == sheet_name)
     if (visit_group %>% nrow() == 1) {
@@ -18,6 +18,10 @@ EditItemAndItemVisit <- function(field_items, sheet_name) {
     ))
 }
 EditItem <- function(field_items, alias_name) {
+    aliasName <- alias_name
+    sheet_seq <- sheet_info %>%
+        filter(alias_name == aliasName) %>%
+        purrr::pluck("sort_order", 1)
     target_field_items <- field_items %>% GetTargetByType("FieldItem::Article")
     target <- target_field_items %>% map_df(~ {
         presence_if_references <- GetFieldText(.x[["validators"]][["presence"]][["validate_presence_if"]], alias_name)
@@ -69,8 +73,10 @@ EditItem <- function(field_items, alias_name) {
             validators.date.validate_date_before_or_equal_to = .x[["validators"]][["date"]][["validate_date_before_or_equal_to"]] %||% NA,
             references_before = references_before %||% NA,
             field_type = field_type,
-            numericality_normal_range_check = numericality_normal_range_check
+            numericality_normal_range_check = numericality_normal_range_check,
+            field_item.seq = .x[["seq"]] %||% NA,
         )
+        res[["sheet.seq"]] <- sheet_seq
         return(res)
     })
     return(target)
