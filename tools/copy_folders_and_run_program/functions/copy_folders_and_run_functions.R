@@ -2,7 +2,7 @@
 #' description
 #' @file copy_folders_and_run_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2025.5.9
+#' @date 2026.1.9
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -25,11 +25,9 @@ copyFoldersAndRunProgramMain <- function(targetRow) {
   targetTrialName <- basename(targetPath) |> str_remove("forTest_input_")
   targetTrialName |> write.table(here("temp", "targetTrialName"), sep = ",", col.names = F, row.names = F)
   targetFiles <- list.files(targetPath, full.names = TRUE, recursive = FALSE)
-  targetFiles <- targetFiles[file.info(targetFiles)$isdir == FALSE]
+  targetFiles <- targetFiles[file.info(targetFiles)[["isdir"]] == FALSE]
   outputDirBef <- here("output") |> list.dirs(recursive = F)
   outputDirBef |> write.table(here("temp", "outputDirBef"), sep = ",", col.names = F, row.names = F)
-  #trialPath <- file.path(inputDirPath, targetTrialName)
-  #dir.create(trialPath)
   for (i in 1:length(targetFiles)) {
     file.copy(targetFiles[i], inputDirPath)
   }

@@ -2,7 +2,7 @@
 #'
 #' @file edit_allocation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.11.6
+#' @date 2026.1.9
 GetAllocation <- function(json_file) {
     allocation <- json_file[["allocation"]]
     if (is.null(allocation)) {
@@ -22,7 +22,7 @@ GetAllocation <- function(json_file) {
         ""
     }
     groups <- allocation[["groups"]] %>% map_df(~ {
-        if_references <- GetFieldText(.x[["if"]], json_file[["alias_name"]])
+        if_references <- GetFieldText(.x[["if"]], json_file[[.const[["kAliasName"]]]])
         group_tbl <- tibble::tibble(
             groups.code = .x[["code"]],
             groups.label = .x[["label"]],
@@ -41,7 +41,7 @@ GetAllocation <- function(json_file) {
     ) %>%
         bind_cols(groups)
     res[["formula_field"]] <- formula_field_str
-    temp_formula_field_references <- GetDfSheetField(formula_field_str, json_file[["alias_name"]])
+    temp_formula_field_references <- GetDfSheetField(formula_field_str, json_file[[.const[["kAliasName"]]]])
     if (!is.null(temp_formula_field_references)) {
         formula_field_references <- temp_formula_field_references %>% EditRefFieldTextVec()
         # Replace raw in formula_field_str with text for all rows if raw is present

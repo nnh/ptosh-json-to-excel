@@ -2,7 +2,7 @@
 #'
 #' @file sort_sheets.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.7
+#' @date 2026.1.9
 SortSheetAndField <- function(df, sheet_sort_info, field_sort_info) {
     if (nrow(df) == 0) {
         return(df)
@@ -11,8 +11,8 @@ SortSheetAndField <- function(df, sheet_sort_info, field_sort_info) {
         left_join(
             field_sort_info,
             by = setNames(
-                c("alias_name", "name"),
-                c(kAliasNameJapaneseColumnName, "フィールドID")
+                c(.const[["kAliasName"]], "name"),
+                c(.const[["kAliasNameJapaneseColumnName"]], "フィールドID")
             )
         ) %>%
         arrange(sort_order, field_seq) %>%
@@ -32,11 +32,11 @@ SortSheetsMain <- function(output_checklist) {
         select(alias_name, sort_order) %>%
         distinct()
     temp_field_sort_info <- sheet_sort_info %>%
-        left_join(field_list, by = "alias_name") %>%
+        left_join(field_list, by = .const[["kAliasName"]]) %>%
         select(alias_name, sort_order, name, field_seq)
     field_sort_info <- temp_field_sort_info %>%
-        left_join(visit_info, by = "alias_name")
-    field_sort_info[["alias_name"]] <- ifelse(!is.na(field_sort_info[["visit_group"]]), field_sort_info[["visit_group"]], field_sort_info[["alias_name"]])
+        left_join(visit_info, by = .const[["kAliasName"]])
+    field_sort_info[[.const[["kAliasName"]]]] <- ifelse(!is.na(field_sort_info[["visit_group"]]), field_sort_info[["visit_group"]], field_sort_info[[.const[["kAliasName"]]]])
     field_sort_info <- field_sort_info %>%
         select(alias_name, name, sort_order, field_seq)
     field_sort_info <- field_sort_info %>%
@@ -46,7 +46,7 @@ SortSheetsMain <- function(output_checklist) {
 
     # 各シートをソート
     # item_nonvisit
-    target <- "item_nonvisit"
+    target <- .const[["kItemNonVisit"]]
     temp[[target]] <- SortSheetAndFieldByDfValues(target, output_checklist)
     # limitation
     target <- "limitation"
@@ -62,7 +62,7 @@ SortSheetsMain <- function(output_checklist) {
     sort_name <- output_checklist[["name"]] %>%
         left_join(
             sheet_sort_info,
-            by = setNames("alias_name", kAliasNameJapaneseColumnName)
+            by = setNames(.const[["kAliasName"]], .const[["kAliasNameJapaneseColumnName"]])
         ) %>%
         arrange(sort_order) %>%
         select(-sort_order)
@@ -74,6 +74,6 @@ SortSheetsMain <- function(output_checklist) {
     target <- "assigned"
     temp[[target]] <- output_checklist[[target]] %>% SortSheetAndField(., sheet_sort_info, field_sort_info)
     # シート出力順の変更
-    res <- temp[kSortOrderSheetNames]
+    res <- temp[.const[["kSortOrderSheetNames"]]]
     return(res)
 }

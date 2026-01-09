@@ -2,7 +2,7 @@
 #'
 #' @file edit_item.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.23
+#' @date 2026.1.9
 EditItemAndItemVisit <- function(field_items, sheet_name) {
     visit_group <- visit_info %>% filter(alias_name == sheet_name)
     if (visit_group %>% nrow() == 1) {
@@ -12,9 +12,9 @@ EditItemAndItemVisit <- function(field_items, sheet_name) {
         item <- EditItem(field_items, sheet_name)
         item_visit <- NULL
     }
-    return(list(
-        item = item,
-        item_visit = item_visit
+    return(list2(
+        !!.const[["kItemNonVisit"]] := item,
+        !!.const[["kItemVisit"]] := item_visit
     ))
 }
 EditItem <- function(field_items, alias_name) {
@@ -22,16 +22,22 @@ EditItem <- function(field_items, alias_name) {
     sheet_seq <- sheet_info %>%
         filter(alias_name == aliasName) %>%
         purrr::pluck("sort_order", 1)
-    target_field_items <- field_items %>% GetTargetByType("FieldItem::Article")
+    target_field_items <- field_items %>% GetTargetByType(.const[["kArticle"]])
     target <- target_field_items %>% map_df(~ {
-        presence_if_references <- GetFieldText(.x[["validators"]][["presence"]][["validate_presence_if"]], alias_name)
-        formula_if_references <- GetFieldText(.x[["validators"]][["formula"]][["validate_formula_if"]], alias_name)
-        references_after <- GetFieldText(.x[["validators"]][["date"]][["validate_date_after_or_equal_to"]], alias_name)
-        references_before <- GetFieldText(.x[["validators"]][["date"]][["validate_date_before_or_equal_to"]], alias_name)
-        numericality <- purrr::pluck(.x, "validators", "numericality", .default = NULL)
-        numericality_check <- !is.null(.x[["validators"]][["numericality"]])
-        normal_range_gte <- purrr::pluck(.x, "normal_range", "greater_than_or_equal_to", .default = NA)
-        normal_range_lss <- purrr::pluck(.x, "normal_range", "less_than_or_equal_to", .default = NA)
+        presence_if_references <- purrr::pluck(.x, !!!.const[["kValidatePresenceIf"]], .default = NULL) %>%
+            GetFieldText(alias_name)
+        formula_if_references <- purrr::pluck(.x, !!!.const[["kValidateFormulaIf"]], .default = NULL) %>%
+            GetFieldText(alias_name)
+        references_after <- purrr::pluck(.x, !!!.const[["kValidateDateAfterOrEqualTo"]], .default = NULL) %>%
+            GetFieldText(alias_name)
+        references_before <- purrr::pluck(.x, !!!.const[["kValidateDateBeforeOrEqualTo"]], .default = NULL) %>%
+            GetFieldText(alias_name)
+        numericality <- purrr::pluck(.x, !!!.const[["kValidatorsNumericality"]], .default = NULL)
+        numericality_check <- !is.null(
+            purrr::pluck(.x, !!!.const[["kValidatorsNumericality"]], .default = NULL)
+        )
+        normal_range_gte <- purrr::pluck(.x, !!!.const[["kNormalRangeGreaterThanOrEqualTo"]], .default = NA)
+        normal_range_lss <- purrr::pluck(.x, !!!.const[["kNormalRangeLessThanOrEqualTo"]], .default = NA)
         normal_range_check <- (!is.null(normal_range_gte) && !is.na(normal_range_gte)) ||
             (!is.null(normal_range_lss) && !is.na(normal_range_lss))
         if (numericality_check) {
@@ -59,22 +65,22 @@ EditItem <- function(field_items, alias_name) {
             field_type <- NA
         }
         res <- tibble::tibble(
-            name = .x[["name"]],
-            label = .x[["label"]],
+            name = .x[[.const[["kFieldItemsFieldId"]]]] %||% NA,
+            label = .x[[.const[["kFieldItemsFieldName"]]]] %||% NA,
             option.name = .x[["option_name"]] %||% NA,
-            default_value = .x[["default_value"]] %||% NA,
-            validators.presence.validate_presence_if = .x[["validators"]][["presence"]][["validate_presence_if"]] %||% NA,
+            default_value = .x[[.const[["kFieldItemDefaultValue"]]]] %||% NA,
+            validators.presence.validate_presence_if = purrr::pluck(.x, !!!.const[["kValidatePresenceIf"]], .default = NA),
             presence_if_references = presence_if_references %||% NA,
-            validators.formula.validate_formula_if = .x[["validators"]][["formula"]][["validate_formula_if"]] %||% NA,
+            validators.formula.validate_formula_if = purrr::pluck(.x, !!!.const[["kValidateFormulaIf"]], .default = NA),
             formula_if_references = formula_if_references %||% NA,
-            validators.formula.validate_formula_message = .x[["validators"]][["formula"]][["validate_formula_message"]] %||% NA,
-            validators.date.validate_date_after_or_equal_to = .x[["validators"]][["date"]][["validate_date_after_or_equal_to"]] %||% NA,
+            validators.formula.validate_formula_message = purrr::pluck(.x, "validators", "formula", "validate_formula_message", .default = NA),
+            validators.date.validate_date_after_or_equal_to = purrr::pluck(.x, !!!.const[["kValidateDateAfterOrEqualTo"]], .default = NA),
             references_after = references_after %||% NA,
-            validators.date.validate_date_before_or_equal_to = .x[["validators"]][["date"]][["validate_date_before_or_equal_to"]] %||% NA,
+            validators.date.validate_date_before_or_equal_to = purrr::pluck(.x, !!!.const[["kValidateDateBeforeOrEqualTo"]], .default = NA),
             references_before = references_before %||% NA,
             field_type = field_type,
             numericality_normal_range_check = numericality_normal_range_check,
-            field_item.seq = .x[["seq"]] %||% NA,
+            field_item.seq = .x[[.const[["kFieldItemsSeq"]]]] %||% NA,
         )
         res[["sheet.seq"]] <- sheet_seq
         return(res)

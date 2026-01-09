@@ -2,7 +2,7 @@
 #'
 #' @file edit_comment.R
 #' @author Mariko Ohtsuka
-#' @date 2025.11.7
+#' @date 2026.1.9
 GetComment <- function(field_items, condition_column, sheet) {
     target <- field_items %>%
         map(~ {
@@ -10,8 +10,8 @@ GetComment <- function(field_items, condition_column, sheet) {
                 return(NULL)
             }
             return(tibble::tibble(
-                name = .x[["name"]] %||% NA,
-                label = .x[["label"]] %||% NA,
+                name = .x[[.const[["kFieldItemsFieldId"]]]] %||% NA,
+                label = .x[[.const[["kFieldItemsFieldName"]]]] %||% NA,
                 !!condition_column := .x[[condition_column]] %||% NA
             ))
         }) %>%

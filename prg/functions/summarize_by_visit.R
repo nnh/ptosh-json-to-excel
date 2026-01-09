@@ -2,7 +2,7 @@
 #'
 #' @file summarize_by_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.19
+#' @date 2026.1.9
 #
 SummarizeByVisit <- function(sheet_data_combine) {
     res <- sheet_data_combine
@@ -19,8 +19,8 @@ SummarizeByVisit <- function(sheet_data_combine) {
             visit_group <- visit_info %>%
                 dplyr::filter(alias_name == aliasName)
             if (nrow(visit_group) == 1) {
-                res[[sheet_name]][row, "jpname"] <- visit_group[["visit_group_name"]]
-                res[[sheet_name]][row, "alias_name"] <- visit_group[["visit_group"]]
+                res[[sheet_name]][row, .const[["kOutputJapanaseNameEnglish"]]] <- visit_group[["visit_group_name"]]
+                res[[sheet_name]][row, .const[["kAliasName"]]] <- visit_group[["visit_group"]]
             }
         }
         res[[sheet_name]] <- res[[sheet_name]] %>% distinct()

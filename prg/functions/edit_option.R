@@ -2,14 +2,14 @@
 #'
 #' @file edit_option.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.23
+#' @date 2026.1.9
 GetOptionsValues <- function(option) {
     option_name <- option[["name"]]
     option_values <- option[["values"]]
     df_option_values <- option_values %>%
         map_df(~ tibble(
             option.values_name = .x[["name"]] %||% NA,
-            option.values_seq = .x[["seq"]] %||% NA,
+            option.values_seq = .x[[.const[["kOptionSeq"]]]] %||% NA,
             option.values_code = .x[["code"]] %||% NA,
             option.values_is_usable = .x[["is_usable"]] %||% NA
         ))
@@ -20,10 +20,10 @@ GetOptionsValues <- function(option) {
 GetOptions <- function(field_items, sheet) {
     if (options_flag) {
         target <- field_items %>%
-            keep(~ !is.null(.x[["option_name"]]) && .x[["type"]] == "FieldItem::Article")
+            keep(~ !is.null(.x[["option_name"]]) && .x[[.const[["kFieldItemsType"]]]] == .const[["kArticle"]])
     } else {
         target <- field_items %>%
-            keep(~ !is.null(.x[["option"]]) && .x[["type"]] == "FieldItem::Article")
+            keep(~ !is.null(.x[["option"]]) && .x[[.const[["kFieldItemsType"]]]] == .const[["kArticle"]])
     }
 
     if (length(target) == 0) {
@@ -40,7 +40,7 @@ GetOptions <- function(field_items, sheet) {
             if (length(option) == 0) {
                 stop(paste("Option ID", option_id, "not found in options JSON."))
             }
-            field_item_seq <- .x[["seq"]]
+            field_item_seq <- .x[[.const[["kFieldItemsSeq"]]]]
             df_option_values <- option %>% GetOptionsValues(.)
             df_option_values[["field_item.seq"]] <- field_item_seq
             return(df_option_values)
