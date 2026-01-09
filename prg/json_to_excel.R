@@ -53,7 +53,7 @@ sheet_data_list_group <- sheets %>% map(~ {
   item_nonvisit <- temp[[.const[["kItemNonVisit"]]]]
   item_visit_old <- temp[[.const[["kItemVisit"]]]]
   allocation <- sheet %>% GetAllocation()
-  master <- field_items %>% GetComment("link_type", sheet)
+  master <- field_items %>% GetMaster(sheet)
   if (!is_visit) {
     visit <- field_items %>% GetVisit(sheet)
   } else {

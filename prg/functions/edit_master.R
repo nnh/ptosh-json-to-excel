@@ -1,9 +1,11 @@
-#' edit_comment.R
+#' edit_master.R
 #'
-#' @file edit_comment.R
+#' @file edit_master.R
 #' @author Mariko Ohtsuka
 #' @date 2026.1.9
-GetComment <- function(field_items, condition_column, sheet) {
+GetMaster <- function(field_items, sheet) {
+    condition_column <- "link_type"
+    dfname <- "master"
     target <- field_items %>%
         map(~ {
             if (is.null(.x[[condition_column]]) || .x[[condition_column]] == "") {
@@ -17,15 +19,6 @@ GetComment <- function(field_items, condition_column, sheet) {
         }) %>%
         bind_rows()
     if (nrow(target) == 0) {
-        return(NULL)
-    }
-    if (condition_column == "content") {
-        dfname <- "comment"
-    } else if (condition_column == "description") {
-        dfname <- "explanation"
-    } else if (condition_column == "link_type") {
-        dfname <- "master"
-    } else {
         return(NULL)
     }
     assign(dfname, target)
