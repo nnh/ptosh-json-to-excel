@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.17
+#' @date 2026.1.13
 CheckJsonVisitForVisit <- function(visitJson) {
     res <- visitJson %>%
         map_df(~ {
@@ -13,8 +13,8 @@ CheckJsonVisitForVisit <- function(visitJson) {
             )
             return(res)
         }) %>%
-        arrange(name) %>%
         distinct()
+    res <- res %>% arrange(name)
     res$name <- as.character(res$name)
     return(res)
 }
@@ -68,8 +68,6 @@ CheckVisit <- function(sheetList, sheetName) {
         json <- CheckJsonVisitForNonVisit()
         sheet <- sheetList[[sheetName]] |>
             rename(!!!engToJpnColumnMappings[[sheetName]])
-        json <- json %>% arrange(alias_name, name)
-        sheet <- sheet %>% arrange(alias_name, name)
     } else {
         json <- CheckJsonVisitForVisit(visitJson)
         sheet <- sheetList[[sheetName]] |>
