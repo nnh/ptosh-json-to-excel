@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.23
+#' @date 2026.1.9
 # ------ constants ------
 # ------ functions ------
 OutputChecklistSheet <- function(df_output, wb, sheet_name) {
@@ -16,10 +16,10 @@ OutputChecklistSheet <- function(df_output, wb, sheet_name) {
   setColWidths(wb = wb, sheet = sheet_name, cols = 1:ncol(df_output), widths = "auto")
   fontStyle <- setFontStyle()
   addStyle(wb = wb, sheet = sheet_name, style = fontStyle, rows = 1:(nrow(df_output) + 1), cols = 1:ncol(df_output), gridExpand = TRUE)
-  if (sheet_name == kItemVisit_old || sheet_name == kItemVisit) {
+  if (sheet_name == .const[["kItemVisit_old"]] || sheet_name == .const[["kItemVisit"]]) {
     setColumnConditionalFormatting(
       wb = wb, sheetName = sheet_name,
-      targetColName = kItemVisitConditionalFormattingColumnName,
+      targetColName = .const[["kItemVisitConditionalFormattingColumnName"]],
       rows = 2:(nrow(df_output) + 1)
     )
   }
@@ -33,14 +33,9 @@ OutputChecklistXlsx <- function(output_list, output_checklist_path) {
   }
   saveWorkbook(wb = wb, file = str_c(output_checklist_path, "/", kOutputChecklistName), overwrite = T)
 }
-CreatedummyDf <- function(target_columns) {
-  df <- data.frame(matrix(ncol = length(target_columns), nrow = 0))
-  colnames(df) <- target_columns
-  return(df)
-}
 JoinJpnameAndAliasName <- function(df, json_file) {
-  df[["jpname"]] <- json_file[["name"]]
-  df[["alias_name"]] <- json_file[["alias_name"]]
+  df[[.const[["kOutputJapanaseNameEnglish"]]]] <- json_file[[.const[["kSheetJapaneseName"]]]]
+  df[[.const[["kAliasName"]]]] <- json_file[[.const[["kAliasName"]]]]
   return(df)
 }
 SelectColumns <- function(df, target_columns) {
@@ -54,47 +49,25 @@ JoinJpnameAndAliasNameAndSelectColumns <- function(df_name, json_file) {
     return(NULL)
   }
   df <- JoinJpnameAndAliasName(df, json_file)
-  df <- SelectColumns(df, kEngColumnNames[[df_name]])
+  df <- SelectColumns(df, .const[["kEngColumnNames"]][[df_name]])
   return(df)
 }
 GetFieldItems <- function(json_file) {
-  return(json_file[["field_items"]])
+  return(json_file[[.const[["kFieldItems"]]]])
 }
 CheckExistenceOfVisitGroup <- function(sheet_alias_name, visit_groups) {
   if (is.null(visit_groups)) {
     return(FALSE)
   }
-  return(sheet_alias_name %in% visit_groups[["alias_name"]])
+  return(sheet_alias_name %in% visit_groups[[.const[["kAliasName"]]]])
 }
-
-EditGroupVisit <- function(sheets) {
-  visit_json_files <- sheets %>%
-    keep(~ CheckExistenceOfVisitGroup(.x[["alias_name"]], visit_groups))
-  no_visit_json_files <- sheets %>%
-    discard(~ CheckExistenceOfVisitGroup(.x[["alias_name"]], visit_groups))
-  # グループ名ごとに最小の数値を持つ要素だけを残す
-  visit_names <- names(visit_json_files)
-  group_info <- tibble::tibble(
-    name = visit_names,
-    group = str_replace(visit_names, "_\\d+$", ""),
-    num = as.integer(str_extract(visit_names, "\\d+$"))
-  )
-  min_num_per_group <- group_info %>%
-    group_by(group) %>%
-    filter(num == min(num)) %>%
-    ungroup()
-  visit_json_files_group_group <- visit_json_files[min_num_per_group$name]
-  # visit_json_files_group_groupとno_visit_json_filesを結合
-  visit_json_files_group <- c(visit_json_files_group_group, no_visit_json_files)
-  return(visit_json_files_group)
-}
-
+# ------ load other function files ------
 source(here("prg", "functions", "edit_common.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_item.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_item_visit.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_allocation.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_option.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_comment.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_master.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_visit.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_assigned.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_limitation.R"), encoding = "UTF-8")

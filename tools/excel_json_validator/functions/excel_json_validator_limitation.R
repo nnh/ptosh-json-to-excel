@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_limitation.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.18
+#' @date 2026.1.13
 CheckLimitation <- function(sheetList, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
@@ -22,9 +22,7 @@ CheckLimitation <- function(sheetList, sheetName) {
             stringsAsFactors = FALSE
         )
     }
-    sheet <- sheet %>% arrange(alias_name, name)
     sheet[["normal_range.less_than_or_equal_to"]] <- ifelse(sheet[["normal_range.less_than_or_equal_to"]] == "1e+06", "1000000", sheet[["normal_range.less_than_or_equal_to"]])
-    json <- json %>% arrange(alias_name, name)
     return(CheckTarget(sheet, json))
 }
 GetLimitationFromJson <- function() {
@@ -83,16 +81,20 @@ GetLimitationFromJson <- function() {
         }) %>%
         bind_rows()
     df2 <- JoinVisitGroupsValidator(limitation, key = "alias_name", target = "group") %>% distinct()
-    res <- GetItemsSelectColnames(df2, c(
+    df3 <- df2 %>% inner_join(visitGroupSheetAndFieldOrders, by = c("alias_name" = "alias_name", "name" = "field_id"))
+    df4 <- GetItemsSelectColnames(df3, c(
         "jpname", "alias_name", "name", "label", "default_value", "normal_range.less_than_or_equal_to", "normal_range.greater_than_or_equal_to",
-        "validators.numericality.validate_numericality_less_than_or_equal_to", "validators.numericality.validate_numericality_greater_than_or_equal_to"
+        "validators.numericality.validate_numericality_less_than_or_equal_to", "validators.numericality.validate_numericality_greater_than_or_equal_to", "seq", "field_seq"
     ), jpNameAndGroup)
-    res <- res %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
-    res <- res %>% filter(
+    df5 <- df4 %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
+    df6 <- df5 %>% filter(
         normal_range.less_than_or_equal_to != "" |
             normal_range.greater_than_or_equal_to != "" |
             validators.numericality.validate_numericality_less_than_or_equal_to != "" |
             validators.numericality.validate_numericality_greater_than_or_equal_to != ""
     )
+    res <- df6 %>%
+        arrange(seq, field_seq) %>%
+        select(-seq, -field_seq)
     return(res)
 }

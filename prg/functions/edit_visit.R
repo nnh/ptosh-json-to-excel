@@ -2,13 +2,14 @@
 #'
 #' @file edit_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.19
+#' @date 2026.1.9
 GetVisit <- function(field_items, sheet) {
+    kNonvisitCondition <- "Visit Number"
     target <- field_items %>%
         keep(~ {
-            if (is.null(.x[["label"]])) {
+            if (is.null(.x[[.const[["kFieldItemsFieldName"]]]])) {
                 return(FALSE)
-            } else if (.x[["label"]] == "Visit Number") {
+            } else if (.x[[.const[["kFieldItemsFieldName"]]]] == kNonvisitCondition) {
                 return(TRUE)
             } else {
                 return(FALSE)
@@ -20,20 +21,20 @@ GetVisit <- function(field_items, sheet) {
     visit <- target %>%
         map_df(~ {
             res <- tibble::tibble(
-                name = .x[["name"]],
-                default_value = .x[["default_value"]] %||% NA,
+                name = .x[[.const[["kFieldItemsFieldId"]]]],
+                default_value = .x[[.const[["kFieldItemDefaultValue"]]]] %||% NA,
             )
             return(res)
         })
 
-    res <- JoinJpnameAndAliasNameAndSelectColumns("visit", sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(.const[["kVisit"]], sheet)
     return(res)
 }
 GetVisitGroupsFromJson <- function(json_files) {
-    visit_groups <- json_files$visit_groups %>%
+    visit_groups <- json_files[[.const[["kVisitGroup"]]]] %>%
         map(~ {
             name <- .x[["name"]]
-            alias_name <- .x[["alias_name"]]
+            alias_name <- .x[[.const[["kAliasName"]]]]
             reference_sheet <- .x[["reference_sheet"]]
             res <- .x[["visit_sheets"]] %>% map_df(~ {
                 tibble::tibble(
@@ -49,7 +50,7 @@ GetVisitGroupsFromJson <- function(json_files) {
     return(visit_groups)
 }
 GetVisitsFromJson <- function(json_files) {
-    visits <- json_files$visits %>%
+    visits <- json_files[[.const[["kVisits"]]]] %>%
         map_df(~ {
             tibble::tibble(
                 visit_name = .x[["name"]],
@@ -71,6 +72,6 @@ GetVisitIsVisit <- function() {
         select(visitnum, visit_name) %>%
         arrange(visitnum) %>%
         distinct()
-    colnames(visit) <- c("name", "default_value")
+    colnames(visit) <- c(.const[["kFieldItemsFieldId"]], .const[["kFieldItemDefaultValue"]])
     return(visit)
 }

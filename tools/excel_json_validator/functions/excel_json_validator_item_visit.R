@@ -2,14 +2,21 @@
 #'
 #' @file excel_json_validator_item_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.8
+#' @date 2026.1.13
 CheckItemVisit <- function(sheetList, sheetName) {
     sheet <- sheetList[[sheetName]]
-    json <- isVisit_json
-    if (!isVisit & nrow(sheet) == 1 & length(json) == 0) {
+    json <- GetItemVisitFromJson()
+    if (!isVisit & nrow(sheet) == 1 & is.null(json)) {
         if (all(is.na(sheet[1, ]) | sheet[1, ] == "")) {
             return(NULL)
         }
+    }
+    return(CheckTarget(sheet, json))
+}
+GetItemVisitFromJson <- function() {
+    json <- isVisit_json
+    if (length(json) == 0) {
+        return(NULL)
     }
     non_visit_sheet_names <- isNonVisit_json %>% map_chr(~ .x[["alias_name"]])
 
@@ -243,34 +250,5 @@ CheckItemVisit <- function(sheetList, sheetName) {
     temp_colnames <- colnames(json_item_visit) %>% str_replace_all(" ", ".")
     colnames(json_item_visit) <- temp_colnames
     json <- json_item_visit %>% as.data.frame()
-    if (identical(sheet, json)) {
-        return(NULL)
-    }
-    if (nrow(sheet) != nrow(json)) {
-        stop(str_c("Row count mismatch in sheet '", sheetName, "' in trial: ", trialName))
-    }
-    if (ncol(sheet) != ncol(json)) {
-        stop(str_c("Column count mismatch in sheet '", sheetName, "' in trial: ", trialName))
-    }
-    if (!identical(colnames(sheet), colnames(json))) {
-        print(colnames(sheet))
-        print(colnames(json))
-        stop(str_c("Column names mismatch in sheet '", sheetName, "' in trial: ", trialName))
-    }
-    if (!identical(sheet$label, json$label)) {
-        stop(str_c("Labels mismatch in sheet '", sheetName, "' in trial: ", trialName))
-    }
-    for (row in 1:nrow(sheet)) {
-        for (col in 2:ncol(sheet)) {
-            val_sheet <- sheet[row, col][[1]]
-            val_json <- json[row, col][[1]]
-            if (is.na(val_sheet) && is.na(val_json)) {
-                next
-            }
-            if (val_sheet != val_json) {
-                stop(str_c("Value mismatch at row ", row, ", column ", col, " in sheet '", sheetName, "' in trial: ", trialName))
-            }
-        }
-    }
-    return(CheckTarget(json, sheet))
+    return(json)
 }

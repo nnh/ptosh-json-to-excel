@@ -2,13 +2,13 @@
 #'
 #' @file edit_common.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.19
+#' @date 2026.1.9
 GetTargetByType <- function(field_items, type) {
     target <- field_items %>%
         keep(~ {
-            if (is.null(.x[["type"]])) {
+            if (is.null(.x[[.const[["kFieldItemsType"]]]])) {
                 return(FALSE)
-            } else if (.x[["type"]] == type) {
+            } else if (.x[[.const[["kFieldItemsType"]]]] == type) {
                 return(TRUE)
             } else {
                 return(FALSE)
@@ -27,23 +27,23 @@ GetFieldList <- function(sheets) {
             fields <- field_items %>%
                 map(~ {
                     res <- tibble::tibble(
-                        name = .x[["name"]],
-                        field_number = .x[["name"]] %>% str_extract("\\d+") %>% as.numeric(),
-                        label = .x[["label"]],
-                        field_seq = .x[["seq"]]
+                        name = .x[[.const[["kFieldItemsFieldId"]]]],
+                        field_number = .x[[.const[["kFieldItemsFieldId"]]]] %>% str_extract("\\d+") %>% as.numeric(),
+                        label = .x[[.const[["kFieldItemsFieldName"]]]],
+                        field_seq = .x[[.const[["kFieldItemsSeq"]]]]
                     )
                     return(res)
                 }) %>%
                 bind_rows()
-            fields[["jpname"]] <- json_file[["name"]]
-            fields[["alias_name"]] <- json_file[["alias_name"]]
+            fields[[.const[["kOutputJapanaseNameEnglish"]]]] <- json_file[[.const[["kSheetJapaneseName"]]]]
+            fields[[.const[["kAliasName"]]]] <- json_file[[.const[["kAliasName"]]]]
             return(fields)
         }) %>%
         bind_rows()
     return(field_list)
 }
 CombineSheetSafety <- function(sheet_data_list) {
-    targetSheetNames <- kTargetSheetNames %>% append("name", .)
+    targetSheetNames <- .const[["kTargetSheetNames"]] %>% append("name", .)
     sheet_data_combine <- targetSheetNames %>%
         map(~ map(sheet_data_list, pluck, .x) %>%
             compact() %>%
@@ -53,9 +53,9 @@ CombineSheetSafety <- function(sheet_data_list) {
     for (nm in names(sheet_data_combine)) {
         df <- sheet_data_combine[[nm]]
         if (is.data.frame(df) && nrow(df) == 0 && ncol(df) == 0) {
-            if (!is.null(kEngColumnNames[[nm]])) {
-                sheet_data_combine[[nm]] <- data.frame(matrix(ncol = length(kEngColumnNames[[nm]]), nrow = 0)) %>%
-                    setNames(kEngColumnNames[[nm]])
+            if (!is.null(.const[["kEngColumnNames"]][[nm]])) {
+                sheet_data_combine[[nm]] <- data.frame(matrix(ncol = length(.const[["kEngColumnNames"]][[nm]]), nrow = 0)) %>%
+                    setNames(.const[["kEngColumnNames"]][[nm]])
             }
         }
     }

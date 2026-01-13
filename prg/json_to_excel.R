@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.19
+#' @date 2026.1.9
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -35,23 +35,7 @@ InstallAndLoadPackage("rlang")
 source(here("prg", "functions", "common_functions.R"), encoding = "UTF-8")
 source(here("prg", "functions", "io_functions.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8")
-# ------ constants ------
-kInputFolderName <- "input"
-kOutputFolderName <- "output"
-kOutputPath <- here(kOutputFolderName)
-kAliasNameJapaneseColumnName <- "シート名英数字別名"
-kItemVisitConditionalFormattingColumnName <- "数値チェック・アラート条件の有無"
-kReferenceColnames <- c("条件の参照先情報", "論理式の参照先情報", "最小値の参照先情報", "最大値の参照先情報")
-kEngToJpnColumnMappings <- GetEngToJpnColumnMappings()
-kEngColumnNames <- kEngToJpnColumnMappings %>%
-  map(names)
-kOptions <- "options"
-kItemVisit <- "item_visit"
-kItemVisit_old <- "item_visit_old"
-kVisit <- "visit"
-kVisits <- "visits"
-kTargetSheetNames <- c(kItemVisit, kItemVisit_old, "item_nonvisit", "visit", "allocation", "limitation", "date", "option", "master", "assigned")
-kSortOrderSheetNames <- c(kItemVisit, "item_nonvisit", "visit", "allocation", "limitation", "date", "option", "name", "master", "assigned")
+source(here("prg", "functions", "constants.R"), encoding = "UTF-8")
 # ------ main ------
 temp <- ExecReadJsonFiles()
 for (name in names(temp)) {
@@ -63,25 +47,25 @@ field_list <- GetFieldList(sheets)
 
 sheet_data_list_group <- sheets %>% map(~ {
   sheet <- .x
-  sheet_name <- sheet[["alias_name"]]
+  sheet_name <- sheet[[.const[["kAliasName"]]]]
   field_items <- sheet %>% GetFieldItems()
   temp <- EditItemAndItemVisit(field_items, sheet_name)
-  item_nonvisit <- temp$item
-  item_visit_old <- temp$item_visit
+  item_nonvisit <- temp[[.const[["kItemNonVisit"]]]]
+  item_visit_old <- temp[[.const[["kItemVisit"]]]]
   allocation <- sheet %>% GetAllocation()
-  master <- field_items %>% GetComment("link_type", sheet)
+  master <- field_items %>% GetMaster(sheet)
   if (!is_visit) {
     visit <- field_items %>% GetVisit(sheet)
   } else {
     visit <- NULL
   }
-  name <- tibble(name = sheet[["name"]], alias_name = sheet_name, images_count = sheet[["images_count"]])
+  name <- tibble(name = sheet[[.const[["kSheetJapaneseName"]]]], alias_name = sheet_name, images_count = sheet[["images_count"]])
   option <- field_items %>% GetOptions(sheet)
   assigned <- field_items %>% EditAssigned(sheet)
   limitation <- field_items %>% EditLimitation(sheet)
   date <- field_items %>% EditDate(sheet)
-  item_nonvisit <- JoinJpnameAndAliasNameAndSelectColumns("item_nonvisit", sheet)
-  item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns("item_visit_old", sheet)
+  item_nonvisit <- JoinJpnameAndAliasNameAndSelectColumns(.const[["kItemNonVisit"]], sheet)
+  item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns(.const[["kItemVisit_old"]], sheet)
   return(list(
     name = name,
     item_nonvisit = item_nonvisit,
@@ -101,14 +85,14 @@ sheet_data_combine <- CombineSheetSafety(sheet_data_list_group)
 summary_sheet_data <- SummarizeByVisit(sheet_data_combine)
 # VISIT対応シートを使用している試験のVISIT情報を格納する
 if (is_visit) {
-  summary_sheet_data[[kVisit]] <- GetVisitIsVisit()
+  summary_sheet_data[[.const[["kVisit"]]]] <- GetVisitIsVisit()
 }
 # 日本語列名に変換する
 output_checklist <- convertSheetColumnsToJapanese(summary_sheet_data)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
-output_checklist[[kItemVisit]] <- EditItemVisit(output_checklist[[kItemVisit_old]])
+output_checklist[[.const[["kItemVisit"]]]] <- EditItemVisit(output_checklist[[.const[["kItemVisit_old"]]]])
 # remove item_visit_old sheet
-output_checklist[[kItemVisit_old]] <- NULL
+output_checklist[[.const[["kItemVisit_old"]]]] <- NULL
 # シート出力順、各シートの行順の変更
 sort_output_checklist <- SortSheetsMain(output_checklist)
 
@@ -116,7 +100,7 @@ sort_output_checklist <- SortSheetsMain(output_checklist)
 output_folder_name <- Sys.time() %>%
   format("%Y%m%d%H%M%S") %>%
   str_c("output_", .)
-output_folder_path <- CreateOutputFolder(output_folder_name, kOutputPath)
+output_folder_path <- CreateOutputFolder(output_folder_name, .const[["kOutputPath"]])
 output_file_ymd <- Sys.time() %>%
   format("%Y%m%d")
 kOutputChecklistName <- str_c(trialName, " eCRF Spec ", output_file_ymd, ".xlsx")

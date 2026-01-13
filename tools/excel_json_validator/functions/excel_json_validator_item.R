@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_item.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.23
+#' @date 2026.1.13
 GetItemVisitOldFromJson <- function() {
     item_json <- target_json[["sheets"]] %>% keep(~ .x[["category"]] == "visit")
     if (length(item_json) == 0) {
@@ -137,7 +137,10 @@ GetItemNonVisitFromJson <- function() {
             }
         }
     }
-    res <- item_nonvisit %>% select(-fieldType, -numeric_check)
+    df2 <- item_nonvisit %>% inner_join(visitGroupSheetAndFieldOrders, by = c("alias_name" = "alias_name", "name" = "field_id"))
+    df3 <- df2 %>%
+        arrange(seq, field_seq)
+    res <- df3 %>% select(-fieldType, -numeric_check, -seq, -field_seq, -field_label)
     return(res)
 }
 EditItemFromJsonForValidate <- function(item_json) {

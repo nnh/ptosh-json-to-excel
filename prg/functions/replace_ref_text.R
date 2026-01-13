@@ -2,23 +2,16 @@
 #'
 #' @file replace_ref_text.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.19
+#' @date 2026.1.9
 #
 EditRefFieldTextVec <- function(df_sheet_field) {
-    join_field_info <- dplyr::left_join(df_sheet_field, field_list, by = c("alias_name", "field_number")) %>% select(-field_seq)
+    join_field_info <- dplyr::left_join(df_sheet_field, field_list, by = c(.const[["kAliasName"]], "field_number")) %>% select(-field_seq)
     join_field_info <- join_field_info %>%
-        dplyr::left_join(visit_info, by = "alias_name")
-    join_field_info$output_alias_name <- ifelse(is.na(join_field_info$visit_group), join_field_info$alias_name, join_field_info$visit_group)
-    join_field_info[["text"]] <- paste(join_field_info[["output_alias_name"]], join_field_info[["name"]], join_field_info[["label"]], sep = ",") %>%
+        dplyr::left_join(visit_info, by = .const[["kAliasName"]])
+    join_field_info[["output_alias_name"]] <- ifelse(is.na(join_field_info[["visit_group"]]), join_field_info[[.const[["kAliasName"]]]], join_field_info[["visit_group"]])
+    join_field_info[["text"]] <- paste(join_field_info[["output_alias_name"]], join_field_info[[.const[["kFieldItemsFieldId"]]]], join_field_info[[.const[["kFieldItemsFieldName"]]]], sep = ",") %>%
         paste0("(", ., ")")
     return(join_field_info)
-}
-EditRefFieldText <- function(df_sheet_field) {
-    join_field_info <- EditRefFieldTextVec(df_sheet_field)
-    res <- join_field_info[["text"]] %>%
-        unique() %>%
-        paste(collapse = "")
-    return(res)
 }
 ExtractAliasAndField <- function(x, thisSheetName) {
     if (str_detect(x, "^ref\\(")) {
@@ -69,7 +62,7 @@ GetFieldText <- function(target, thisSheetName) {
     df_refFieldText <- EditRefFieldTextVec(df_sheet_field)
     temp_ref <- target
     for (i in 1:nrow(df_refFieldText)) {
-        raw_pattern <- RegexEscape(df_refFieldText$raw[i])
+        raw_pattern <- RegexEscape(df_refFieldText[["raw"]][i])
         # 後に数字が続かない場合のみマッチ
         regex_pattern <- paste0("(", raw_pattern, ")(?![0-9])")
         if (str_detect(temp_ref, regex(regex_pattern))) {

@@ -2,11 +2,12 @@
 #'
 #' @file edit_date.R
 #' @author Mariko Ohtsuka
-#' @date 2025.11.6
+#' @date 2026.1.9
 GetDate <- function(field_items) {
     target <- field_items %>% keep(
         ~ (
-            !is.null(.x[["validators"]][["date"]][["validate_date_after_or_equal_to"]]) || !is.null(.x[["validators"]][["date"]][["validate_date_before_or_equal_to"]])
+            !is.null(purrr::pluck(.x, !!!.const[["kValidateDateAfterOrEqualTo"]], .default = NULL)) ||
+                !is.null(purrr::pluck(.x, !!!.const[["kValidateDateBeforeOrEqualTo"]], .default = NULL))
         )
     )
     if (length(target) == 0) {
@@ -16,16 +17,18 @@ GetDate <- function(field_items) {
 }
 EditDate <- function(input_field_items, sheet) {
     field_items <- input_field_items %>% GetDate()
-    alias_name <- sheet[["alias_name"]]
+    alias_name <- sheet[[.const[["kAliasName"]]]]
     date <- field_items %>% map_df(~ {
-        references_after <- GetFieldText(.x[["validators"]][["date"]][["validate_date_after_or_equal_to"]], alias_name)
-        references_before <- GetFieldText(.x[["validators"]][["date"]][["validate_date_before_or_equal_to"]], alias_name)
+        references_after <- purrr::pluck(.x, !!!.const[["kValidateDateAfterOrEqualTo"]], .default = NULL) %>%
+            GetFieldText(alias_name)
+        references_before <- purrr::pluck(.x, !!!.const[["kValidateDateBeforeOrEqualTo"]], .default = NULL) %>%
+            GetFieldText(alias_name)
         res <- tibble::tibble(
-            name = .x[["name"]],
-            label = .x[["label"]],
-            validators.date.validate_date_after_or_equal_to = .x[["validators"]][["date"]][["validate_date_after_or_equal_to"]] %||% NA,
+            name = .x[[.const[["kFieldItemsFieldId"]]]],
+            label = .x[[.const[["kFieldItemsFieldName"]]]],
+            validators.date.validate_date_after_or_equal_to = purrr::pluck(.x, !!!.const[["kValidateDateAfterOrEqualTo"]], .default = NA),
             references_after = references_after %||% NA,
-            validators.date.validate_date_before_or_equal_to = .x[["validators"]][["date"]][["validate_date_before_or_equal_to"]] %||% NA,
+            validators.date.validate_date_before_or_equal_to = purrr::pluck(.x, !!!.const[["kValidateDateBeforeOrEqualTo"]], .default = NA),
             references_before = references_before %||% NA
         )
         return(res)

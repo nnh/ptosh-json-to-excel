@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_date.R
 #' @author Mariko Ohtsuka
-#' @date 2025.12.16
+#' @date 2026.1.13
 CheckDate <- function(sheetList, sheetName) {
     sheet <- sheetList[[sheetName]] |>
         rename(!!!engToJpnColumnMappings[[sheetName]])
@@ -13,10 +13,8 @@ CheckDate <- function(sheetList, sheetName) {
     if (is.null(json)) {
         res <- NULL
     } else {
-        test1 <- arrange(sheet, alias_name, name)
-        test1 <- test1 %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
-        test2 <- arrange(json, alias_name, name)
-        test2 <- test2 %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
+        test1 <- json %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
+        test2 <- sheet %>% mutate(across(everything(), ~ ifelse(is.na(.), "", .)))
         res <- CheckTarget(test1, test2)
     }
     return(res)
@@ -71,7 +69,12 @@ CheckValidatorsDate <- function() {
         )
     }
     df2 <- JoinVisitGroupsValidator(data_tibble, key = "alias_name", target = "group") %>% distinct()
-    res <- GetItemsSelectColnames(df2, c("jpname", "alias_name", "name", "label", "validators.date.validate_date_after_or_equal_to", "references_after", "validators.date.validate_date_before_or_equal_to", "references_before"), jpNameAndGroup)
+    df3 <- df2 %>% inner_join(visitGroupSheetAndFieldOrders, by = c("alias_name" = "alias_name", "name" = "field_id"))
+    df4 <- GetItemsSelectColnames(df3, c("jpname", "alias_name", "name", "label", "validators.date.validate_date_after_or_equal_to", "references_after", "validators.date.validate_date_before_or_equal_to", "references_before", "seq", "field_seq"), jpNameAndGroup)
+    df5 <- df4 %>%
+        arrange(seq, field_seq) %>%
+        select(-seq, -field_seq)
+    res <- df5
 
     return(res)
 }
