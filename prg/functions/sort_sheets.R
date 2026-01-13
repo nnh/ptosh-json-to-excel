@@ -25,6 +25,14 @@ SortSheetAndFieldByDfValues <- function(target, output_checklist) {
         distinct()
     return(res)
 }
+SortOptionSheet <- function(target, output_checklist) {
+    optionSeqColname <- "-"
+    res <- output_checklist[[target]] %>%
+        arrange(sheet.seq, field_item.seq, !!sym(optionSeqColname)) %>%
+        select(-sheet.seq, -field_item.seq) %>%
+        distinct()
+    return(res)
+}
 
 SortSheetsMain <- function(output_checklist) {
     temp <- output_checklist
@@ -56,7 +64,7 @@ SortSheetsMain <- function(output_checklist) {
     temp[[target]] <- output_checklist[[target]] %>% SortSheetAndField(., sheet_sort_info, field_sort_info)
     # option
     target <- "option"
-    temp[[target]] <- SortSheetAndFieldByDfValues(target, output_checklist)
+    temp[[target]] <- SortOptionSheet(target, output_checklist)
     # visit
     # name
     sort_name <- output_checklist[["name"]] %>%
