@@ -18,7 +18,7 @@
 
 7. [Create Project] ボタンをクリックしてプロジェクトを開きます。
 
-8. JSON ファイルが入っているフォルダを `input` フォルダに格納してください。JSON ファイルの拡張子は必ず `.json` である必要があります。 JSON ファイルが入っているフォルダの名前を「試験名略称」として扱います。
+8. JSON ファイルを `input` フォルダに格納してください。JSON ファイルの拡張子は必ず `.json` である必要があります。 JSON ファイルの名前から日付情報を除いた文字列を「試験名略称」として扱います。
 
 9. [File] > [Open File...]から、`prg/json_to_excel.R` ファイルを開いてください。
 10. `source` をクリックし、 画面左下の console に「処理が終了しました。」と出るまでお待ちください。 処理の途中で「パブリックネットワークとプライベートネットワークにこのアプリのアクセスを許可しますか？」という Windows セキュリティのポップアップが出た場合は、「キャンセル」をクリックして下さい。
@@ -34,9 +34,7 @@ ptosh-json-to-excel
 ├── LICENSE
 ├── README.md
 ├── input
-│   └── trial_name
-│       ├── aaa.json
-│       └── zzz.json
+│   └── trial_name_YYMMDD_HHMM.json
 ├── output
 │   └── output_YYYYMMDDHHMMSS
 │       └──  list
