@@ -87,42 +87,73 @@ flattenSheetsList <- function(sheets_list) {
     })
 }
 
+#' シートグループと来院情報の紐付け・クロス集計の編集
+#' 
+#' @description 
+#' シートリストとシートグループリストを結合し、
+#' 割り付けグループ(arm)ごとのシート展開表を作成する。
+#' 結果はvisitとnon-visitのリスト形式で返す。
+#'
+#' @return A list containing:
+#' \itemize{
+#'   \item \code{visit}: visitのシートクロス集計 (tibble)
+#'   \item \code{nonvisit}: non-visitのシートクロス集計 (tibble)
+#' }
 editSheetGroupsVisit <- function() {
-    test_sheets <- flattenSheetsList(sheets) %>% 
-      select(-c(images_count, is_serious, is_closed))
-    test_sheet_groups <- flattenSheetGroupList(json_files$sheet_groups) %>% 
-      select(c(sheets_alias_name, allocation_sheet_alias))
-    test_sheet_groups_2 <- test_sheets %>% 
-      left_join(
-        test_sheet_groups, 
-          by = c("alias_name" = "sheets_alias_name"),
-          relationship = "many-to-many"
-      )
-
-    test_sheet_groups_3 <- test_sheet_groups_2 
-    test_sheet_groups_3$arm_sheets_name <- ifelse(
-      test_sheet_groups_3$sg_is_default, 
-      "デフォルト", 
-      test_sheet_groups_3$sg_group_name
+  kSheetsAliasName <- "sheets_alias_name"
+  kDefaultName <- "default"
+  
+  # 1. シートマスタのフラット化と列整理
+  # 不要なメタデータを除外し、結合のベースを作成
+  test_sheets <- flattenSheetsList(sheets) %>% 
+    select(-c(images_count, is_serious, is_closed))
+  
+  # 2. シートグループ情報の抽出
+  # 各シートがどの割り付けシート（allocation_sheet）に属するかを取得
+  test_sheet_groups <- flattenSheetGroupList(json_files$sheet_groups) %>% 
+    select(sheets_alias_name, allocation_sheet_alias)
+  
+  # 3. データの結合と群情報の正規化
+  # left_joinにより、1つのシートが複数の群に属する状態(1:n)を許容して結合
+  join_key <- setNames(kSheetsAliasName, .const[["kAliasName"]])
+  test_sheet_groups_combined <- test_sheets %>% 
+    left_join(
+      test_sheet_groups, 
+      by = join_key,
+      relationship = "many-to-many"
+    ) %>% 
+    mutate(
+      # 表示用の群名を整理
+      # クロス集計の列名となるコードを整理（空文字やNAはdefaultに置換）
+      arm_code = if_else(
+        is.na(sg_allocation_group) | sg_allocation_group == "", 
+        kDefaultName, 
+        sg_allocation_group
+      ),
     )
-    test_sheet_groups_3$arm_code <- ifelse(
-      is.na(test_sheet_groups_3$sg_allocation_group) | test_sheet_groups_3$sg_allocation_group == "", 
-      "default", 
-      test_sheet_groups_3$sg_allocation_group
-    )
-    test_sheet_groups_3$arm_name <- ifelse(test_sheet_groups_3$sg_is_default, "デフォルト", test_sheet_groups_3$sg_group_alias_name)
-    result_xtab <- createArmSheetCrossTab(test_sheet_groups_3)
-    visit <- result_xtab$visit
-    nonvisit <- result_xtab$nonvisit
-
+  
+  # 4. クロス集計の実行
+  # 整理されたデータから、arm_code（列）× alias_name（行）の表を作成
+  # ※createArmSheetCrossTab内部で names_from = arm_code 等が指定されている想定
+  full_xtab <- createArmSheetCrossTab(test_sheet_groups_combined, kDefaultName)
+  
+  res_visit <- full_xtab$visit
+  res_nonvisit <- full_xtab$nonvisit
+  
+  return(list(
+    visit = res_visit,
+    nonvisit = res_nonvisit
+  ))
 }
 
 #' arm_alias_nameを横軸、sheets_alias_nameを縦軸にしたクロス集計表を作成する
 #'
 #' @param df 入力データフレーム (test_sheet_groups_3)
+#' @param kDefaultName デフォルトの文字列
 #' @return クロス集計された tibble
-createArmSheetCrossTab <- function(input_df) {
+createArmSheetCrossTab <- function(input_df, default_name) {
   kHeaderCategory <- "header"
+  kDefaultJapaneseName <- "デフォルト"
   df <- input_df %>%
     # 1. 必要な列を残したまま重複を排除する
     # sheets_name も集計の軸(id_cols)に使うため、ここで含めておく必要があります
@@ -143,12 +174,12 @@ createArmSheetCrossTab <- function(input_df) {
     # 4. シート名でソート
     arrange(sort_order)
   # allocation情報を取得
-  allocation_info <- sheet_info %>% filter(category == "allocation") %>% 
+  allocation_info <- sheet_info %>% filter(category == .const[["kAllocation"]]) %>% 
     select(alias_name, sheet_name)
   group_info <- sheet_info %>% select(allocation_group, group_name) %>% distinct()
   group_info$group_name <- ifelse(
-    group_info$group_name == "default" | is.na(group_info$group_name), 
-    "デフォルト", 
+    group_info$group_name == default_name | is.na(group_info$group_name), 
+    kDefaultJapaneseName, 
     group_info$group_name
   )
   # 列名の行を作成する
@@ -166,16 +197,16 @@ createArmSheetCrossTab <- function(input_df) {
       if (length(parts) == 2) {
         allocation_alias <- parts[1]
         arm_code <- parts[2]
-        if (allocation_alias == "NA" || allocation_alias == "default") {
-          header[1, i] <- "デフォルト"
+        if (allocation_alias == "NA" || allocation_alias == default_name) {
+          header[1, i] <- kDefaultJapaneseName
         } else {
           allocation_row <- allocation_info %>% filter(alias_name == allocation_alias)
           if (nrow(allocation_row) > 0) {
             header[1, i] <- allocation_row$sheet_name[1]
           } 
         }
-        if (arm_code == "NA" || arm_code == "default") {
-          header[2, i] <- "デフォルト"
+        if (arm_code == "NA" || arm_code == default_name) {
+          header[2, i] <- kDefaultJapaneseName
         } else {
           group_row <- group_info %>% filter(allocation_group == arm_code)
           if (nrow(group_row) > 0) {
@@ -184,14 +215,14 @@ createArmSheetCrossTab <- function(input_df) {
         }
       }
     } else {
-      if (temp_colnames[i] == "alias_name") {
+      if (temp_colnames[i] == .const[["kAliasName"]]) {
         header[2, i] <- .const[["kAliasNameJapaneseColumnName"]]
-      } else if (temp_colnames[i] == "name") {
-        header[2, i] <- "シート名"
-      } else if (temp_colnames[i] == "sort_order") {
+      } else if (temp_colnames[i] == .const[["kSheetJapaneseName"]]) {
+        header[2, i] <- .const[["kSheetNameJapanese"]]
+      } else if (temp_colnames[i] == .const[["kSortOrder"]]) {
         header[1, i] <- -999
         header[2, i] <- -888
-      } else if (temp_colnames[i] == "category") {
+      } else if (temp_colnames[i] == .const[["kCategory"]]) {
         header[1, i] <- kHeaderCategory
         header[2, i] <- kHeaderCategory
 
@@ -202,13 +233,13 @@ createArmSheetCrossTab <- function(input_df) {
   }
   # categoryがvisitまたはallocationならばvisitに、それ以外ならnonvisitに格納
   header_df <- df %>% bind_rows(header)
-  temp_visit <- header_df %>% filter(category == "visit" | category == "allocation" | category == kHeaderCategory) %>% arrange(sort_order)
+  temp_visit <- header_df %>% filter(category == .const[["kVisit"]] | category == .const[["kAllocation"]] | category == kHeaderCategory) %>% arrange(sort_order)
   visitnum_alias_name <- visit_info %>% select(c(.const[["kAliasName"]], visitnum))
   visit <- visitnum_alias_name %>% left_join(temp_visit, ., by = .const[["kAliasName"]])# visitnum と alias_name を先頭に移動し、残りの列順は維持する
   visit <- visit %>%
     relocate(visitnum, alias_name, .before = everything()) %>% arrange(sort_order)
   visit <- visit %>% select(-c(sort_order, category))
-  nonvisit <- header_df %>% filter(!(category == "visit" | category == "allocation")) %>% arrange(sort_order) 
+  nonvisit <- header_df %>% filter(!(category == .const[["kVisit"]] | category == .const[["kAllocation"]])) %>% arrange(sort_order) 
   nonvisit <- nonvisit %>% select(-c(sort_order, category))
   result <- list(
     visit = visit,

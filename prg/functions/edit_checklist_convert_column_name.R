@@ -3,7 +3,7 @@
 #'
 #' @file edit_checklist_convert_column_name.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.4.16
 renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     stopifnot(is.data.frame(df))
     stopifnot(is.character(nameMap), !is.null(names(nameMap)))
@@ -16,7 +16,7 @@ renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
 
 GetEngToJpnColumnMappings <- function() {
     itemColumnName <- c(
-        jpname = "シート名",
+        jpname = .const[["kSheetNameJapanese"]],
         alias_name = .const[["kAliasNameJapaneseColumnName"]],
         name = "フィールドID",
         label = "ラベル",
@@ -36,7 +36,7 @@ GetEngToJpnColumnMappings <- function() {
     )
     engToJpnColumnMappings <- list(
         name = c(
-            name = "シート名",
+            name = .const[["kSheetNameJapanese"]],
             alias_name = .const[["kAliasNameJapaneseColumnName"]],
             images_count = "画像登録欄の数"
         ),
@@ -46,7 +46,7 @@ GetEngToJpnColumnMappings <- function() {
         ),
         item_nonvisit = c(itemColumnName, field_type = "フィールドタイプ"),
         option = c(
-            jpname = "シート名",
+            jpname = .const[["kSheetNameJapanese"]],
             alias_name = .const[["kAliasNameJapaneseColumnName"]],
             option.name = "オプション名",
             option.values_name = "ラベル",
@@ -57,7 +57,7 @@ GetEngToJpnColumnMappings <- function() {
             field_item.seq = "field_item.seq"
         ),
         visit = c(
-            jpname = "シート名",
+            jpname = .const[["kSheetNameJapanese"]],
             alias_name = .const[["kAliasNameJapaneseColumnName"]],
             name = "フィールドID",
             default_value = "デフォルト値"
@@ -67,14 +67,14 @@ GetEngToJpnColumnMappings <- function() {
             default_value = "VISIT"
         ),
         master = c(
-            jpname = "シート名",
+            jpname = .const[["kSheetNameJapanese"]],
             alias_name = .const[["kAliasNameJapaneseColumnName"]],
             name = "フィールドID",
             label = "ラベル",
             link_type = "保存先のマスタ"
         ),
         allocation = c(
-            jpname = "シート名",
+            jpname = .const[["kSheetNameJapanese"]],
             alias_name = .const[["kAliasNameJapaneseColumnName"]],
             is_zelen = "Zelenの施設内バランス化",
             zelen_imbalance = "施設間の差",
@@ -90,14 +90,14 @@ GetEngToJpnColumnMappings <- function() {
             formula_field_references = "調整因子フィールド.式の参照先情報"
         ),
         assigned = c(
-            jpname = "シート名",
+            jpname = .const[["kSheetNameJapanese"]],
             alias_name = .const[["kAliasNameJapaneseColumnName"]],
             name = "フィールドID",
             label = "ラベル",
             default_value = "デフォルト値"
         ),
         limitation = c(
-            jpname = "シート名",
+            jpname = .const[["kSheetNameJapanese"]],
             alias_name = .const[["kAliasNameJapaneseColumnName"]],
             name = "フィールドID",
             label = "ラベル",
@@ -108,7 +108,7 @@ GetEngToJpnColumnMappings <- function() {
             validators.numericality.validate_numericality_greater_than_or_equal_to = "バリデータ.数値.最小値"
         ),
         date = c(
-            jpname = "シート名",
+            jpname = .const[["kSheetNameJapanese"]],
             alias_name = .const[["kAliasNameJapaneseColumnName"]],
             name = "フィールドID",
             label = "ラベル",

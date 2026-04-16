@@ -2,7 +2,7 @@
 #'
 #' @file constants.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.4.16
 #' @dependencies here, purrr, edit_checklist_convert_column_name.R
 SetConstants <- function() {
     .const[["kOutputJapanaseNameEnglish"]] <- "jpname"
@@ -10,6 +10,7 @@ SetConstants <- function() {
     .const[["kOutputFolderName"]] <- "output"
     .const[["kOutputPath"]] <- here(.const[["kOutputFolderName"]])
     .const[["kAliasNameJapaneseColumnName"]] <- "シート名英数字別名"
+    .const[["kSheetNameJapanese"]] <- "シート名"
     .const[["kItemVisitConditionalFormattingColumnName"]] <- "数値チェック・アラート条件の有無"
     .const[["kReferenceColnames"]] <- c("条件の参照先情報", "論理式の参照先情報", "最小値の参照先情報", "最大値の参照先情報")
     .const[["kEngToJpnColumnMappings"]] <- GetEngToJpnColumnMappings()
@@ -20,10 +21,12 @@ SetConstants <- function() {
     .const[["kAliasName"]] <- "alias_name"
     .const[["kSheetGroups"]] <- "sheet_groups"
     .const[["kSheets"]] <- "sheets"
+    .const[["kCategory"]] <- "category"
     ## sheet_orders
     .const[["kSheetOrders"]] <- "sheet_orders"
     .const[["kSheetOrdersAliasName"]] <- "sheet"
     .const[["kSheetSeq"]] <- "seq"
+    .const[["kSortOrder"]] <- "sort_order"
     ## options
     .const[["kOptions"]] <- "options"
     .const[["kOptionSeq"]] <- "seq"
@@ -48,6 +51,9 @@ SetConstants <- function() {
     .const[["kVisits"]] <- "visits"
     .const[["kVisitGroup"]] <- "visit_groups"
 
+    ## allocation
+    .const[["kAllocation"]] <- "allocation"
+
     # 条件コンスタント
     .const[["kArticle"]] <- "FieldItem::Article"
 
@@ -61,13 +67,13 @@ SetConstants <- function() {
         .const[["kItemVisit_old"]],
         .const[["kItemNonVisit"]],
         .const[["kVisit"]],
-        "allocation", "limitation", "date", "option", "master", "assigned"
+        .const[["kAllocation"]], "limitation", "date", "option", "master", "assigned"
     )
     .const[["kSortOrderSheetNames"]] <- c(
         .const[["kItemVisit"]],
         .const[["kItemNonVisit"]],
         .const[["kVisit"]],
-        "allocation", "limitation", "date", "option", "name", "master", "assigned"
+        .const[["kAllocation"]], "limitation", "date", "option", "name", "master", "assigned"
     )
 }
 .const <- new.env(parent = emptyenv())

@@ -59,7 +59,7 @@ GetSheetNamesAndSortOrderFromJson <- function(json_file) {
     res <- tibble::tibble(
       sheet_name = .x[["name"]],
       alias_name = .x[[.const[["kAliasName"]]]],
-      category = .x[["category"]]
+      category = .x[[.const[["kCategory"]]]]
     )
     return(res)
   })
