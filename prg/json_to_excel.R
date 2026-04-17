@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.4.17
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -93,6 +93,10 @@ output_checklist <- convertSheetColumnsToJapanese(summary_sheet_data)
 output_checklist[[.const[["kItemVisit"]]]] <- EditItemVisit(output_checklist[[.const[["kItemVisit_old"]]]])
 # remove item_visit_old sheet
 output_checklist[[.const[["kItemVisit_old"]]]] <- NULL
+# sheet_groupsを作成
+sheet_groups <- EditSheetGroups()
+output_checklist[[.const[["kSheetGroupsVisit"]]]] <- sheet_groups$visit
+output_checklist[[.const[["kSheetGroupsNonVisit"]]]]<- sheet_groups$nonvisit
 # シート出力順、各シートの行順の変更
 sort_output_checklist <- SortSheetsMain(output_checklist)
 

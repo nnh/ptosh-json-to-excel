@@ -1,11 +1,15 @@
-#' シートグループと来院情報の紐付け・クロス集計の編集
-editSheetGroupsVisit <- function() {
+#' edit_sheet_groups.R
+#'
+#' @file edit_sheet_groups.R
+#' @author Mariko Ohtsuka
+#' @date 2026.4.17
+EditSheetGroups <- function() {
   kDefaultName <- "default"
   kSheetsAliasName <- "sheets_alias_name"
   
   # 1. データ抽出とフラット化
-  test_sheets <- flattenSheetsList(sheets)
-  test_sheet_groups <- flattenSheetGroupList(json_files$sheet_groups) %>% 
+  test_sheets <- FlattenSheetsList(sheets)
+  test_sheet_groups <- FlattenSheetGroupList(json_files$sheet_groups) %>% 
     select(sheets_alias_name, allocation_sheet_alias)
   
   # 2. データの結合と正規化
@@ -19,12 +23,12 @@ editSheetGroupsVisit <- function() {
     )
   
   # 3. クロス集計の実行と結果の返却
-  result <- createArmSheetCrossTab(test_sheet_groups_combined, kDefaultName)
+  result <- CreateArmSheetCrossTab(test_sheet_groups_combined, kDefaultName)
   return(result)
 }
 
 #' sheet_groupsリストの全情報を保持したままtibbleに変換する
-flattenSheetGroupList <- function(sheet_groups) {
+FlattenSheetGroupList <- function(sheet_groups) {
   map_df(sheet_groups, function(x) {
     base_info <- tibble(
       uuid = x$uuid %||% NA_character_,
@@ -46,7 +50,7 @@ flattenSheetGroupList <- function(sheet_groups) {
 }
 
 #' sheetsリストの全情報を保持したままtibbleに変換する
-flattenSheetsList <- function(sheets_list) {
+FlattenSheetsList <- function(sheets_list) {
   map_df(sheets_list, function(x) {
     base_info <- tibble(
       name = x$name %||% NA_character_,
@@ -68,7 +72,7 @@ flattenSheetsList <- function(sheets_list) {
 }
 
 #' クロス集計表の作成とヘッダー行の付与
-createArmSheetCrossTab <- function(input_df, default_name) {
+CreateArmSheetCrossTab <- function(input_df, default_name) {
   kHeaderCategory <- "header"
   kDefaultJapaneseName <- "デフォルト"
   
@@ -101,7 +105,7 @@ createArmSheetCrossTab <- function(input_df, default_name) {
     mutate(across(everything(), as.character)) %>%
     slice(0) %>% 
     add_row() %>% # 1行目: 割り付けシート名
-    add_row()    # 2行目: 腕名
+    add_row()    # 2行目: グループ名
   
   temp_colnames <- colnames(df)
   
@@ -141,23 +145,41 @@ createArmSheetCrossTab <- function(input_df, default_name) {
   # --- 4. 結合と最終整理 ---
   header_df <- bind_rows(header, mutate(df, across(everything(), as.character)))
   
-  # Visit情報の結合
+  # Visit情報のマッピング準備
   visitnum_map <- visit_info %>% select(all_of(c(.const[["kAliasName"]], "visitnum")))
   
-  # 分離ロジック
-  is_visit_row <- header_df$category %in% c(.const[["kVisit"]], .const[["kAllocation"]], kHeaderCategory)
+  # --- 5. 分離ロジック ---
   
+  # ヘッダー行かどうかの判定フラグ
+  is_header <- header_df$category == kHeaderCategory
+  
+  # visit行かどうかの判定フラグ（visitマスタが空の場合はヘッダーのみを対象とする）
+  if (nrow(visit_info) == 0) {
+    is_visit_content <- FALSE # コンテンツとしてのvisit行は無し
+  } else {
+    is_visit_content <- header_df$category %in% c(.const[["kVisit"]], .const[["kAllocation"]])
+  }
+  
+  # --- 6. テーブル生成 ---
+
+  # 【Visitテーブル】: ヘッダー + visitコンテンツ
   visit <- header_df %>% 
-    filter(is_visit_row) %>%
+    filter(is_header | is_visit_content) %>%
     left_join(visitnum_map, by = .const[["kAliasName"]]) %>%
     relocate(visitnum, everything()) %>%
     arrange(as.numeric(sort_order)) %>%
     select(-c(sort_order, category))
-  
+
+  # 【Non-Visitテーブル】: ヘッダー + (visitコンテンツ以外の行)
+  # ※ !is_visit_content を使うことで、ヘッダー以外の全行からvisitを除外したものに、
+  #    is_header を OR で結合してヘッダーを必ず残します。
   nonvisit <- header_df %>% 
-    filter(!is_visit_row) %>%
+    filter(is_header | (!is_header & !is_visit_content)) %>%
     arrange(as.numeric(sort_order)) %>%
     select(-c(sort_order, category))
-  
-  list(visit = visit, nonvisit = nonvisit)
+
+  return(list(
+    visit = visit,
+    nonvisit = nonvisit
+  ))
 }

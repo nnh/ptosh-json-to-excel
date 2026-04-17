@@ -62,18 +62,26 @@ SetConstants <- function() {
     .const[["kItemVisit"]] <- "item_visit"
     .const[["kItemVisit_old"]] <- "item_visit_old"
     .const[["kVisit"]] <- "visit"
+    .const[["kSheetGroupsVisit"]] <- "sheet_groups_visit"
+    .const[["kSheetGroupsNonVisit"]] <- "sheet_groups_nonvisit"
     .const[["kTargetSheetNames"]] <- c(
         .const[["kItemVisit"]],
         .const[["kItemVisit_old"]],
         .const[["kItemNonVisit"]],
         .const[["kVisit"]],
-        .const[["kAllocation"]], "limitation", "date", "option", "master", "assigned"
+        .const[["kAllocation"]], 
+        .const[["kSheetGroupsVisit"]],
+        .const[["kSheetGroupsNonVisit"]],
+        "limitation", "date", "option", "master", "assigned"
     )
     .const[["kSortOrderSheetNames"]] <- c(
         .const[["kItemVisit"]],
         .const[["kItemNonVisit"]],
         .const[["kVisit"]],
-        .const[["kAllocation"]], "limitation", "date", "option", "name", "master", "assigned"
+        .const[["kAllocation"]], 
+        .const[["kSheetGroupsVisit"]],
+        .const[["kSheetGroupsNonVisit"]],
+        "limitation", "date", "option", "name", "master", "assigned"
     )
 }
 .const <- new.env(parent = emptyenv())
