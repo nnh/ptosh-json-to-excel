@@ -10,7 +10,7 @@ EditSheetGroups <- function() {
   # 1. データ抽出とフラット化
   test_sheets <- FlattenSheetsList(sheets)
   test_sheet_groups <- FlattenSheetGroupList(json_files$sheet_groups) %>% 
-    select(sheets_alias_name, allocation_sheet_alias)
+    select(sheets_alias_name, allocation_sheet_alias, allocation_group)
   
   # 2. データの結合と正規化
   join_key <- setNames(kSheetsAliasName, .const[["kAliasName"]])
