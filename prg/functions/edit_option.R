@@ -38,7 +38,7 @@ GetOptions <- function(field_items, sheet) {
                 option <- .x[["option"]]
             }
             if (length(option) == 0) {
-                stop(paste("Option ID", option_id, "not found in options JSON."))
+                stop(paste("Option ID", option_name, "not found in options JSON."))
             }
             field_item_seq <- .x[[.const[["kFieldItemsSeq"]]]]
             df_option_values <- option %>% GetOptionsValues(.)
