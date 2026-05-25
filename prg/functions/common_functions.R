@@ -173,7 +173,7 @@ ExecReadJsonFiles <- function() {
   res[["json_files"]] <- json_file
   res[["trialName"]] <- trial_name
   res[["options_flag"]] <- options_flag
-  res[["options_json"]] <- options_json
+  res[["options_json"]] <- if (options_flag) options_json else NULL
   res[["is_visit"]] <- is_visit
   res[["visit_info"]] <- visit_info
   return(res)
