@@ -2,7 +2,7 @@
 #'
 #' @file edit_checklist_function.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.25
 # ------ constants ------
 # ------ functions ------
 OutputChecklistSheet <- function(df_output, wb, sheet_name) {
@@ -28,7 +28,7 @@ OutputChecklistSheet <- function(df_output, wb, sheet_name) {
 }
 OutputChecklistXlsx <- function(output_list, output_checklist_path) {
   wb <- createWorkbook()
-  for (i in 1:length(output_list)) {
+  for (i in seq_along(output_list)) {
     wb <- OutputChecklistSheet(df_output = output_list[[i]], wb = wb, sheet_name = names(output_list)[i])
   }
   saveWorkbook(wb = wb, file = str_c(output_checklist_path, "/", kOutputChecklistName), overwrite = T)
