@@ -51,6 +51,6 @@ EditLimitation <- function(input_field_items, sheet) {
         )
         return(res)
     })
-    res <- JoinJpnameAndAliasNameAndSelectColumns("limitation", sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(limitation, "limitation", sheet)
     return(res)
 }

@@ -21,8 +21,7 @@ GetMaster <- function(field_items, sheet) {
     if (nrow(target) == 0) {
         return(NULL)
     }
-    assign(dfname, target)
-    res <- JoinJpnameAndAliasNameAndSelectColumns(dfname, sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(target, dfname, sheet)
 
     return(res)
 }

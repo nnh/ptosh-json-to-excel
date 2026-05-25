@@ -49,7 +49,7 @@ GetOptions <- function(field_items, sheet) {
         distinct() %>%
         filter(option.values_is_usable == TRUE)
     option[["sheet.seq"]] <- sheet[["sort_order"]]
-    res <- JoinJpnameAndAliasNameAndSelectColumns("option", sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(option, "option", sheet)
 
     return(res)
 }

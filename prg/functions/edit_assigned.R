@@ -13,6 +13,6 @@ EditAssigned <- function(input_field_items, sheet) {
         )
         return(res)
     })
-    res <- JoinJpnameAndAliasNameAndSelectColumns("assigned", sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(assigned, "assigned", sheet)
     return(res)
 }

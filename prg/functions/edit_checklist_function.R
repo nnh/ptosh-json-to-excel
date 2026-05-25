@@ -43,8 +43,7 @@ SelectColumns <- function(df, target_columns) {
     select(all_of(target_columns))
   return(df)
 }
-JoinJpnameAndAliasNameAndSelectColumns <- function(df_name, json_file) {
-  df <- get(df_name, envir = parent.frame())
+JoinJpnameAndAliasNameAndSelectColumns <- function(df, df_name, json_file) {
   if (is.null(df) || nrow(df) == 0) {
     return(NULL)
   }

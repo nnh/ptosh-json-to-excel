@@ -33,6 +33,6 @@ EditDate <- function(input_field_items, sheet) {
         )
         return(res)
     })
-    res <- JoinJpnameAndAliasNameAndSelectColumns("date", sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(date, "date", sheet)
     return(res)
 }

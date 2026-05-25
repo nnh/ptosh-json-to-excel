@@ -58,7 +58,6 @@ GetAllocation <- function(json_file) {
         }
     }
     res[["formula_field_references"]] <- formula_field_str
-    allocation <- res
-    res <- JoinJpnameAndAliasNameAndSelectColumns("allocation", json_file)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(res, "allocation", json_file)
     return(res)
 }

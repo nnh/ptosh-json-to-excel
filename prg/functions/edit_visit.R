@@ -27,7 +27,7 @@ GetVisit <- function(field_items, sheet) {
             return(res)
         })
 
-    res <- JoinJpnameAndAliasNameAndSelectColumns(.const[["kVisit"]], sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(visit, .const[["kVisit"]], sheet)
     return(res)
 }
 GetVisitGroupsFromJson <- function(json_files) {

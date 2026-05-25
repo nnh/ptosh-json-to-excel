@@ -64,8 +64,8 @@ sheet_data_list_group <- sheets %>% map(~ {
   assigned <- field_items %>% EditAssigned(sheet)
   limitation <- field_items %>% EditLimitation(sheet)
   date <- field_items %>% EditDate(sheet)
-  item_nonvisit <- JoinJpnameAndAliasNameAndSelectColumns(.const[["kItemNonVisit"]], sheet)
-  item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns(.const[["kItemVisit_old"]], sheet)
+  item_nonvisit <- JoinJpnameAndAliasNameAndSelectColumns(item_nonvisit, .const[["kItemNonVisit"]], sheet)
+  item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns(item_visit_old, .const[["kItemVisit_old"]], sheet)
   return(list(
     name = name,
     item_nonvisit = item_nonvisit,
