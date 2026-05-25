@@ -1,0 +1,7 @@
+# データファイルフォルダ — Claudeに参照させない
+input/
+output/
+forTest_input_ALL-B19/
+forTest_input_AML224-FLT3-ITD/
+forTest_input_Bev-FOLFOX-SBC/
+20260420forTest_input_AML224-FLT3-ITD/
