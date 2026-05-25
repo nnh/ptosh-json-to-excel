@@ -2,28 +2,30 @@
 #'
 #' @file summarize_by_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.25
 #
 SummarizeByVisit <- function(sheet_data_combine) {
     res <- sheet_data_combine
     summarize_target_sheet_names <- c("option", "assigned", "limitation", "date")
+    visit_group_map <- visit_info %>%
+        dplyr::select(
+            alias_name,
+            visit_group_name,
+            visit_group
+        ) %>%
+        dplyr::distinct()
     for (sheet_name in summarize_target_sheet_names) {
         if (nrow(res[[sheet_name]]) == 0) {
             next
         }
-        for (row in 1:nrow(res[[sheet_name]])) {
-            aliasName <- res[[sheet_name]] %>%
-                dplyr::slice(row) %>%
-                dplyr::pull(alias_name)
-
-            visit_group <- visit_info %>%
-                dplyr::filter(alias_name == aliasName)
-            if (nrow(visit_group) == 1) {
-                res[[sheet_name]][row, .const[["kOutputJapanaseNameEnglish"]]] <- visit_group[["visit_group_name"]]
-                res[[sheet_name]][row, .const[["kAliasName"]]] <- visit_group[["visit_group"]]
-            }
-        }
-        res[[sheet_name]] <- res[[sheet_name]] %>% distinct()
+        res[[sheet_name]] <- res[[sheet_name]] %>%
+            dplyr::left_join(visit_group_map, by = .const[["kAliasName"]]) %>%
+            dplyr::mutate(
+                !!.const[["kOutputJapanaseNameEnglish"]] := dplyr::coalesce(visit_group_name, !!sym(.const[["kOutputJapanaseNameEnglish"]])),
+                !!.const[["kAliasName"]] := dplyr::coalesce(visit_group, !!sym(.const[["kAliasName"]]))
+            ) %>%
+            dplyr::select(-visit_group_name, -visit_group) %>%
+            dplyr::distinct()
     }
     return(res)
 }
