@@ -2,23 +2,23 @@
 #'
 #' @file io_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2025.10.1
+#' @date 2026.5.25
 # ------ constants ------
 kTableStyle <- "TableStyleMedium2"
 # ------ functions ------
-#' Read JSON files and return a list of raw and flatten JSON data.
+#' Read a JSON file and return its contents.
 #'
-#' This function reads JSON files and returns a list of raw and flatten JSON data.
+#' This function reads a single JSON file and returns its contents as a list.
 #'
-#' @param json_filenames Vector of JSON file names.
+#' @param json_filename A single JSON file name.
 #' @param targetTrialFolder The path of the folder containing the JSON file.
-#' @return A list containing raw and flatten JSON data.
+#' @return A list containing the JSON file contents.
 #'
 #' @importFrom jsonlite fromJSON
 #' @export
-ReadJsonFiles <- function(json_filenames, targetTrialFolder) {
-  json_files <- json_filenames %>%
+ReadJsonFiles <- function(json_filename, targetTrialFolder) {
+  json_file <- json_filename %>%
     file.path(targetTrialFolder, .) %>%
     read_json()
-  return(json_files)
+  return(json_file)
 }

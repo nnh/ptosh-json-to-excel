@@ -2,7 +2,7 @@
 #'
 #' @file common_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2025.1.9
+#' @date 2026.5.25
 # ------ functions ------
 #' Create an output folder if it does not exist.
 #'
@@ -137,17 +137,17 @@ GetSheetNamesAndSortOrderFromJson <- function(json_file) {
 #' @import ReadJsonFiles
 #' @export
 ExecReadJsonFiles <- function() {
-  json_filenames <- list.files(.const[["kInputFolderName"]], pattern = "*.json", full.names = F)
-  if (length(json_filenames) == 0) {
+  json_filename <- list.files(.const[["kInputFolderName"]], pattern = "*.json", full.names = F)
+  if (length(json_filename) == 0) {
     stop("inputフォルダの中にjsonファイルが存在しません。")
     return(NULL)
   }
-  if (length(json_filenames) > 1) {
+  if (length(json_filename) > 1) {
     stop("inputフォルダの中にjsonファイルが複数存在します。jsonファイルを一つだけ格納して再実行してください。")
     return(NULL)
   }
-  json_file <- ReadJsonFiles(json_filenames, .const[["kInputFolderName"]])
-  trial_name <- json_filenames %>% str_remove("_[0-9]{6}_[0-9]{4}\\.json$")
+  json_file <- ReadJsonFiles(json_filename, .const[["kInputFolderName"]])
+  trial_name <- json_filename %>% str_remove("_[0-9]{6}_[0-9]{4}\\.json$")
   options_flag <- .const[["kOptions"]] %in% names(json_file)
   if (options_flag) {
     options_json <- GetListSetName(json_file, .const[["kOptions"]], "name")
