@@ -2,7 +2,7 @@
 #'
 #' @file edit_item.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.25
 EditItemAndItemVisit <- function(field_items, sheet_name) {
     visit_group <- visit_info %>% filter(alias_name == sheet_name)
     if (visit_group %>% nrow() == 1) {
@@ -33,9 +33,7 @@ EditItem <- function(field_items, alias_name) {
         references_before <- purrr::pluck(.x, !!!.const[["kValidateDateBeforeOrEqualTo"]], .default = NULL) %>%
             GetFieldText(alias_name)
         numericality <- purrr::pluck(.x, !!!.const[["kValidatorsNumericality"]], .default = NULL)
-        numericality_check <- !is.null(
-            purrr::pluck(.x, !!!.const[["kValidatorsNumericality"]], .default = NULL)
-        )
+        numericality_check <- !is.null(numericality)
         normal_range_gte <- purrr::pluck(.x, !!!.const[["kNormalRangeGreaterThanOrEqualTo"]], .default = NA)
         normal_range_lss <- purrr::pluck(.x, !!!.const[["kNormalRangeLessThanOrEqualTo"]], .default = NA)
         normal_range_check <- (!is.null(normal_range_gte) && !is.na(normal_range_gte)) ||
