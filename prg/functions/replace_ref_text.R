@@ -2,7 +2,7 @@
 #'
 #' @file replace_ref_text.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.25
 #
 EditRefFieldTextVec <- function(df_sheet_field) {
     join_field_info <- dplyr::left_join(df_sheet_field, field_list, by = c(.const[["kAliasName"]], "field_number")) %>% select(-field_seq)
@@ -50,10 +50,6 @@ GetDfSheetField <- function(target, thisSheetName) {
         select(-parsed)
     return(df_sheet_field)
 }
-RegexEscape <- function(text) {
-    # 正規表現の特殊文字をバックスラッシュでエスケープ
-    gsub("([][{}()+*^$|\\\\?.])", "\\\\\\1", text)
-}
 GetFieldText <- function(target, thisSheetName) {
     df_sheet_field <- GetDfSheetField(target, thisSheetName)
     if (is.null(df_sheet_field)) {
@@ -62,7 +58,7 @@ GetFieldText <- function(target, thisSheetName) {
     df_refFieldText <- EditRefFieldTextVec(df_sheet_field)
     temp_ref <- target
     for (i in 1:nrow(df_refFieldText)) {
-        raw_pattern <- RegexEscape(df_refFieldText[["raw"]][i])
+        raw_pattern <- stringr::str_escape(df_refFieldText[["raw"]][i])
         # 後に数字が続かない場合のみマッチ
         regex_pattern <- paste0("(", raw_pattern, ")(?![0-9])")
         if (str_detect(temp_ref, regex(regex_pattern))) {
