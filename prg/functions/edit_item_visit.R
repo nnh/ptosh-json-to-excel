@@ -1,6 +1,6 @@
 #' edit_item_visit.R
 #'
-#' @file edit_item.R
+#' @file edit_item_visit.R
 #' @author Mariko Ohtsuka
 #' @date 2026.1.9
 EditItemVisit <- function(item_visit) {
