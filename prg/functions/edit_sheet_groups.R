@@ -1,29 +1,14 @@
 #' edit_sheet_groups.R
+#' シートグループの編集とクロス集計表の作成
 #'
 #' @file edit_sheet_groups.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.25
-library(tidyverse)
+#' @date 2026.5.26
+EditSheetGroups <- function(sheets, json_files, sheet_info) {
+  sheet_orders <- sheet_info %>% 
+    select(name=alias_name, seq=sort_order) %>% 
+    distinct()
 
-edit_sheet_groups <- function(sheets, json_files, sheet_orders) {
-  
-  # --- 1. カテゴリ別のシート分類 ---
-  visit_sheets <- sheets %>% 
-    keep(~ .x[["category"]] %in% c("visit", "allocation")) %>% 
-    map_df(~ tibble(
-      sheet_name = .x[["name"]] %||% NA_character_,
-      sheet_alias_name = .x[["alias_name"]] %||% NA_character_
-    ))
-
-  non_visit_sheets <- sheets %>% 
-    keep(~ !(.x[["category"]] %in% c("visit", "allocation"))) %>% 
-    map_df(~ tibble(
-      sheet_name = .x[["name"]] %||% NA_character_,
-      sheet_alias_name = .x[["alias_name"]] %||% NA_character_
-    ))
-
-
-  # --- 2. sheet_groups構造の平坦化 (シートとグループのマッピング) ---
   sheet_group_mappings <- json_files[["sheet_groups"]] %>% 
     map_df(function(sg) {
       alloc_group <- sg[["allocation_group"]] %||% NA_character_
@@ -52,14 +37,12 @@ edit_sheet_groups <- function(sheets, json_files, sheet_orders) {
     }) %>% 
     distinct()
 
-
-  # --- 3. グループ割り当て情報の抽出 ---
   sheet_group_allocations <- json_files[["sheet_groups"]] %>% 
     keep(~ !is.null(.x[["allocation_group"]]) && !is.null(.x[["allocation_sheet"]])) %>% 
     map_df(function(sg) {
       alloc_sheets <- sg[["allocation_sheet"]]
       alloc_aliases <- if (!is.null(alloc_sheets[["alias_name"]])) {
-        alloc_sheets[["alias_name"]] # ← タイポも併せて修正しました
+        alloc_sheets[["alias_name"]] 
       } else {
         map_chr(alloc_sheets, ~ if(is.list(.x)) .x[["alias_name"]] %||% NA_character_ else as.character(.x))
       }
@@ -73,7 +56,6 @@ edit_sheet_groups <- function(sheets, json_files, sheet_orders) {
     distinct()
 
 
-  # --- 4. 各シートに定義された割当グループのマスタ作成 ---
   allocation_group_master <- json_files[["sheets"]] %>% 
     keep(~ !is.null(.x[["allocation"]][["groups"]])) %>% 
     map_df(function(s) {
@@ -83,33 +65,26 @@ edit_sheet_groups <- function(sheets, json_files, sheet_orders) {
       s[["allocation"]][["groups"]] %>% 
         map_df(~ tibble(
           sheet_name = s_name,
-          alias_name = alias_name,  # ← 結合キーを合わせるため sheet_alias_name から alias_name に戻しました
+          alias_name = alias_name,  
           group_code = .x[["code"]] %||% NA_character_,
           group_label = .x[["label"]] %||% NA_character_
         ))
     }) %>% 
     distinct()
 
-
-  # --- 5. 列情報の作成 (column_information) ---
   column_information <- allocation_group_master %>%
-    # by の指定を正確に対応させました
-    left_join(sheet_group_allocations, by = c("alias_name" = "alias_name", "group_code" = "group_code")) %>%
+    left_join(sheet_group_allocations, by = c("alias_name", "group_code")) %>%
     select(sheet_name, sheet_alias_name = alias_name, sheet_group_name, group_code, group_label) %>%
     mutate(sheet_group_name = if_else(is.na(sheet_group_name), group_label, sheet_group_name)) %>%
     select(-group_label) %>%
     distinct()
 
-
-  # --- 6. 最終データの結合 (ordered_sheet_groups) ---
   resolved_mappings <- sheet_group_mappings %>% 
     left_join(column_information, by = c("alias_name" = "sheet_alias_name", "allocation_group" = "group_code")) 
 
   ordered_sheet_groups <- sheet_orders %>% 
     left_join(resolved_mappings, by = c("name" = "sheet_alias_name"))
 
-
-  # --- 7. クロス集計表の作成 ---
   unique_columns <- column_information %>% 
     distinct(sheet_name, sheet_alias_name, sheet_group_name, group_code)
   
@@ -164,7 +139,6 @@ edit_sheet_groups <- function(sheets, json_files, sheet_orders) {
     left_join(order_seq_master, by = "name") %>% 
     select(seq, name, sheet_name, is_visit_or_allocation, everything())
   
-#  header_1 <- c("seq", "name", "sheet_name", "is_visit_or_allocation", "default", unique_columns$sheet_alias_name)
   header_2 <- c("seq", "name", "sheet_name", "is_visit_or_allocation", "default", unique_columns$group_code)
   header_3 <- c("seq", "name", "sheet_name", "is_visit_or_allocation", "デフォルト", unique_columns$sheet_name)
   header_4 <- c("seq", "name", "sheet_name", "is_visit_or_allocation", "デフォルト", unique_columns$sheet_group_name)
@@ -172,14 +146,10 @@ edit_sheet_groups <- function(sheets, json_files, sheet_orders) {
   dummy_colnames <- paste0("V", 1:ncol(matrix_body))
   colnames(matrix_body) <- dummy_colnames
   
-#  names(header_1) <- dummy_colnames
-#  names(header_2) <- dummy_colnames
   names(header_3) <- dummy_colnames
   names(header_4) <- dummy_colnames
   
   cross_tab <- bind_rows(
- #   as_tibble_row(header_1),
- #   as_tibble_row(header_2),
     as_tibble_row(header_3),
     as_tibble_row(header_4),
     matrix_body
@@ -198,7 +168,7 @@ edit_sheet_groups <- function(sheets, json_files, sheet_orders) {
 #'
 #' @param cross_tab 新しい仕様の edit_sheet_groups() の戻り値 (ヘッダー2行構造)
 #' @return visit_cross_tab と non_visit_cross_tab を格納したリスト
-split_cross_tab <- function(cross_tab) {
+SplitCrossTab <- function(cross_tab) {
   
   # --- 1. ヘッダー行（最初の2行）とデータ行の分離 ---
   header_rows <- cross_tab %>% slice(1:2)
@@ -210,13 +180,13 @@ split_cross_tab <- function(cross_tab) {
   
   # visit / allocation 対象のデータ行
   visit_data <- data_rows %>% 
-    filter(.[[4]] == "T") %>%            # ← スペースを詰め、構文エラーを修正しました
-    arrange(as.numeric(.[[1]]))          # ← 同上
+    filter(.[[4]] == "T") %>%            
+    arrange(as.numeric(.[[1]]))          
   
   # それ以外のデータ行
   non_visit_data <- data_rows %>% 
-    filter(.[[4]] == "F") %>%            # ← 同上
-    arrange(as.numeric(.[[1]]))          # ← 同上
+    filter(.[[4]] == "F") %>%            
+    arrange(as.numeric(.[[1]]))          
   
   # --- 3. ヘッダーとソート済データを再結合 ---
   visit_cross_tab     <- bind_rows(header_rows, visit_data)
@@ -237,7 +207,9 @@ split_cross_tab <- function(cross_tab) {
     non_visit_cross_tab = non_visit_cross_tab
   ))
 }
-my_cross_tab <- edit_sheet_groups(sheets, json_files, sheet_orders)
-result <- split_cross_tab(my_cross_tab)
-visit_cross_tab <- result$visit_cross_tab
-non_visit_cross_tab <- result$non_visit_cross_tab
+
+EditSheetGroupsMain <- function(sheets, json_files, sheet_info) {
+  sheet_groups <- EditSheetGroups(sheets, json_files, sheet_info)
+  sheet_groups_table <- SplitCrossTab(sheet_groups)
+  return(sheet_groups_table)
+}

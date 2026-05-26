@@ -2,7 +2,7 @@
 #'
 #' @file constants.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.26
 #' @dependencies here, purrr, edit_checklist_convert_column_name.R
 SetConstants <- function() {
     .const[["kOutputJapanaseNameEnglish"]] <- "jpname"
@@ -56,18 +56,24 @@ SetConstants <- function() {
     .const[["kItemVisit"]] <- "item_visit"
     .const[["kItemVisit_old"]] <- "item_visit_old"
     .const[["kVisit"]] <- "visit"
+    .const[["kSheetGroupsVisit"]] <- "sheet_groups_visit"
+    .const[["kSheetGroupsNonVisit"]] <- "sheet_groups_non_visit"
     .const[["kTargetSheetNames"]] <- c(
         .const[["kItemVisit"]],
         .const[["kItemVisit_old"]],
         .const[["kItemNonVisit"]],
         .const[["kVisit"]],
-        "allocation", "limitation", "date", "option", "master", "assigned"
+        "allocation", .const[["kSheetGroupsVisit"]],
+        .const[["kSheetGroupsNonVisit"]],
+        "limitation", "date", "option", "master", "assigned"
     )
     .const[["kSortOrderSheetNames"]] <- c(
         .const[["kItemVisit"]],
         .const[["kItemNonVisit"]],
         .const[["kVisit"]],
-        "allocation", "limitation", "date", "option", "name", "master", "assigned"
+        "allocation", .const[["kSheetGroupsVisit"]],
+        .const[["kSheetGroupsNonVisit"]],
+        "limitation", "date", "option", "name", "master", "assigned"
     )
 }
 .const <- new.env(parent = emptyenv())
