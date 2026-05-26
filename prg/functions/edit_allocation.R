@@ -2,9 +2,9 @@
 #'
 #' @file edit_allocation.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.26
 GetAllocation <- function(json_file) {
-    allocation <- json_file[["allocation"]]
+    allocation <- json_file[[.const[["kAllocation"]]]]
     if (is.null(allocation)) {
         return(NULL)
     }
@@ -21,11 +21,11 @@ GetAllocation <- function(json_file) {
     } else {
         ""
     }
-    groups <- allocation[["groups"]] %>% map_df(~ {
+    groups <- allocation[[.const[["kAllocationGroups"]]]] %>% map_df(~ {
         if_references <- GetFieldText(.x[["if"]], json_file[[.const[["kAliasName"]]]])
         group_tbl <- tibble::tibble(
-            groups.code = .x[["code"]],
-            groups.label = .x[["label"]],
+            groups.code = .x[[.const[["kAllocationGroupsCode"]]]],
+            groups.label = .x[[.const[["kAllocationGroupsLabel"]]]],
             groups.if = .x[["if"]],
             groups.if_references = if (is.null(if_references)) NA else if_references,
             groups.message = .x[["message"]]
@@ -58,6 +58,6 @@ GetAllocation <- function(json_file) {
         }
     }
     res[["formula_field_references"]] <- formula_field_str
-    res <- JoinJpnameAndAliasNameAndSelectColumns(res, "allocation", json_file)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(res, .const[["kAllocation"]], json_file)
     return(res)
 }

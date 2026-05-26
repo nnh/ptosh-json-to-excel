@@ -9,6 +9,7 @@ SetConstants <- function() {
     .const[["kInputFolderName"]] <- "input"
     .const[["kOutputFolderName"]] <- "output"
     .const[["kOutputPath"]] <- here(.const[["kOutputFolderName"]])
+    .const[["kNameJapaneseColumnName"]] <- "シート名"
     .const[["kAliasNameJapaneseColumnName"]] <- "シート名英数字別名"
     .const[["kItemVisitConditionalFormattingColumnName"]] <- "数値チェック・アラート条件の有無"
     .const[["kReferenceColnames"]] <- c("条件の参照先情報", "論理式の参照先情報", "最小値の参照先情報", "最大値の参照先情報")
@@ -18,7 +19,6 @@ SetConstants <- function() {
     # jsonファイルの要素名
     .const[["kSheetJapaneseName"]] <- "name"
     .const[["kAliasName"]] <- "alias_name"
-    .const[["kSheetGroups"]] <- "sheet_groups"
     .const[["kSheets"]] <- "sheets"
     ## sheet_orders
     .const[["kSheetOrders"]] <- "sheet_orders"
@@ -27,6 +27,18 @@ SetConstants <- function() {
     ## options
     .const[["kOptions"]] <- "options"
     .const[["kOptionSeq"]] <- "seq"
+    ## sheet_groups
+    .const[["kSheetGroups"]] <- "sheet_groups"
+    .const[["kSheetGroupsName"]] <- "name"
+    .const[["kSheetGroupAllocationGroup"]] <- "allocation_group"
+    ## allocation
+    .const[["kAllocation"]] <- "allocation"
+    .const[["kAllocationSheet"]] <- "allocation_sheet"
+    .const[["kAllocationGroups"]] <- "groups"
+    .const[["kAllocationGroupsCode"]] <- "code"
+    .const[["kAllocationGroupsLabel"]] <- "label"
+    ## sheets
+    .const[["kCategory"]] <- "category"
     ## sheets$field_items
     .const[["kFieldItems"]] <- "field_items"
     .const[["kFieldItemsType"]] <- "type"
@@ -47,9 +59,12 @@ SetConstants <- function() {
     ## visits
     .const[["kVisits"]] <- "visits"
     .const[["kVisitGroup"]] <- "visit_groups"
+    .const[["kSheetAliasName"]] <- "sheet_alias_name"
 
     # 条件コンスタント
     .const[["kArticle"]] <- "FieldItem::Article"
+    .const[["kCategoryAllocation"]] <- "allocation"
+    .const[["kCategoryVisit"]] <- "visit"
 
     # 出力シート名
     .const[["kItemNonVisit"]] <- "item_nonvisit"
@@ -63,7 +78,8 @@ SetConstants <- function() {
         .const[["kItemVisit_old"]],
         .const[["kItemNonVisit"]],
         .const[["kVisit"]],
-        "allocation", .const[["kSheetGroupsVisit"]],
+        .const[["kAllocation"]], 
+        .const[["kSheetGroupsVisit"]],
         .const[["kSheetGroupsNonVisit"]],
         "limitation", "date", "option", "master", "assigned"
     )
@@ -71,7 +87,8 @@ SetConstants <- function() {
         .const[["kItemVisit"]],
         .const[["kItemNonVisit"]],
         .const[["kVisit"]],
-        "allocation", .const[["kSheetGroupsVisit"]],
+        .const[["kAllocation"]], 
+        .const[["kSheetGroupsVisit"]],
         .const[["kSheetGroupsNonVisit"]],
         "limitation", "date", "option", "name", "master", "assigned"
     )

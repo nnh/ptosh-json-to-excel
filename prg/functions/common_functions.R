@@ -2,7 +2,7 @@
 #'
 #' @file common_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.25
+#' @date 2026.5.26
 # ------ functions ------
 #' Create an output folder if it does not exist.
 #'
@@ -63,17 +63,17 @@ GetSheetNamesAndSortOrderFromJson <- function(json_file) {
     )
     return(res)
   })
-  sheet_groups <- json_file[["sheet_groups"]] %>% map_df(~ {
+  sheet_groups <- json_file[[.const[["kSheetGroups"]]]] %>% map_df(~ {
     group_name <- .x[["name"]]
     group_alias_name <- .x[[.const[["kAliasName"]]]]
-    group_alocation_group <- .x[["allocation_group"]]
+    group_allocation_group <- .x[[.const[["kSheetGroupAllocationGroup"]]]]
     group_is_default <- .x[["is_default"]]
     res <- .x[["sheets"]] %>% map_df(~ {
       res <- tibble::tibble(
         alias_name = .x[[.const[["kAliasName"]]]],
         group_name = group_name,
         group_alias_name = group_alias_name,
-        allocation_group = group_alocation_group,
+        allocation_group = group_allocation_group,
         is_default = group_is_default
       )
       return(res)
@@ -96,9 +96,9 @@ GetSheetNamesAndSortOrderFromJson <- function(json_file) {
     res <- .x
     sheet_group_row <- sheet_groups %>% filter(alias_name == res[[.const[["kAliasName"]]]])
     if (nrow(sheet_group_row) == 0) {
-      res[["sheet_groups"]] <- NA
+      res[[.const[["kSheetGroups"]]]] <- NA
     } else {
-      res[["sheet_groups"]] <- sheet_group_row
+      res[[.const[["kSheetGroups"]]]] <- sheet_group_row
     }
     sheet_order_row <- sheet_orders %>% filter(alias_name == res[[.const[["kAliasName"]]]])
     if (nrow(sheet_order_row) == 0) {

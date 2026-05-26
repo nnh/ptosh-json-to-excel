@@ -4,144 +4,169 @@
 #' @file edit_sheet_groups.R
 #' @author Mariko Ohtsuka
 #' @date 2026.5.26
-EditSheetGroups <- function(sheets, json_files, sheet_info) {
+EditSheetGroups <- function(json_files, sheet_info) {
+  kGroupCode <- "group_code"
+  kSheetName <- "sheet_name"
+  kSheetGroupName <- "sheet_group_name"
+  kGroupLabel <- "group_label"
+  kDefault <- "default"
+  kDefaultLabel <- "デフォルト"
+  kSeparator <- "___"
+  kMarkHit <- "〇"
+  kMarkMiss <- "-"
+  kNameKey <- "name_key"
+  kIsVisitOrAllocation <- "is_visit_or_allocation"
+  kFlag <- "flag"
+  kFlagTrue <- "T"
+  kFlagFalse <- "F"
+  kColumnInfoKey <- "column_info_key"
+  kJapaneseName <- "japanese_name"
   sheet_orders <- sheet_info %>% 
     select(name=alias_name, seq=sort_order) %>% 
     distinct()
 
-  sheet_group_mappings <- json_files[["sheet_groups"]] %>% 
+  sheet_group_mappings <- json_files[[.const[["kSheetGroups"]]]] %>% 
     map_df(function(sg) {
-      alloc_group <- sg[["allocation_group"]] %||% NA_character_
+      alloc_group <- sg[[.const[["kSheetGroupAllocationGroup"]]]] %||% NA_character_
       
-      alloc_sheets <- sg[["allocation_sheet"]]
+      alloc_sheets <- sg[[.const[["kAllocationSheet"]]]]
       alloc_aliases <- if (is.null(alloc_sheets)) {
         NA_character_
-      } else if (!is.null(alloc_sheets[["alias_name"]])) {
-        alloc_sheets[["alias_name"]]
+      } else if (!is.null(alloc_sheets[[.const[["kAliasName"]]]])) {
+        alloc_sheets[[.const[["kAliasName"]]]]
       } else {
-        map_chr(alloc_sheets, ~ if(is.list(.x)) .x[["alias_name"]] %||% NA_character_ else as.character(.x))
+        map_chr(alloc_sheets, ~ if(is.list(.x)) .x[[.const[["kAliasName"]]]] %||% NA_character_ else as.character(.x))
       }
       
-      sheets_list <- sg[["sheets"]]
+      sheets_list <- sg[[.const[["kSheets"]]]]
       sheet_aliases <- if (is.null(sheets_list)) {
         NA_character_
       } else {
-        map_chr(sheets_list, ~ if(is.list(.x)) .x[["alias_name"]] %||% NA_character_ else as.character(.x))
+        map_chr(sheets_list, ~ if(is.list(.x)) .x[[.const[["kAliasName"]]]] %||% NA_character_ else as.character(.x))
       }
       
       expand_grid(
-        sheet_alias_name = sheet_aliases,
-        allocation_group = alloc_group,
-        alias_name = alloc_aliases
+        !!.const[["kSheetAliasName"]] := sheet_aliases,
+        !!.const[["kSheetGroupAllocationGroup"]] := alloc_group,
+        !!.const[["kAliasName"]] := alloc_aliases
       )
     }) %>% 
     distinct()
 
-  sheet_group_allocations <- json_files[["sheet_groups"]] %>% 
-    keep(~ !is.null(.x[["allocation_group"]]) && !is.null(.x[["allocation_sheet"]])) %>% 
+  sheet_group_allocations <- json_files[[.const[["kSheetGroups"]]]] %>% 
+    keep(~ !is.null(.x[[.const[["kSheetGroupAllocationGroup"]]]]) && !is.null(.x[[.const[["kAllocationSheet"]]]])) %>% 
     map_df(function(sg) {
-      alloc_sheets <- sg[["allocation_sheet"]]
-      alloc_aliases <- if (!is.null(alloc_sheets[["alias_name"]])) {
-        alloc_sheets[["alias_name"]] 
+      alloc_sheets <- sg[[.const[["kAllocationSheet"]]]]
+      alloc_aliases <- if (!is.null(alloc_sheets[[.const[["kAliasName"]]]])) {
+        alloc_sheets[[.const[["kAliasName"]]]] 
       } else {
-        map_chr(alloc_sheets, ~ if(is.list(.x)) .x[["alias_name"]] %||% NA_character_ else as.character(.x))
+        map_chr(alloc_sheets, ~ if(is.list(.x)) .x[[.const[["kAliasName"]]]] %||% NA_character_ else as.character(.x))
       }
       
       tibble(
-        alias_name = alloc_aliases,
-        sheet_group_name = sg[["name"]] %||% NA_character_,
-        group_code = sg[["allocation_group"]] %||% NA_character_
+        !!.const[["kAliasName"]] := alloc_aliases,
+        !!kSheetGroupName := sg[[.const[["kSheetGroupsName"]]]] %||% NA_character_,
+        !!kGroupCode := sg[[.const[["kSheetGroupAllocationGroup"]]]] %||% NA_character_
       )
     }) %>% 
     distinct()
 
-
-  allocation_group_master <- json_files[["sheets"]] %>% 
-    keep(~ !is.null(.x[["allocation"]][["groups"]])) %>% 
+  allocation_group_master <- json_files[[.const[["kSheets"]]]] %>% 
+    keep(~ !is.null(.x[[.const[["kAllocation"]]]][[.const[["kAllocationGroups"]]]])) %>% 
     map_df(function(s) {
-      s_name <- s[["name"]] %||% NA_character_
-      alias_name <- s[["alias_name"]] %||% NA_character_
+      s_name <- s[[.const[["kSheetJapaneseName"]]]] %||% NA_character_
+      alias_name <- s[[.const[["kAliasName"]]]] %||% NA_character_
       
-      s[["allocation"]][["groups"]] %>% 
+      s[[.const[["kAllocation"]]]][[.const[["kAllocationGroups"]]]] %>% 
         map_df(~ tibble(
-          sheet_name = s_name,
-          alias_name = alias_name,  
-          group_code = .x[["code"]] %||% NA_character_,
-          group_label = .x[["label"]] %||% NA_character_
+          !!kSheetName := s_name,
+          !!.const[["kAliasName"]] := !!.const[["kAliasName"]],  
+          !!kGroupCode := .x[[.const[["kAllocationGroupsCode"]]]] %||% NA_character_,
+          !!kGroupLabel := .x[[.const[["kAllocationGroupsLabel"]]]] %||% NA_character_
         ))
     }) %>% 
     distinct()
 
+  join_keys <- c(.const[["kAliasName"]], kGroupCode)
+  names(join_keys) <- join_keys
   column_information <- allocation_group_master %>%
-    left_join(sheet_group_allocations, by = c("alias_name", "group_code")) %>%
-    select(sheet_name, sheet_alias_name = alias_name, sheet_group_name, group_code, group_label) %>%
-    mutate(sheet_group_name = if_else(is.na(sheet_group_name), group_label, sheet_group_name)) %>%
-    select(-group_label) %>%
+    left_join(sheet_group_allocations, by = join_keys) %>%
+    select(!!kSheetName, !!.const[["kSheetAliasName"]] := !!.const[["kAliasName"]], !!kSheetGroupName, !!kGroupCode, !!kGroupLabel) %>%
+    mutate(!!kSheetGroupName := if_else(is.na(!!sym(kSheetGroupName)), !!sym(kGroupLabel), !!sym(kSheetGroupName))) %>%
+    select(-!!kGroupLabel) %>%
     distinct()
 
+  join_keys <- c(.const[["kSheetAliasName"]], kGroupCode)
+  names(join_keys) <- c(.const[["kAliasName"]], .const[["kSheetGroupAllocationGroup"]])
   resolved_mappings <- sheet_group_mappings %>% 
-    left_join(column_information, by = c("alias_name" = "sheet_alias_name", "allocation_group" = "group_code")) 
+    left_join(column_information, by = join_keys)
 
+  join_keys <- .const[["kSheetAliasName"]]
+  names(join_keys) <- .const[["kSheetJapaneseName"]]
   ordered_sheet_groups <- sheet_orders %>% 
-    left_join(resolved_mappings, by = c("name" = "sheet_alias_name"))
+    left_join(resolved_mappings, by = join_keys)
 
   unique_columns <- column_information %>% 
-    distinct(sheet_name, sheet_alias_name, sheet_group_name, group_code)
+    distinct(!!sym(kSheetName), !!sym(.const[["kSheetAliasName"]]), !!sym(kSheetGroupName), !!sym(kGroupCode))
   
   match_data <- ordered_sheet_groups %>% 
-    mutate(column_info_key = if_else(
+    mutate(!!kColumnInfoKey := if_else(
       is.na(alias_name), 
-      "default", 
-      paste(alias_name, allocation_group, sep = "___")
+      kDefault, 
+      paste(alias_name, allocation_group, sep = kSeparator)
     )) %>% 
-    select(name, column_info_key) %>% 
+    select(name, !!sym(kColumnInfoKey)) %>% 
     distinct() %>% 
-    mutate(flag = "〇")
+    mutate(!!kFlag := kMarkHit)
   
   expected_columns <- c(
-    "default",
-    paste(unique_columns$sheet_alias_name, unique_columns$group_code, sep = "___")
+    kDefault,
+    paste(unique_columns[[.const[["kSheetAliasName"]]]], unique_columns[[kGroupCode]], sep = kSeparator)
   )
   
   grid_base <- expand_grid(
-    name = unique(ordered_sheet_groups$name),
-    column_info_key = expected_columns
+    !!.const[["kSheetGroupsName"]] := unique(ordered_sheet_groups[[.const[["kSheetGroupsName"]]]]),
+    !!kColumnInfoKey := expected_columns
   )
   
+  join_keys <- c(.const[["kSheetGroupsName"]], kColumnInfoKey)
+  names(join_keys) <- join_keys
   pivoted_body <- grid_base %>% 
-    left_join(match_data, by = c("name", "column_info_key")) %>% 
-    mutate(flag = if_else(is.na(flag), "-", flag)) %>% 
-    pivot_wider(names_from = column_info_key, values_from = flag)
+    left_join(match_data, by = join_keys) %>% 
+    mutate(!!kFlag := if_else(is.na(!!sym(kFlag)), kMarkMiss, !!sym(kFlag))) %>% 
+    pivot_wider(names_from = !!sym(kColumnInfoKey), values_from = !!sym(kFlag))
   
-  alias_master <- json_files[["sheets"]] %>% 
+  alias_master <- json_files[[.const[["kSheets"]]]] %>% 
     map_df(~ tibble(
-      name_key = .x[["alias_name"]] %||% NA_character_,
-      japanese_name = .x[["name"]] %||% NA_character_,
-      category = .x[["category"]] %||% NA_character_
+      !!kNameKey := .x[[.const[["kAliasName"]]]] %||% NA_character_,
+      !!kJapaneseName := .x[[.const[["kSheetJapaneseName"]]]] %||% NA_character_,
+      !!.const[["kCategory"]] := .x[[.const[["kCategory"]]]] %||% NA_character_
     )) %>% 
     distinct()
   
   alias_to_properties_master <- alias_master %>% 
-    mutate(is_visit_or_allocation = if_else(category %in% c("visit", "allocation"), "T", "F")) %>% 
-    mutate(is_visit_or_allocation = if_else(is.na(is_visit_or_allocation), "F", is_visit_or_allocation)) %>% 
-    select(name_key, japanese_name, is_visit_or_allocation)
+    mutate(!!kIsVisitOrAllocation := if_else(!!sym(.const[["kCategory"]]) %in% c(.const[["kCategoryVisit"]], .const[["kCategoryAllocation"]]), kFlagTrue, kFlagFalse)) %>% 
+    mutate(!!kIsVisitOrAllocation := if_else(is.na(!!sym(kIsVisitOrAllocation)), kFlagFalse, !!sym(kIsVisitOrAllocation))) %>% 
+    select(!!sym(kNameKey), !!sym(kJapaneseName), !!sym(kIsVisitOrAllocation))
   
   order_seq_master <- sheet_orders %>% 
-    select(name, seq) %>% 
+    select(name, !!.const[["kSheetSeq"]]) %>% 
     distinct() %>% 
-    mutate(seq = as.character(seq))
+    mutate(!!.const[["kSheetSeq"]] := as.character(!!sym(.const[["kSheetSeq"]])))
   
+  join_keys <- kNameKey
+  names(join_keys) <- .const[["kSheetJapaneseName"]]
   matrix_body <- pivoted_body %>% 
-    left_join(alias_to_properties_master, by = c("name" = "name_key")) %>% 
-    rename(sheet_name = japanese_name) %>% 
-    mutate(sheet_name = if_else(is.na(sheet_name), "デフォルト", sheet_name)) %>% 
-    mutate(is_visit_or_allocation = if_else(is.na(is_visit_or_allocation), "F", is_visit_or_allocation)) %>% 
-    left_join(order_seq_master, by = "name") %>% 
-    select(seq, name, sheet_name, is_visit_or_allocation, everything())
+    left_join(alias_to_properties_master, by = join_keys) %>% 
+    rename(!!kSheetName := japanese_name) %>% 
+    mutate(!!sym(kSheetName) := if_else(is.na(!!sym(kSheetName)), kDefaultLabel, !!sym(kSheetName))) %>% 
+    mutate(!!sym(kIsVisitOrAllocation) := if_else(is.na(!!sym(kIsVisitOrAllocation)), kFlagFalse, !!sym(kIsVisitOrAllocation))) %>% 
+    left_join(order_seq_master, by = .const[["kSheetJapaneseName"]]) %>% 
+    select(!!sym(.const[["kSheetSeq"]]), !!sym(.const[["kSheetJapaneseName"]]), !!sym(kSheetName), !!sym(kIsVisitOrAllocation), everything())
   
-  header_2 <- c("seq", "name", "sheet_name", "is_visit_or_allocation", "default", unique_columns$group_code)
-  header_3 <- c("seq", "name", "sheet_name", "is_visit_or_allocation", "デフォルト", unique_columns$sheet_name)
-  header_4 <- c("seq", "name", "sheet_name", "is_visit_or_allocation", "デフォルト", unique_columns$sheet_group_name)
+  header_2 <- c(.const[["kSheetSeq"]], .const[["kSheetJapaneseName"]], kSheetName, kIsVisitOrAllocation, kDefault, unique_columns[[kGroupCode]])
+  header_3 <- c(.const[["kSheetSeq"]], .const[["kSheetJapaneseName"]], kSheetName, kIsVisitOrAllocation, kDefaultLabel, unique_columns[[kSheetName]])
+  header_4 <- c(.const[["kSheetSeq"]], .const[["kSheetJapaneseName"]], kSheetName, kIsVisitOrAllocation, kDefaultLabel, unique_columns[[kSheetGroupName]])
   
   dummy_colnames <- paste0("V", 1:ncol(matrix_body))
   colnames(matrix_body) <- dummy_colnames
@@ -159,8 +184,8 @@ EditSheetGroups <- function(sheets, json_files, sheet_info) {
   cross_tab[1, 1] <- "-999"
   cross_tab[2, 1] <- "-888"
   cross_tab[1:2, 2:3] <- ""
-  cross_tab[2, 2] <- "シート名英数字別名"
-  cross_tab[2, 3] <- "シート名"
+  cross_tab[2, 2] <- .const[["kAliasNameJapaneseColumnName"]]
+  cross_tab[2, 3] <- .const[["kNameJapaneseColumnName"]]
 
   return(cross_tab)
 }
@@ -208,8 +233,8 @@ SplitCrossTab <- function(cross_tab) {
   ))
 }
 
-EditSheetGroupsMain <- function(sheets, json_files, sheet_info) {
-  sheet_groups <- EditSheetGroups(sheets, json_files, sheet_info)
+EditSheetGroupsMain <- function(json_files, sheet_info) {
+  sheet_groups <- EditSheetGroups(json_files, sheet_info)
   sheet_groups_table <- SplitCrossTab(sheet_groups)
   return(sheet_groups_table)
 }
