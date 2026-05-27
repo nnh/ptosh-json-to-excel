@@ -54,6 +54,16 @@ AddSlashIfMissing <- function(input_string) {
     return(input_string)
   }
 }
+GetSheetGroupRow <- function(sheet_groups, alias) {
+  row <- sheet_groups %>% filter(alias_name == alias)
+  if (nrow(row) == 0) NA else row
+}
+GetSheetSortOrder <- function(sheet_orders, alias) {
+  row <- sheet_orders %>% filter(alias_name == alias)
+  if (nrow(row) == 0) return(NA)
+  if (nrow(row) == 1) return(row[["sort_order"]][1])
+  stop(paste0("sheet_ordersに同じalias_nameが複数存在します: ", alias))
+}
 GetSheetNamesAndSortOrderFromJson <- function(json_file) {
   sheets <- json_file[["sheets"]] %>% map_df(~ {
     res <- tibble::tibble(
@@ -94,20 +104,9 @@ GetSheetNamesAndSortOrderFromJson <- function(json_file) {
     arrange(sort_order)
   sheets <- json_file[["sheets"]] %>% map(~ {
     res <- .x
-    sheet_group_row <- sheet_groups %>% filter(alias_name == res[[.const[["kAliasName"]]]])
-    if (nrow(sheet_group_row) == 0) {
-      res[[.const[["kSheetGroups"]]]] <- NA
-    } else {
-      res[[.const[["kSheetGroups"]]]] <- sheet_group_row
-    }
-    sheet_order_row <- sheet_orders %>% filter(alias_name == res[[.const[["kAliasName"]]]])
-    if (nrow(sheet_order_row) == 0) {
-      res[["sort_order"]] <- NA
-    } else if (nrow(sheet_order_row) == 1) {
-      res[["sort_order"]] <- sheet_order_row[["sort_order"]][1]
-    } else {
-      stop(paste0("sheet_ordersに同じalias_nameが複数存在します: ", res[[.const[["kAliasName"]]]]))
-    }
+    current_alias <- res[[.const[["kAliasName"]]]]
+    res[[.const[["kSheetGroups"]]]] <- GetSheetGroupRow(sheet_groups, current_alias)
+    res[["sort_order"]] <- GetSheetSortOrder(sheet_orders, current_alias)
     res[["stylesheet"]] <- NULL
     res[["fax_stylesheet"]] <- NULL
     res[["odm"]] <- NULL
