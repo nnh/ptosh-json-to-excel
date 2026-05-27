@@ -37,48 +37,20 @@ source(here("prg", "functions", "io_functions.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8")
 source(here("prg", "functions", "constants.R"), encoding = "UTF-8")
 # ------ main ------
-temp <- ExecReadJsonFiles()
-for (name in names(temp)) {
-  assign(name, temp[[name]])
-}
+temp         <- ExecReadJsonFiles()
+sheets       <- temp$sheets
+sheet_info   <- temp$sheet_info
+json_files   <- temp$json_files
+trialName    <- temp$trialName
+options_flag <- temp$options_flag
+options_json <- temp$options_json
+is_visit     <- temp$is_visit
+visit_info   <- temp$visit_info
 rm(temp)
 # field_list は replace_ref_text.R::GetFieldText の参照先情報解決に必要
 field_list <- GetFieldList(sheets)
 
-sheet_data_list_group <- sheets %>% map(~ {
-  sheet <- .x
-  sheet_name <- sheet[[.const[["kAliasName"]]]]
-  field_items <- sheet %>% GetFieldItems()
-  temp <- EditItemAndItemVisit(field_items, sheet_name)
-  item_nonvisit <- temp[[.const[["kItemNonVisit"]]]]
-  item_visit_old <- temp[[.const[["kItemVisit"]]]]
-  allocation <- sheet %>% GetAllocation()
-  master <- field_items %>% GetMaster(sheet)
-  if (!is_visit) {
-    visit <- field_items %>% GetVisit(sheet)
-  } else {
-    visit <- NULL
-  }
-  name <- tibble(name = sheet[[.const[["kSheetJapaneseName"]]]], alias_name = sheet_name, images_count = sheet[["images_count"]])
-  option <- field_items %>% GetOptions(sheet)
-  assigned <- field_items %>% EditAssigned(sheet)
-  limitation <- field_items %>% EditLimitation(sheet)
-  date <- field_items %>% EditDate(sheet)
-  item_nonvisit <- JoinJpnameAndAliasNameAndSelectColumns(item_nonvisit, .const[["kItemNonVisit"]], sheet)
-  item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns(item_visit_old, .const[["kItemVisit_old"]], sheet)
-  return(list(
-    name = name,
-    item_nonvisit = item_nonvisit,
-    allocation = allocation,
-    master = master,
-    visit = visit,
-    item_visit_old = item_visit_old,
-    option = option,
-    assigned = assigned,
-    limitation = limitation,
-    date = date
-  ))
-})
+sheet_data_list_group <- sheets %>% map(~ BuildSheetData(.x, is_visit))
 # シートデータを結合し、空データを補完する
 sheet_data_combine <- CombineSheetSafety(sheet_data_list_group)
 # VISIT情報を集約する
