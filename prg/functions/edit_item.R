@@ -38,30 +38,19 @@ EditItem <- function(field_items, alias_name) {
         normal_range_lss <- PluckConst(.x, .const[["kNormalRangeLessThanOrEqualTo"]], NA)
         normal_range_check <- (!is.null(normal_range_gte) && !is.na(normal_range_gte)) ||
             (!is.null(normal_range_lss) && !is.na(normal_range_lss))
-        if (numericality_check) {
-            if (normal_range_check) {
-                numericality_normal_range_check <- "数値・アラート有"
-            } else {
-                numericality_normal_range_check <- "数値チェック有"
-            }
-        } else {
-            if (normal_range_check) {
-                numericality_normal_range_check <- "アラート設定有"
-            } else {
-                numericality_normal_range_check <- "条件なし"
-            }
-        }
+        numericality_normal_range_check <- dplyr::case_when(
+            numericality_check & normal_range_check  ~ "数値・アラート有",
+            numericality_check & !normal_range_check ~ "数値チェック有",
+            !numericality_check & normal_range_check ~ "アラート設定有",
+            TRUE                                     ~ "条件なし"
+        )
 
         # フィールドタイプ
-        if (.x[["field_type"]] %in% c("text", "text_area")) {
-            if (numericality_check) {
-                field_type <- "数値"
-            } else {
-                field_type <- "テキスト"
-            }
-        } else {
-            field_type <- NA
-        }
+        field_type <- dplyr::case_when(
+            .x[["field_type"]] %in% c("text", "text_area") & numericality_check  ~ "数値",
+            .x[["field_type"]] %in% c("text", "text_area") & !numericality_check ~ "テキスト",
+            TRUE ~ NA_character_
+        )
         res <- tibble::tibble(
             name = .x[[.const[["kFieldItemsFieldId"]]]] %||% NA,
             label = .x[[.const[["kFieldItemsFieldName"]]]] %||% NA,
