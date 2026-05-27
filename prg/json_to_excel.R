@@ -32,6 +32,12 @@ InstallAndLoadPackage("here")
 InstallAndLoadPackage("jsonlite")
 InstallAndLoadPackage("openxlsx")
 InstallAndLoadPackage("rlang")
+# source の読み込み順序について：
+# constants.R は直感に反して最後に読み込む。
+# これは SetConstants() 内で GetEngToJpnColumnMappings() を呼んでおり、
+# 同関数が edit_checklist_function.R 経由でソースされる
+# edit_checklist_convert_column_name.R に定義されているため。
+# 読み込み順序： common_functions → io_functions → edit_checklist_function → constants
 source(here("prg", "functions", "common_functions.R"), encoding = "UTF-8")
 source(here("prg", "functions", "io_functions.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8")
@@ -49,7 +55,7 @@ visit_info   <- temp$visit_info
 rm(temp)
 # field_list は replace_ref_text.R::GetFieldText の参照先情報解決に必要
 field_list <- GetFieldList(sheets)
-
+# シートごとにシートデータを作成する
 sheet_data_list_group <- sheets %>% map(~ BuildSheetData(.x, is_visit))
 # シートデータを結合し、空データを補完する
 sheet_data_combine <- CombineSheetSafety(sheet_data_list_group)
