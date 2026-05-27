@@ -6,15 +6,7 @@
 GetVisit <- function(field_items, sheet) {
     kNonvisitCondition <- "Visit Number"
     target <- field_items %>%
-        keep(~ {
-            if (is.null(.x[[.const[["kFieldItemsFieldName"]]]])) {
-                return(FALSE)
-            } else if (.x[[.const[["kFieldItemsFieldName"]]]] == kNonvisitCondition) {
-                return(TRUE)
-            } else {
-                return(FALSE)
-            }
-        })
+        keep(~ identical(.x[[.const[["kFieldItemsFieldName"]]]], kNonvisitCondition))
     if (length(target) == 0) {
         return(NULL)
     }
