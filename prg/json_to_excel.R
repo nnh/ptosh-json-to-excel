@@ -37,9 +37,8 @@ InstallAndLoadPackage("rlang")
 # これは SetConstants() 内で GetEngToJpnColumnMappings() を呼んでおり、
 # 同関数が edit_checklist_function.R 経由でソースされる
 # edit_checklist_convert_column_name.R に定義されているため。
-# 読み込み順序： common_functions → io_functions → edit_checklist_function → constants
+# 読み込み順序： common_functions → edit_checklist_function → constants
 source(here("prg", "functions", "common_functions.R"), encoding = "UTF-8")
-source(here("prg", "functions", "io_functions.R"), encoding = "UTF-8")
 source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8")
 source(here("prg", "functions", "constants.R"), encoding = "UTF-8")
 # ------ main ------

@@ -4,6 +4,7 @@
 #' @author Mariko Ohtsuka
 #' @date 2026.5.27
 # ------ constants ------
+kTableStyle <- "TableStyleMedium2"
 # ------ functions ------
 OutputChecklistSheet <- function(df_output, wb, sheet_name) {
   output_colnames <- df_output %>% colnames()

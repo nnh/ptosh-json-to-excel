@@ -2,7 +2,7 @@
 #'
 #' @file common_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.26
+#' @date 2026.5.27
 # ------ functions ------
 #' Create an output folder if it does not exist.
 #'
@@ -194,4 +194,15 @@ GetListSetName <- function(input_list, target_name, target_col_name) {
   targetNames <- GetNamesFromList(target_list, target_col_name)
   res <- setNames(target_list, targetNames)
   return(res)
+}
+#' Read a JSON file and return its contents.
+#'
+#' @param json_filename A single JSON file name.
+#' @param targetTrialFolder The path of the folder containing the JSON file.
+#' @return A list containing the JSON file contents.
+ReadJsonFiles <- function(json_filename, targetTrialFolder) {
+  json_file <- json_filename %>%
+    file.path(targetTrialFolder, .) %>%
+    read_json()
+  return(json_file)
 }
