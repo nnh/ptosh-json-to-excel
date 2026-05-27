@@ -13,6 +13,7 @@ SetConstants <- function() {
     .const[["kAliasNameJapaneseColumnName"]] <- "シート名英数字別名"
     .const[["kLabelJapaneseColumnName"]] <- "ラベル"
     .const[["kItemVisitConditionalFormattingColumnName"]] <- "数値チェック・アラート条件の有無"
+    .const[["kOptionSeqColname"]] <- "-"
     .const[["kReferenceColnames"]] <- c("条件の参照先情報", "論理式の参照先情報", "最小値の参照先情報", "最大値の参照先情報")
     .const[["kEngToJpnColumnMappings"]] <- GetEngToJpnColumnMappings()
     .const[["kEngColumnNames"]] <- .const[["kEngToJpnColumnMappings"]] %>% map(names)
