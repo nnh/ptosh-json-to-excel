@@ -2,14 +2,13 @@
 #'
 #' @file edit_date.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.27
+HasDateValidation <- function(x) {
+    !is.null(PluckConst(x, .const[["kValidateDateAfterOrEqualTo"]])) ||
+        !is.null(PluckConst(x, .const[["kValidateDateBeforeOrEqualTo"]]))
+}
 GetDate <- function(field_items) {
-    target <- field_items %>% keep(
-        ~ (
-            !is.null(purrr::pluck(.x, !!!.const[["kValidateDateAfterOrEqualTo"]], .default = NULL)) ||
-                !is.null(purrr::pluck(.x, !!!.const[["kValidateDateBeforeOrEqualTo"]], .default = NULL))
-        )
-    )
+    target <- field_items %>% keep(HasDateValidation)
     if (length(target) == 0) {
         return(NULL)
     }
@@ -19,16 +18,16 @@ EditDate <- function(input_field_items, sheet) {
     field_items <- input_field_items %>% GetDate()
     alias_name <- sheet[[.const[["kAliasName"]]]]
     date <- field_items %>% map_df(~ {
-        references_after <- purrr::pluck(.x, !!!.const[["kValidateDateAfterOrEqualTo"]], .default = NULL) %>%
+        references_after <- PluckConst(.x, .const[["kValidateDateAfterOrEqualTo"]]) %>%
             GetFieldText(alias_name)
-        references_before <- purrr::pluck(.x, !!!.const[["kValidateDateBeforeOrEqualTo"]], .default = NULL) %>%
+        references_before <- PluckConst(.x, .const[["kValidateDateBeforeOrEqualTo"]]) %>%
             GetFieldText(alias_name)
         res <- tibble::tibble(
             name = .x[[.const[["kFieldItemsFieldId"]]]],
             label = .x[[.const[["kFieldItemsFieldName"]]]],
-            validators.date.validate_date_after_or_equal_to = purrr::pluck(.x, !!!.const[["kValidateDateAfterOrEqualTo"]], .default = NA),
+            validators.date.validate_date_after_or_equal_to = PluckConst(.x, .const[["kValidateDateAfterOrEqualTo"]], NA),
             references_after = references_after %||% NA,
-            validators.date.validate_date_before_or_equal_to = purrr::pluck(.x, !!!.const[["kValidateDateBeforeOrEqualTo"]], .default = NA),
+            validators.date.validate_date_before_or_equal_to = PluckConst(.x, .const[["kValidateDateBeforeOrEqualTo"]], NA),
             references_before = references_before %||% NA
         )
         return(res)

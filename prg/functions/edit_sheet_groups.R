@@ -17,6 +17,15 @@ GetAllocAliases <- function(alloc_sheets) {
     map_chr(alloc_sheets, ~ if (is.list(.x)) .x[[.const[["kAliasName"]]]] %||% NA_character_ else as.character(.x))
   }
 }
+#' シートグループが割当グループと割当シートを両方持つか判定する述語
+HasAllocationGroup <- function(x) {
+  !is.null(x[[.const[["kSheetGroupAllocationGroup"]]]]) &&
+      !is.null(x[[.const[["kAllocationSheet"]]]])
+}
+#' シートが allocation.groups を持つか判定する述語
+HasAllocationGroupsDefined <- function(x) {
+  !is.null(x[[.const[["kAllocation"]]]][[.const[["kAllocationGroups"]]]])
+}
 
 #' @param json_files JSONファイルのリスト
 #' @param sheet_info シート情報のデータフレーム（alias_name, sort_order 列を含む）
@@ -71,7 +80,7 @@ EditSheetGroups <- function(json_files, sheet_info) {
   # --- 2. 割当グループを持つシートグループの情報を抽出 ---
   # allocation_group と allocation_sheet を両方持つグループのみを対象とする
   sheet_group_allocations <- json_files[[.const[["kSheetGroups"]]]] %>%
-    keep(~ !is.null(.x[[.const[["kSheetGroupAllocationGroup"]]]]) && !is.null(.x[[.const[["kAllocationSheet"]]]])) %>% 
+    keep(HasAllocationGroup) %>%
     map_df(function(sg) {
       alloc_aliases <- GetAllocAliases(sg[[.const[["kAllocationSheet"]]]])
       
@@ -86,7 +95,7 @@ EditSheetGroups <- function(json_files, sheet_info) {
   # --- 3. 各シートの割当グループ定義マスタを作成 ---
   # sheets.allocation.groups から group_code と group_label を展開する
   allocation_group_master <- json_files[[.const[["kSheets"]]]] %>%
-    keep(~ !is.null(.x[[.const[["kAllocation"]]]][[.const[["kAllocationGroups"]]]])) %>% 
+    keep(HasAllocationGroupsDefined) %>%
     map_df(function(s) {
       s_name <- s[[.const[["kSheetJapaneseName"]]]] %||% NA_character_
       alias_name <- s[[.const[["kAliasName"]]]] %||% NA_character_

@@ -2,36 +2,18 @@
 #'
 #' @file edit_limitation.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.27
 HasValueLimitation <- function(x) {
     !is.null(x) && !is.na(x) && x != ""
 }
+HasLimitationValidation <- function(x) {
+    HasValueLimitation(PluckConst(x, .const[["kNormalRangeLessThanOrEqualTo"]])) ||
+        HasValueLimitation(PluckConst(x, .const[["kNormalRangeGreaterThanOrEqualTo"]])) ||
+        HasValueLimitation(PluckConst(x, .const[["kValidatorsNumericalityLessThanOrEqualTo"]])) ||
+        HasValueLimitation(PluckConst(x, .const[["kValidatorsNumericalityGreaterThanOrEqualTo"]]))
+}
 GetLimitation <- function(field_items) {
-    target <- field_items %>%
-        keep(~ {
-            normal_lte <- purrr::pluck(
-                .x, !!!.const[["kNormalRangeLessThanOrEqualTo"]],
-                .default = NULL
-            )
-            normal_gte <- purrr::pluck(
-                .x, !!!.const[["kNormalRangeGreaterThanOrEqualTo"]],
-                .default = NULL
-            )
-
-            num_lte <- purrr::pluck(
-                .x, !!!.const[["kValidatorsNumericalityLessThanOrEqualTo"]],
-                .default = NULL
-            )
-            num_gte <- purrr::pluck(
-                .x, !!!.const[["kValidatorsNumericalityGreaterThanOrEqualTo"]],
-                .default = NULL
-            )
-
-            HasValueLimitation(normal_lte) ||
-                HasValueLimitation(normal_gte) ||
-                HasValueLimitation(num_lte) ||
-                HasValueLimitation(num_gte)
-        })
+    target <- field_items %>% keep(HasLimitationValidation)
     if (length(target) == 0) {
         return(NULL)
     }
@@ -44,10 +26,10 @@ EditLimitation <- function(input_field_items, sheet) {
             name = .x[[.const[["kFieldItemsFieldId"]]]],
             label = .x[[.const[["kFieldItemsFieldName"]]]],
             default_value = .x[[.const[["kFieldItemDefaultValue"]]]] %||% NA,
-            normal_range.less_than_or_equal_to = purrr::pluck(.x, !!!.const[["kNormalRangeLessThanOrEqualTo"]], .default = NA),
-            normal_range.greater_than_or_equal_to = purrr::pluck(.x, !!!.const[["kNormalRangeGreaterThanOrEqualTo"]], .default = NA),
-            validators.numericality.validate_numericality_less_than_or_equal_to = purrr::pluck(.x, !!!.const[["kValidatorsNumericalityLessThanOrEqualTo"]], .default = NA),
-            validators.numericality.validate_numericality_greater_than_or_equal_to = purrr::pluck(.x, !!!.const[["kValidatorsNumericalityGreaterThanOrEqualTo"]], .default = NA)
+            normal_range.less_than_or_equal_to = PluckConst(.x, .const[["kNormalRangeLessThanOrEqualTo"]], NA),
+            normal_range.greater_than_or_equal_to = PluckConst(.x, .const[["kNormalRangeGreaterThanOrEqualTo"]], NA),
+            validators.numericality.validate_numericality_less_than_or_equal_to = PluckConst(.x, .const[["kValidatorsNumericalityLessThanOrEqualTo"]], NA),
+            validators.numericality.validate_numericality_greater_than_or_equal_to = PluckConst(.x, .const[["kValidatorsNumericalityGreaterThanOrEqualTo"]], NA)
         )
         return(res)
     })
