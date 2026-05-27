@@ -80,31 +80,28 @@ EditSheetGroups <- function(json_files, sheet_info) {
       s[[.const[["kAllocation"]]]][[.const[["kAllocationGroups"]]]] %>% 
         map_df(~ tibble(
           !!kSheetName := s_name,
-          !!.const[["kAliasName"]] := !!.const[["kAliasName"]],  
+          !!.const[["kAliasName"]] := alias_name,  
           !!kGroupCode := .x[[.const[["kAllocationGroupsCode"]]]] %||% NA_character_,
           !!kGroupLabel := .x[[.const[["kAllocationGroupsLabel"]]]] %||% NA_character_
         ))
     }) %>% 
     distinct()
 
-  join_keys <- c(.const[["kAliasName"]], kGroupCode)
-  names(join_keys) <- join_keys
   column_information <- allocation_group_master %>%
-    left_join(sheet_group_allocations, by = join_keys) %>%
+    left_join(sheet_group_allocations, by = c(.const[["kAliasName"]], kGroupCode)) %>%
     select(!!kSheetName, !!.const[["kSheetAliasName"]] := !!.const[["kAliasName"]], !!kSheetGroupName, !!kGroupCode, !!kGroupLabel) %>%
     mutate(!!kSheetGroupName := if_else(is.na(!!sym(kSheetGroupName)), !!sym(kGroupLabel), !!sym(kSheetGroupName))) %>%
     select(-!!kGroupLabel) %>%
     distinct()
 
-  join_keys <- c(.const[["kSheetAliasName"]], kGroupCode)
-  names(join_keys) <- c(.const[["kAliasName"]], .const[["kSheetGroupAllocationGroup"]])
-  resolved_mappings <- sheet_group_mappings %>% 
-    left_join(column_information, by = join_keys)
+  resolved_mappings <- sheet_group_mappings %>%
+    left_join(column_information,
+              by = setNames(c(.const[["kSheetAliasName"]], kGroupCode),
+                            c(.const[["kAliasName"]], .const[["kSheetGroupAllocationGroup"]])))
 
-  join_keys <- .const[["kSheetAliasName"]]
-  names(join_keys) <- .const[["kSheetJapaneseName"]]
-  ordered_sheet_groups <- sheet_orders %>% 
-    left_join(resolved_mappings, by = join_keys)
+  ordered_sheet_groups <- sheet_orders %>%
+    left_join(resolved_mappings,
+              by = setNames(.const[["kSheetAliasName"]], .const[["kSheetJapaneseName"]]))
 
   unique_columns <- column_information %>% 
     distinct(!!sym(kSheetName), !!sym(.const[["kSheetAliasName"]]), !!sym(kSheetGroupName), !!sym(kGroupCode))
@@ -129,10 +126,8 @@ EditSheetGroups <- function(json_files, sheet_info) {
     !!kColumnInfoKey := expected_columns
   )
   
-  join_keys <- c(.const[["kSheetGroupsName"]], kColumnInfoKey)
-  names(join_keys) <- join_keys
-  pivoted_body <- grid_base %>% 
-    left_join(match_data, by = join_keys) %>% 
+  pivoted_body <- grid_base %>%
+    left_join(match_data, by = c(.const[["kSheetGroupsName"]], kColumnInfoKey)) %>%
     mutate(!!kFlag := if_else(is.na(!!sym(kFlag)), kMarkMiss, !!sym(kFlag))) %>% 
     pivot_wider(names_from = !!sym(kColumnInfoKey), values_from = !!sym(kFlag))
   
@@ -154,10 +149,9 @@ EditSheetGroups <- function(json_files, sheet_info) {
     distinct() %>% 
     mutate(!!.const[["kSheetSeq"]] := as.character(!!sym(.const[["kSheetSeq"]])))
   
-  join_keys <- kNameKey
-  names(join_keys) <- .const[["kSheetJapaneseName"]]
-  matrix_body <- pivoted_body %>% 
-    left_join(alias_to_properties_master, by = join_keys) %>% 
+  matrix_body <- pivoted_body %>%
+    left_join(alias_to_properties_master,
+              by = setNames(kNameKey, .const[["kSheetJapaneseName"]])) %>%
     rename(!!kSheetName := japanese_name) %>% 
     mutate(!!sym(kSheetName) := if_else(is.na(!!sym(kSheetName)), kDefaultLabel, !!sym(kSheetName))) %>% 
     mutate(!!sym(kIsVisitOrAllocation) := if_else(is.na(!!sym(kIsVisitOrAllocation)), kFlagFalse, !!sym(kIsVisitOrAllocation))) %>% 
@@ -200,31 +194,24 @@ SplitCrossTab <- function(cross_tab) {
   data_rows   <- cross_tab %>% slice(3:n())
   
   # --- 2. データ行の仕分けとソート ---
-  # 列名が可変なため、インデックス（位置）で安全に処理します。
-  # 1列目 = seq, 4列目 = is_visit_or_allocation
-  
   # visit / allocation 対象のデータ行
-  visit_data <- data_rows %>% 
-    filter(.[[4]] == "T") %>%            
-    arrange(as.numeric(.[[1]]))          
-  
+  visit_data <- data_rows %>%
+    filter(is_visit_or_allocation == "T") %>%
+    arrange(as.numeric(.data[[.const[["kSheetSeq"]]]]))
+
   # それ以外のデータ行
-  non_visit_data <- data_rows %>% 
-    filter(.[[4]] == "F") %>%            
-    arrange(as.numeric(.[[1]]))          
-  
+  non_visit_data <- data_rows %>%
+    filter(is_visit_or_allocation == "F") %>%
+    arrange(as.numeric(.data[[.const[["kSheetSeq"]]]]))
+
   # --- 3. ヘッダーとソート済データを再結合 ---
   visit_cross_tab     <- bind_rows(header_rows, visit_data)
   non_visit_cross_tab <- bind_rows(header_rows, non_visit_data)
-  
+
   # --- 4. 不要な列（is_visit_or_allocation と seq）の削除 ---
-  # 1列目(seq) と 4列目(is_visit_or_allocation) を除外
-  visit_cross_tab     <- visit_cross_tab     %>% select(-1, -4)
-  non_visit_cross_tab <- non_visit_cross_tab %>% select(-1, -4)
-  
-  # 元々の列名（header_2 の内容）から、削除した1列目と4列目を除いて再設定
-  colnames(visit_cross_tab)     <- colnames(header_rows)[c(-1, -4)]
-  colnames(non_visit_cross_tab) <- colnames(header_rows)[c(-1, -4)]
+  drop_cols <- c(.const[["kSheetSeq"]], "is_visit_or_allocation")
+  visit_cross_tab     <- visit_cross_tab     %>% select(-all_of(drop_cols))
+  non_visit_cross_tab <- non_visit_cross_tab %>% select(-all_of(drop_cols))
   
   # --- 5. 成果物をリストにして返却 ---
   return(list(
