@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.27
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -38,7 +38,7 @@ ExecExcelJsonValidator <- function(trialName) {
 
   # シート並び順のチェックを実行
   checkSheetNames <- sheetList |> names()
-  sheetSortOrders <- c("item_visit", "item_nonvisit", "visit", "allocation", "limitation", "date", "option", "name", "master", "assigned")
+  sheetSortOrders <- c("item_visit", "item_nonvisit", "visit", "allocation", "sheet_groups_visit", "sheet_groups_nonvisit", "limitation", "date", "option", "name", "master", "assigned")
   if (!identical(sheetSortOrders, checkSheetNames)) {
     print(checkSheetNames)
     stop(str_c("Sheet order is incorrect in trial: ", trialName))
@@ -68,6 +68,16 @@ ExecExcelJsonValidator <- function(trialName) {
   sheetName <- "allocation"
   checkChecklist[[sheetName]] <- sheetList |> CheckAllocation(fieldItems, sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
+  ########################
+  # # sheet_groups_visit #
+  ########################
+  sheetName <- "sheet_groups_visit"
+  print("sheet_groups_visitチェック未実装")
+  ###########################
+  # # sheet_groups_nonvisit #
+  ###########################
+  sheetName <- "sheet_groups_nonvisit"
+  print("sheet_groups_nonvisitチェック未実装")
   # ##########
   # # action #
   # ##########

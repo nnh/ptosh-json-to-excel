@@ -2,7 +2,7 @@
 #'
 #' @file constants.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.26
+#' @date 2026.5.27
 #' @dependencies here, purrr, edit_checklist_convert_column_name.R
 SetConstants <- function() {
     .const[["kOutputJapanaseNameEnglish"]] <- "jpname"
@@ -72,7 +72,7 @@ SetConstants <- function() {
     .const[["kItemVisit_old"]] <- "item_visit_old"
     .const[["kVisit"]] <- "visit"
     .const[["kSheetGroupsVisit"]] <- "sheet_groups_visit"
-    .const[["kSheetGroupsNonVisit"]] <- "sheet_groups_non_visit"
+    .const[["kSheetGroupsNonVisit"]] <- "sheet_groups_nonvisit"
     .const[["kTargetSheetNames"]] <- c(
         .const[["kItemVisit"]],
         .const[["kItemVisit_old"]],
