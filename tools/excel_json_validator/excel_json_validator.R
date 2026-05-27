@@ -61,16 +61,10 @@ ExecExcelJsonValidator <- function(trialName) {
   sheetName <- "allocation"
   checkChecklist[[sheetName]] <- sheetList |> CheckAllocation(fieldItems, sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
-  ########################
-  # # sheet_groups_visit #
-  ########################
-  sheetName <- "sheet_groups_visit"
-  print("sheet_groups_visitチェック未実装")
-  ###########################
-  # # sheet_groups_nonvisit #
-  ###########################
-  sheetName <- "sheet_groups_nonvisit"
-  print("sheet_groups_nonvisitチェック未実装")
+  ################
+  # sheet_groups #
+  ################
+  CheckSheetGroups(target_json, sheetList, trialName)
   # ##########
   # # action #
   # ##########
