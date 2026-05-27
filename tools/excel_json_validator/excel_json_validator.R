@@ -36,13 +36,6 @@ ExecExcelJsonValidator <- function(trialName) {
   options_json <<- target_json[[kOptions]]
   fieldInfoForGetReference <<- GetFieldInfoForGetRef()
 
-  # シート並び順のチェックを実行
-  checkSheetNames <- sheetList |> names()
-  sheetSortOrders <- c("item_visit", "item_nonvisit", "visit", "allocation", "sheet_groups_visit", "sheet_groups_nonvisit", "limitation", "date", "option", "name", "master", "assigned")
-  if (!identical(sheetSortOrders, checkSheetNames)) {
-    print(checkSheetNames)
-    stop(str_c("Sheet order is incorrect in trial: ", trialName))
-  }
   checkChecklist <- list()
   # ########
   # # item #
@@ -158,7 +151,9 @@ for (i in 1:length(kTrialNames)) {
   trialName <- kTrialNames[i]
   jsonAndSheet <- GetJsonAndSheet(trialName)
   target_json <- jsonAndSheet[["json"]]
-  sheetList <- jsonAndSheet[["sheetList"]]
+  sheetList   <- jsonAndSheet[["sheetList"]]
+  # 全検証の前提条件としてシート並び順を確認する
+  CheckSheetOrder(sheetList, trialName)
   checkChecklist <- ExecExcelJsonValidator(trialName)
   if (length(checkChecklist) > 0) {
     print(names(checkChecklist))

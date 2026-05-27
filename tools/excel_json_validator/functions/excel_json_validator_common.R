@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.27
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -262,6 +262,25 @@ CheckSheetNotExists <- function(sheetList, sheetName) {
     stop(str_c("Error: sheetList[[", sheetName, "]] exists."), call. = FALSE)
   }
   invisible(TRUE)
+}
+# シートの並び順が期待値と一致するかを検証する（比較ロジックのみ、データ読み込みは行わない）
+CheckSheetOrder <- function(sheetList, trialName) {
+  expected <- c(
+    "item_visit", "item_nonvisit", "visit", "allocation",
+    "sheet_groups_visit", "sheet_groups_nonvisit",
+    "limitation", "date", "option", "name", "master", "assigned"
+  )
+  actual <- names(sheetList)
+  if (!identical(expected, actual)) {
+    print(actual)
+    stop(str_c("Sheet order is incorrect in trial: ", trialName))
+  }
+}
+# 単体実行用エントリポイント：データ読み込みからシート並び順チェックまでを一括実行する
+# 使用例: RunCheckSheetOrder("Bev-FOLFOX-SBC")
+RunCheckSheetOrder <- function(trialName) {
+  sheetList <- GetJsonAndSheet(trialName)[["sheetList"]]
+  CheckSheetOrder(sheetList, trialName)
 }
 JoinVisitGroupsValidator <- function(df, key = "alias_name", target = "group") {
   joinVisitGroups <- left_join(df, visitGroups[, c(key, target)], by = key)
