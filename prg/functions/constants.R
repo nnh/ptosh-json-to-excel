@@ -11,6 +11,7 @@ SetConstants <- function() {
     .const[["kOutputPath"]] <- here(.const[["kOutputFolderName"]])
     .const[["kNameJapaneseColumnName"]] <- "シート名"
     .const[["kAliasNameJapaneseColumnName"]] <- "シート名英数字別名"
+    .const[["kLabelJapaneseColumnName"]] <- "ラベル"
     .const[["kItemVisitConditionalFormattingColumnName"]] <- "数値チェック・アラート条件の有無"
     .const[["kReferenceColnames"]] <- c("条件の参照先情報", "論理式の参照先情報", "最小値の参照先情報", "最大値の参照先情報")
     .const[["kEngToJpnColumnMappings"]] <- GetEngToJpnColumnMappings()
@@ -63,6 +64,7 @@ SetConstants <- function() {
 
     # 条件コンスタント
     .const[["kArticle"]] <- "FieldItem::Article"
+    .const[["kFieldItemTypeAssigned"]] <- "FieldItem::Assigned"
     .const[["kCategoryAllocation"]] <- "allocation"
     .const[["kCategoryVisit"]] <- "visit"
 

@@ -2,9 +2,9 @@
 #'
 #' @file edit_assigned.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.27
 EditAssigned <- function(input_field_items, sheet) {
-    field_items <- input_field_items %>% GetTargetByType("FieldItem::Assigned")
+    field_items <- input_field_items %>% GetTargetByType(.const[["kFieldItemTypeAssigned"]])
     assigned <- field_items %>% map_df(~ {
         res <- tibble::tibble(
             name = .x[[.const[["kFieldItemsFieldId"]]]],
