@@ -2,8 +2,8 @@
 #'
 #' @file edit_item_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
-EditItemVisit <- function(item_visit) {
+#' @date 2026.5.27
+EditItemVisit <- function(item_visit, field_list, visit_info, sheet_info) {
     if (nrow(item_visit) == 0) {
         return(item_visit)
     }

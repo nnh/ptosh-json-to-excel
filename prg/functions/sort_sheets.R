@@ -2,7 +2,7 @@
 #'
 #' @file sort_sheets.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.27
 SortSheetAndField <- function(df, sheet_sort_info, field_sort_info) {
     if (nrow(df) == 0) {
         return(df)
@@ -34,7 +34,7 @@ SortOptionSheet <- function(target, output_checklist) {
     return(res)
 }
 
-SortSheetsMain <- function(output_checklist) {
+SortSheetsMain <- function(output_checklist, sheet_info, field_list, visit_info) {
     temp <- output_checklist
     sheet_sort_info <- sheet_info %>%
         select(alias_name, sort_order) %>%

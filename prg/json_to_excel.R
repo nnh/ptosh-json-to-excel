@@ -59,15 +59,15 @@ sheet_data_list_group <- sheets %>% map(~ BuildSheetData(.x, is_visit))
 # シートデータを結合し、空データを補完する
 sheet_data_combine <- CombineSheetSafety(sheet_data_list_group)
 # VISIT情報を集約する
-summary_sheet_data <- SummarizeByVisit(sheet_data_combine)
+summary_sheet_data <- SummarizeByVisit(sheet_data_combine, visit_info)
 # VISIT対応シートを使用している試験のVISIT情報を格納する
 if (is_visit) {
-  summary_sheet_data[[.const[["kVisit"]]]] <- GetVisitIsVisit()
+  summary_sheet_data[[.const[["kVisit"]]]] <- GetVisitIsVisit(visit_info)
 }
 # 日本語列名に変換する
 output_checklist <- convertSheetColumnsToJapanese(summary_sheet_data)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
-output_checklist[[.const[["kItemVisit"]]]] <- EditItemVisit(output_checklist[[.const[["kItemVisit_old"]]]])
+output_checklist[[.const[["kItemVisit"]]]] <- EditItemVisit(output_checklist[[.const[["kItemVisit_old"]]]], field_list, visit_info, sheet_info)
 # remove item_visit_old sheet
 output_checklist[[.const[["kItemVisit_old"]]]] <- NULL
 # シートグループの編集
@@ -75,7 +75,7 @@ sheet_groups_table <- EditSheetGroupsMain(json_files, sheet_info)
 output_checklist[[.const[["kSheetGroupsVisit"]]]] <- sheet_groups_table$visit_cross_tab
 output_checklist[[.const[["kSheetGroupsNonVisit"]]]] <- sheet_groups_table$non_visit_cross_tab
 # シート出力順、各シートの行順の変更
-sort_output_checklist <- SortSheetsMain(output_checklist)
+sort_output_checklist <- SortSheetsMain(output_checklist, sheet_info, field_list, visit_info)
 
 # create output folder.
 output_folder_name <- Sys.time() %>%
