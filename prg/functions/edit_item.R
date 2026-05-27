@@ -25,13 +25,13 @@ EditItem <- function(field_items, alias_name) {
     target_field_items <- field_items %>% GetTargetByType(.const[["kArticle"]])
     target <- target_field_items %>% map_df(~ {
         presence_if_references <- PluckConst(.x, .const[["kValidatePresenceIf"]]) %>%
-            GetFieldText(alias_name)
+            GetFieldText(alias_name, field_list, visit_info)
         formula_if_references <- PluckConst(.x, .const[["kValidateFormulaIf"]]) %>%
-            GetFieldText(alias_name)
+            GetFieldText(alias_name, field_list, visit_info)
         references_after <- PluckConst(.x, .const[["kValidateDateAfterOrEqualTo"]]) %>%
-            GetFieldText(alias_name)
+            GetFieldText(alias_name, field_list, visit_info)
         references_before <- PluckConst(.x, .const[["kValidateDateBeforeOrEqualTo"]]) %>%
-            GetFieldText(alias_name)
+            GetFieldText(alias_name, field_list, visit_info)
         numericality <- PluckConst(.x, .const[["kValidatorsNumericality"]])
         numericality_check <- !is.null(numericality)
         normal_range_gte <- PluckConst(.x, .const[["kNormalRangeGreaterThanOrEqualTo"]], NA)

@@ -2,9 +2,9 @@
 #'
 #' @file replace_ref_text.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.25
+#' @date 2026.5.27
 #
-EditRefFieldTextVec <- function(df_sheet_field) {
+EditRefFieldTextVec <- function(df_sheet_field, field_list, visit_info) {
     join_field_info <- dplyr::left_join(df_sheet_field, field_list, by = c(.const[["kAliasName"]], "field_number")) %>% select(-field_seq)
     join_field_info <- join_field_info %>%
         dplyr::left_join(visit_info, by = .const[["kAliasName"]])
@@ -50,12 +50,12 @@ GetDfSheetField <- function(target, thisSheetName) {
         select(-parsed)
     return(df_sheet_field)
 }
-GetFieldText <- function(target, thisSheetName) {
+GetFieldText <- function(target, thisSheetName, field_list, visit_info) {
     df_sheet_field <- GetDfSheetField(target, thisSheetName)
     if (is.null(df_sheet_field)) {
         return(NULL)
     }
-    df_refFieldText <- EditRefFieldTextVec(df_sheet_field)
+    df_refFieldText <- EditRefFieldTextVec(df_sheet_field, field_list, visit_info)
     temp_ref <- target
     for (i in 1:nrow(df_refFieldText)) {
         raw_pattern <- stringr::str_escape(df_refFieldText[["raw"]][i])

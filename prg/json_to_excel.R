@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.26
+#' @date 2026.5.27
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -42,7 +42,7 @@ for (name in names(temp)) {
   assign(name, temp[[name]])
 }
 rm(temp)
-
+# field_list は replace_ref_text.R::GetFieldText の参照先情報解決に必要
 field_list <- GetFieldList(sheets)
 
 sheet_data_list_group <- sheets %>% map(~ {

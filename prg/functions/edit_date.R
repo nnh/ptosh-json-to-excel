@@ -19,9 +19,9 @@ EditDate <- function(input_field_items, sheet) {
     alias_name <- sheet[[.const[["kAliasName"]]]]
     date <- field_items %>% map_df(~ {
         references_after <- PluckConst(.x, .const[["kValidateDateAfterOrEqualTo"]]) %>%
-            GetFieldText(alias_name)
+            GetFieldText(alias_name, field_list, visit_info)
         references_before <- PluckConst(.x, .const[["kValidateDateBeforeOrEqualTo"]]) %>%
-            GetFieldText(alias_name)
+            GetFieldText(alias_name, field_list, visit_info)
         res <- tibble::tibble(
             name = .x[[.const[["kFieldItemsFieldId"]]]],
             label = .x[[.const[["kFieldItemsFieldName"]]]],
