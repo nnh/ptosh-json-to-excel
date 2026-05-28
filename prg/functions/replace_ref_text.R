@@ -2,7 +2,7 @@
 #'
 #' @file replace_ref_text.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 #
 EditRefFieldTextVec <- function(df_sheet_field, field_list, visit_info) {
     join_field_info <- dplyr::left_join(df_sheet_field, field_list, by = c(.const[["kAliasName"]], "field_number")) %>% select(-field_seq)
@@ -32,7 +32,16 @@ ExtractAliasAndField <- function(x, thisSheetName) {
     list(alias = alias, number = number)
 }
 GetDfSheetField <- function(target, thisSheetName) {
-    kFieldText <- c("ref\\('\\w[\\w\\d\\p{Punct}]*', \\d+\\)", "f\\d+", "field\\d+", "ref\\('[^']+',\\s*\\d+\\)")
+    kFieldText <- c(
+        # ref('alias_name', 123) 形式（英数字・記号を含むエイリアス名）
+        "ref\\('\\w[\\w\\d\\p{Punct}]*', \\d+\\)",
+        # f1, f2, ... 形式（フィールド番号短縮表記）
+        "f\\d+",
+        # field1, field2, ... 形式（フィールド番号完全表記）
+        "field\\d+",
+        # ref('any name', 123) 形式（スペース等を含むエイリアス名にも対応）
+        "ref\\('[^']+',\\s*\\d+\\)"
+    )
     fieldTextList <- unlist(lapply(kFieldText, function(pattern) str_extract_all(target, pattern))) %>% unique()
 
     if (length(fieldTextList) == 0) {
