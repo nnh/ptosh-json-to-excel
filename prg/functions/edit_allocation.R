@@ -2,7 +2,7 @@
 #'
 #' @file edit_allocation.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 GetAllocation <- function(json_file) {
     allocation <- json_file[[.const[["kAllocation"]]]]
     if (is.null(allocation)) {
@@ -47,9 +47,9 @@ GetAllocation <- function(json_file) {
         # Replace raw in formula_field_str with text for all rows if raw is present
         if (!is.null(formula_field_references) && nrow(formula_field_references) > 0) {
             for (i in 1:nrow(formula_field_references)) {
-                raw_val <- formula_field_references[i, "raw"]
-                text_val <- formula_field_references[i, "text"]
-                if (!is.null(raw_val) && !is.null(text_val)) {
+                raw_val  <- formula_field_references[["raw"]][i]
+                text_val <- formula_field_references[["text"]][i]
+                if (!is.na(raw_val) && !is.na(text_val)) {
                     if (grepl(raw_val, formula_field_str, fixed = TRUE)) {
                         formula_field_str <- gsub(raw_val, text_val, formula_field_str, fixed = TRUE)
                     }
