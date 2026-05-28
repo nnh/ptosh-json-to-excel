@@ -49,7 +49,7 @@ GetEngToJpnColumnMappings <- function() {
             alias_name = "シート名英数字別名",
             option.name = "オプション名",
             option.values_name = "ラベル",
-            option.values_seq = "-",
+            option.values_seq = "オプションの表示順",
             option.values_code = "コード",
             option.values_is_usable = "表示",
             sheet.seq = "sheet.seq",

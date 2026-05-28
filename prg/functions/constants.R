@@ -13,7 +13,7 @@ SetConstants <- function() {
     .const[["kAliasNameJapaneseColumnName"]] <- "シート名英数字別名"
     .const[["kLabelJapaneseColumnName"]] <- "ラベル"
     .const[["kItemVisitConditionalFormattingColumnName"]] <- "数値チェック・アラート条件の有無"
-    .const[["kOptionSeqColname"]] <- "-"
+    .const[["kOptionSeqColname"]] <- "オプションの表示順"
     .const[["kReferenceColnames"]] <- c("条件の参照先情報", "論理式の参照先情報", "最小値の参照先情報", "最大値の参照先情報")
 
     # jsonファイルの要素名
