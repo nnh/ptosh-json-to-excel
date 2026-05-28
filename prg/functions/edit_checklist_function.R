@@ -100,8 +100,7 @@ source(here("prg", "functions", "edit_checklist_convert_column_name.R"),
   encoding = "UTF-8"
 )
 # edit_checklist_convert_column_name.R で GetEngToJpnColumnMappings() が定義された後に初期化する
-.const[["kEngToJpnColumnMappings"]] <- GetEngToJpnColumnMappings()
-.const[["kEngColumnNames"]] <- .const[["kEngToJpnColumnMappings"]] %>% map(names)
+.const[["kEngColumnNames"]] <- GetEngToJpnColumnMappings() %>% map(names)
 source(here("prg", "functions", "set_items_sheet_settings.R"), encoding = "UTF-8")
 source(here("prg", "functions", "summarize_by_visit.R"), encoding = "UTF-8")
 source(here("prg", "functions", "replace_ref_text.R"), encoding = "UTF-8")
