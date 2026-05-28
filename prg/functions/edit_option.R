@@ -2,7 +2,7 @@
 #'
 #' @file edit_option.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.28
 GetOptionsValues <- function(option) {
     option_name <- option[["name"]]
     option_values <- option[["values"]]
@@ -49,7 +49,7 @@ GetOptions <- function(field_items, sheet) {
         distinct() %>%
         filter(option.values_is_usable == TRUE)
     option[["sheet.seq"]] <- sheet[["sort_order"]]
-    res <- JoinJpnameAndAliasNameAndSelectColumns(option, "option", sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(option, .const[["kOption"]], sheet)
 
     return(res)
 }

@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -11,6 +11,9 @@ library(jsonlite, warn.conflicts = F)
 source(here("prg", "functions", "edit_checklist_convert_column_name.R"), encoding = "UTF-8")
 # ------ constants ------
 kItemVisitConditionalFormattingColumnName <- "数値チェック・アラート条件の有無"
+kVisitNumber <- "Visit Number"
+kLinkType    <- "link_type"
+kDefault     <- "default"
 engToJpnColumnMappings <- GetEngToJpnColumnMappings()
 # ------ functions ------
 GetHomeDir <- function() {

@@ -2,7 +2,7 @@
 #'
 #' @file edit_date.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 HasDateValidation <- function(x) {
     !is.null(PluckConst(x, .const[["kValidateDateAfterOrEqualTo"]])) ||
         !is.null(PluckConst(x, .const[["kValidateDateBeforeOrEqualTo"]]))
@@ -32,6 +32,6 @@ EditDate <- function(input_field_items, sheet) {
         )
         return(res)
     })
-    res <- JoinJpnameAndAliasNameAndSelectColumns(date, "date", sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(date, .const[["kDate"]], sheet)
     return(res)
 }

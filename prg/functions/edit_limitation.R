@@ -2,7 +2,7 @@
 #'
 #' @file edit_limitation.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 HasValueLimitation <- function(x) {
     !is.null(x) && !is.na(x) && x != ""
 }
@@ -33,6 +33,6 @@ EditLimitation <- function(input_field_items, sheet) {
         )
         return(res)
     })
-    res <- JoinJpnameAndAliasNameAndSelectColumns(limitation, "limitation", sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(limitation, .const[["kLimitation"]], sheet)
     return(res)
 }

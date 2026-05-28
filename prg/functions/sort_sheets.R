@@ -2,7 +2,7 @@
 #'
 #' @file sort_sheets.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 SortSheetAndField <- function(df, sheet_sort_info, field_sort_info) {
     if (nrow(df) == 0) {
         return(df)
@@ -48,9 +48,9 @@ SortSheetsMain <- function(output_checklist, sheet_info, field_list, visit_info)
     # item_nonvisit
     temp[[.const[["kItemNonVisit"]]]] <- SortBySeqColumns(.const[["kItemNonVisit"]], output_checklist)
     # option
-    temp[["option"]] <- SortBySeqColumns("option", output_checklist, .const[["kOptionSeqColname"]])
+    temp[[.const[["kOption"]]]] <- SortBySeqColumns(.const[["kOption"]], output_checklist, .const[["kOptionSeqColname"]])
     # name
-    temp[["name"]] <- output_checklist[["name"]] %>%
+    temp[[.const[["kName"]]]] <- output_checklist[[.const[["kName"]]]] %>%
         left_join(
             sheet_sort_info,
             by = setNames(.const[["kAliasName"]], .const[["kAliasNameJapaneseColumnName"]])
@@ -58,7 +58,7 @@ SortSheetsMain <- function(output_checklist, sheet_info, field_list, visit_info)
         arrange(sort_order) %>%
         select(-sort_order)
     # limitation, date, master, assigned
-    for (target in c("limitation", "date", "master", "assigned")) {
+    for (target in c(.const[["kLimitation"]], .const[["kDate"]], .const[["kMaster"]], .const[["kAssigned"]])) {
         temp[[target]] <- SortSheetAndField(output_checklist[[target]], sheet_sort_info, field_sort_info)
     }
     # シート出力順の変更

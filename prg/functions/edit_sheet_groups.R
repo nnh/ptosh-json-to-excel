@@ -36,7 +36,7 @@ EditSheetGroups <- function(json_files, sheet_info) {
   kSheetName <- "sheet_name"
   kSheetGroupName <- "sheet_group_name"
   kGroupLabel <- "group_label"
-  kDefault <- "default"
+  kDefault <- .const[["kDefault"]]
   kDefaultLabel <- "デフォルト"
   kSeparator <- "___"
   kMarkHit <- "〇"

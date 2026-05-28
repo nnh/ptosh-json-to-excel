@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_sheet_groups.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 ValidateSheetGroup <- function(target_sheet_df, reference_table, type_label, header_rows = 2, trial_name) {
     # 1. 行数のチェック
     if (nrow(target_sheet_df) != nrow(reference_table) + header_rows) {
@@ -57,9 +57,9 @@ ValidateAllocationMarks <- function(sheet_group_df, reference_sheet_groups, type
         # 3. チェックする列の基本方針を決定
         if (nrow(matched_group_info_list) == 0) {
             # JSON側に定義がない場合：強制的に「default」列を参照するターゲットにする
-            target_allocation_column <- "default"
+            target_allocation_column <- kDefault
             # ループを1回だけ回すためにダミーの1行tibbleを作成
-            matched_group_info_list <- tibble(allocation_group = "default")
+            matched_group_info_list <- tibble(allocation_group = kDefault)
         } else {
             # JSON側に定義がある場合：後続のループ内で列名を動的に取得するため、一旦初期化
             target_allocation_column <- "dynamic"
@@ -69,7 +69,7 @@ ValidateAllocationMarks <- function(sheet_group_df, reference_sheet_groups, type
         for (info_idx in 1:nrow(matched_group_info_list)) {
             
             # 「default」固定でない場合は、JSONから取得したグループコードを列名にする
-            if (target_allocation_column != "default") {
+            if (target_allocation_column != kDefault) {
                 target_allocation_column <- matched_group_info_list[[info_idx, "allocation_group"]]
             }
             
@@ -78,7 +78,7 @@ ValidateAllocationMarks <- function(sheet_group_df, reference_sheet_groups, type
             
             # 列自体が存在しない、または値がNULL/NAの場合は「default」列にフォールバック
             if (is.null(mark_value) || length(mark_value) == 0 || is.na(mark_value)) {
-                mark_value <- target_row_data[[1, "default"]]
+                mark_value <- target_row_data[[1, kDefault]]
             }
             
             # それでも値が取得できない場合はエラー

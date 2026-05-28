@@ -2,11 +2,11 @@
 #'
 #' @file summarize_by_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 #
 SummarizeByVisit <- function(sheet_data_combine, visit_info) {
     res <- sheet_data_combine
-    summarize_target_sheet_names <- c("option", "assigned", "limitation", "date")
+    summarize_target_sheet_names <- c(.const[["kOption"]], .const[["kAssigned"]], .const[["kLimitation"]], .const[["kDate"]])
     visit_group_map <- visit_info %>%
         dplyr::select(
             alias_name,

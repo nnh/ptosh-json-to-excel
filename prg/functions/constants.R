@@ -66,6 +66,9 @@ SetConstants <- function() {
     .const[["kFieldItemTypeAssigned"]] <- "FieldItem::Assigned"
     .const[["kCategoryAllocation"]] <- "allocation"
     .const[["kCategoryVisit"]] <- "visit"
+    .const[["kVisitNumber"]] <- "Visit Number"
+    .const[["kLinkType"]]    <- "link_type"
+    .const[["kDefault"]]     <- "default"
 
     # 出力シート名
     .const[["kItemNonVisit"]] <- "item_nonvisit"
@@ -74,24 +77,30 @@ SetConstants <- function() {
     .const[["kVisit"]] <- "visit"
     .const[["kSheetGroupsVisit"]] <- "sheet_groups_visit"
     .const[["kSheetGroupsNonVisit"]] <- "sheet_groups_nonvisit"
+    .const[["kLimitation"]] <- "limitation"
+    .const[["kDate"]]       <- "date"
+    .const[["kOption"]]     <- "option"
+    .const[["kMaster"]]     <- "master"
+    .const[["kAssigned"]]   <- "assigned"
+    .const[["kName"]]       <- "name"
     .const[["kTargetSheetNames"]] <- c(
         .const[["kItemVisit"]],
         .const[["kItemVisit_old"]],
         .const[["kItemNonVisit"]],
         .const[["kVisit"]],
-        .const[["kAllocation"]], 
+        .const[["kAllocation"]],
         .const[["kSheetGroupsVisit"]],
         .const[["kSheetGroupsNonVisit"]],
-        "limitation", "date", "option", "master", "assigned"
+        .const[["kLimitation"]], .const[["kDate"]], .const[["kOption"]], .const[["kMaster"]], .const[["kAssigned"]]
     )
     .const[["kSortOrderSheetNames"]] <- c(
         .const[["kItemVisit"]],
         .const[["kItemNonVisit"]],
         .const[["kVisit"]],
-        .const[["kAllocation"]], 
+        .const[["kAllocation"]],
         .const[["kSheetGroupsVisit"]],
         .const[["kSheetGroupsNonVisit"]],
-        "limitation", "date", "option", "name", "master", "assigned"
+        .const[["kLimitation"]], .const[["kDate"]], .const[["kOption"]], .const[["kName"]], .const[["kMaster"]], .const[["kAssigned"]]
     )
 }
 .const <- new.env(parent = emptyenv())

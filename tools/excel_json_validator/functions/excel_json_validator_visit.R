@@ -30,7 +30,7 @@ CheckJsonVisitForNonVisit <- function() {
         }
         fieldItems_idx <- seq(length(field_items), 1)
         for (fieldItemIdx in fieldItems_idx) {
-            if (visit_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$label != "Visit Number") {
+            if (visit_sheets[[sheetIdx]]$field_items[[fieldItemIdx]]$label != kVisitNumber) {
                 visit_sheets[[sheetIdx]]$field_items[[fieldItemIdx]] <- NULL
                 next
             }

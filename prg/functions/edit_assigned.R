@@ -2,7 +2,7 @@
 #'
 #' @file edit_assigned.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 EditAssigned <- function(input_field_items, sheet) {
     field_items <- input_field_items %>% GetTargetByType(.const[["kFieldItemTypeAssigned"]])
     assigned <- field_items %>% map_df(~ {
@@ -13,6 +13,6 @@ EditAssigned <- function(input_field_items, sheet) {
         )
         return(res)
     })
-    res <- JoinJpnameAndAliasNameAndSelectColumns(assigned, "assigned", sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(assigned, .const[["kAssigned"]], sheet)
     return(res)
 }

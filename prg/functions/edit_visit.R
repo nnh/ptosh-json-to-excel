@@ -4,9 +4,8 @@
 #' @author Mariko Ohtsuka
 #' @date 2026.5.27
 GetVisit <- function(field_items, sheet) {
-    kNonvisitCondition <- "Visit Number"
     target <- field_items %>%
-        keep(~ identical(.x[[.const[["kFieldItemsFieldName"]]]], kNonvisitCondition))
+        keep(~ identical(.x[[.const[["kFieldItemsFieldName"]]]], .const[["kVisitNumber"]]))
     if (length(target) == 0) {
         return(NULL)
     }

@@ -17,7 +17,7 @@ renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
 GetEngToJpnColumnMappings <- function() {
     itemColumnName <- c(
         jpname = "シート名",
-        alias_name = .const[["kAliasNameJapaneseColumnName"]],
+        alias_name = "シート名英数字別名",
         name = "フィールドID",
         label = "ラベル",
         option.name = "オプション名",
@@ -37,16 +37,16 @@ GetEngToJpnColumnMappings <- function() {
     engToJpnColumnMappings <- list(
         name = c(
             name = "シート名",
-            alias_name = .const[["kAliasNameJapaneseColumnName"]],
+            alias_name = "シート名英数字別名",
             images_count = "画像登録欄の数"
         ),
         item_visit_old = c(itemColumnName,
-            numericality_normal_range_check = .const[["kItemVisitConditionalFormattingColumnName"]]
+            numericality_normal_range_check = "数値チェック・アラート条件の有無"
         ),
         item_nonvisit = c(itemColumnName, field_type = "フィールドタイプ"),
         option = c(
             jpname = "シート名",
-            alias_name = .const[["kAliasNameJapaneseColumnName"]],
+            alias_name = "シート名英数字別名",
             option.name = "オプション名",
             option.values_name = "ラベル",
             option.values_seq = "-",
@@ -57,7 +57,7 @@ GetEngToJpnColumnMappings <- function() {
         ),
         visit = c(
             jpname = "シート名",
-            alias_name = .const[["kAliasNameJapaneseColumnName"]],
+            alias_name = "シート名英数字別名",
             name = "フィールドID",
             default_value = "デフォルト値"
         ),
@@ -67,14 +67,14 @@ GetEngToJpnColumnMappings <- function() {
         ),
         master = c(
             jpname = "シート名",
-            alias_name = .const[["kAliasNameJapaneseColumnName"]],
+            alias_name = "シート名英数字別名",
             name = "フィールドID",
             label = "ラベル",
             link_type = "保存先のマスタ"
         ),
         allocation = c(
             jpname = "シート名",
-            alias_name = .const[["kAliasNameJapaneseColumnName"]],
+            alias_name = "シート名英数字別名",
             is_zelen = "Zelenの施設内バランス化",
             zelen_imbalance = "施設間の差",
             is_double_blinded = "二重盲検",
@@ -90,14 +90,14 @@ GetEngToJpnColumnMappings <- function() {
         ),
         assigned = c(
             jpname = "シート名",
-            alias_name = .const[["kAliasNameJapaneseColumnName"]],
+            alias_name = "シート名英数字別名",
             name = "フィールドID",
             label = "ラベル",
             default_value = "デフォルト値"
         ),
         limitation = c(
             jpname = "シート名",
-            alias_name = .const[["kAliasNameJapaneseColumnName"]],
+            alias_name = "シート名英数字別名",
             name = "フィールドID",
             label = "ラベル",
             default_value = "デフォルト値",
@@ -108,7 +108,7 @@ GetEngToJpnColumnMappings <- function() {
         ),
         date = c(
             jpname = "シート名",
-            alias_name = .const[["kAliasNameJapaneseColumnName"]],
+            alias_name = "シート名英数字別名",
             name = "フィールドID",
             label = "ラベル",
             validators.date.validate_date_after_or_equal_to = "日付の最小値",

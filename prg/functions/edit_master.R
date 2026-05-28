@@ -2,10 +2,10 @@
 #'
 #' @file edit_master.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.28
 GetMaster <- function(field_items, sheet) {
-    condition_column <- "link_type"
-    dfname <- "master"
+    condition_column <- .const[["kLinkType"]]
+    dfname <- .const[["kMaster"]]
     target <- field_items %>%
         map(~ {
             if (is.null(.x[[condition_column]]) || .x[[condition_column]] == "") {
