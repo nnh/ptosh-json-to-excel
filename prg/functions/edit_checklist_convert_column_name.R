@@ -3,7 +3,7 @@
 #'
 #' @file edit_checklist_convert_column_name.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.25
+#' @date 2026.5.28
 renameColumnsFromEnglishToJapanese <- function(df, nameMap) {
     stopifnot(is.data.frame(df))
     stopifnot(is.character(nameMap), !is.null(names(nameMap)))
@@ -119,7 +119,7 @@ GetEngToJpnColumnMappings <- function() {
     )
     return(engToJpnColumnMappings)
 }
-convertSheetColumnsToJapanese <- function(output_checklist) {
+convertSheetColumnsToJapanese <- function(output_checklist, is_visit) {
     sheetNames <- names(output_checklist)
     engToJpnColumnMappings <- GetEngToJpnColumnMappings()
     res <- list()

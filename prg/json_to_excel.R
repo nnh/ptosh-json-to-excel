@@ -52,7 +52,7 @@ rm(temp)
 # field_list は replace_ref_text.R::GetFieldText の参照先情報解決に必要
 field_list <- GetFieldList(sheets)
 # シートごとにシートデータを作成する
-sheet_data_list_group <- sheets %>% map(~ BuildSheetData(.x, is_visit))
+sheet_data_list_group <- sheets %>% map(~ BuildSheetData(.x, is_visit, options_flag, options_json))
 # シートデータを結合し、空データを補完する
 sheet_data_combine <- CombineSheetSafety(sheet_data_list_group)
 # VISIT情報を集約する
@@ -64,7 +64,7 @@ if (is_visit) {
 # 各シートの行順をソートする（英語列名のまま処理）
 sorted_sheet_data <- SortRowsMain(summary_sheet_data, sheet_info, field_list, visit_info)
 # 日本語列名に変換する
-output_checklist <- convertSheetColumnsToJapanese(sorted_sheet_data)
+output_checklist <- convertSheetColumnsToJapanese(sorted_sheet_data, is_visit)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
 output_checklist[[.const[["kItemVisit"]]]] <- EditItemVisit(output_checklist[[.const[["kItemVisit_old"]]]], field_list, visit_info, sheet_info)
 # remove item_visit_old sheet

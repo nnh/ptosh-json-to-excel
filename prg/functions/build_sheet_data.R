@@ -7,7 +7,7 @@
 #' @param sheet シートオブジェクト（json_files$sheets の1要素）
 #' @param is_visit VISIT対応試験かどうかのフラグ
 #' @return 各シートのデータをまとめたリスト
-BuildSheetData <- function(sheet, is_visit) {
+BuildSheetData <- function(sheet, is_visit, options_flag, options_json) {
     sheet_name  <- sheet[[.const[["kAliasName"]]]]
     field_items <- sheet %>% GetFieldItems()
 
@@ -23,7 +23,7 @@ BuildSheetData <- function(sheet, is_visit) {
         alias_name   = sheet_name,
         images_count = sheet[["images_count"]]
     )
-    option     <- field_items %>% GetOptions(sheet)
+    option     <- field_items %>% GetOptions(sheet, options_flag, options_json)
     assigned   <- field_items %>% EditAssigned(sheet)
     limitation <- field_items %>% EditLimitation(sheet)
     date       <- field_items %>% EditDate(sheet)

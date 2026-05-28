@@ -17,7 +17,7 @@ GetOptionsValues <- function(option) {
     return(df_option_values)
 }
 
-GetOptions <- function(field_items, sheet) {
+GetOptions <- function(field_items, sheet, options_flag, options_json) {
     if (options_flag) {
         target <- field_items %>%
             keep(~ !is.null(.x[["option_name"]]) && .x[[.const[["kFieldItemsType"]]]] == .const[["kArticle"]])
