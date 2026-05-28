@@ -46,7 +46,7 @@ setColumnConditionalFormatting <- function(wb, sheetName, targetColName, rows) {
         wb,
         sheet = sheetName,
         cols = cols_to_format, rows = rows,
-        rule = paste0("$", col_letter, start_row, '="条件なし"'),
+        rule = paste0("$", col_letter, start_row, '="', .const[["kCheckNone"]], '"'),
         style = style_noCondition
     )
 
@@ -54,7 +54,7 @@ setColumnConditionalFormatting <- function(wb, sheetName, targetColName, rows) {
         wb,
         sheet = sheetName,
         cols = cols_to_format, rows = rows,
-        rule = paste0("$", col_letter, start_row, '="数値チェック有"'),
+        rule = paste0("$", col_letter, start_row, '="', .const[["kCheckNumericality"]], '"'),
         style = style_numericality
     )
 
@@ -62,7 +62,7 @@ setColumnConditionalFormatting <- function(wb, sheetName, targetColName, rows) {
         wb,
         sheet = sheetName,
         cols = cols_to_format, rows = rows,
-        rule = paste0("$", col_letter, start_row, '="アラート設定有"'),
+        rule = paste0("$", col_letter, start_row, '="', .const[["kCheckNormalRange"]], '"'),
         style = style_normal_range
     )
 
@@ -70,7 +70,7 @@ setColumnConditionalFormatting <- function(wb, sheetName, targetColName, rows) {
         wb,
         sheet = sheetName,
         cols = cols_to_format, rows = rows,
-        rule = paste0("$", col_letter, start_row, '="数値・アラート有"'),
+        rule = paste0("$", col_letter, start_row, '="', .const[["kCheckBoth"]], '"'),
         style = style_numericality_normal_range
     )
 

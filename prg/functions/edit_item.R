@@ -2,7 +2,7 @@
 #'
 #' @file edit_item.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 EditItemAndItemVisit <- function(field_items, sheet_name) {
     visit_group <- visit_info %>% filter(alias_name == sheet_name)
     if (visit_group %>% nrow() == 1) {
@@ -39,10 +39,10 @@ EditItem <- function(field_items, alias_name) {
         normal_range_check <- (!is.null(normal_range_gte) && !is.na(normal_range_gte)) ||
             (!is.null(normal_range_lss) && !is.na(normal_range_lss))
         numericality_normal_range_check <- dplyr::case_when(
-            numericality_check & normal_range_check  ~ "数値・アラート有",
-            numericality_check & !normal_range_check ~ "数値チェック有",
-            !numericality_check & normal_range_check ~ "アラート設定有",
-            TRUE                                     ~ "条件なし"
+            numericality_check & normal_range_check  ~ .const[["kCheckBoth"]],
+            numericality_check & !normal_range_check ~ .const[["kCheckNumericality"]],
+            !numericality_check & normal_range_check ~ .const[["kCheckNormalRange"]],
+            TRUE                                     ~ .const[["kCheckNone"]]
         )
 
         # フィールドタイプ
