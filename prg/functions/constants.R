@@ -2,8 +2,8 @@
 #'
 #' @file constants.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
-#' @dependencies here, purrr, edit_checklist_convert_column_name.R
+#' @date 2026.5.28
+#' @dependencies here, purrr
 SetConstants <- function() {
     .const[["kOutputJapanaseNameEnglish"]] <- "jpname"
     .const[["kInputFolderName"]] <- "input"
@@ -15,8 +15,6 @@ SetConstants <- function() {
     .const[["kItemVisitConditionalFormattingColumnName"]] <- "数値チェック・アラート条件の有無"
     .const[["kOptionSeqColname"]] <- "-"
     .const[["kReferenceColnames"]] <- c("条件の参照先情報", "論理式の参照先情報", "最小値の参照先情報", "最大値の参照先情報")
-    .const[["kEngToJpnColumnMappings"]] <- GetEngToJpnColumnMappings()
-    .const[["kEngColumnNames"]] <- .const[["kEngToJpnColumnMappings"]] %>% map(names)
 
     # jsonファイルの要素名
     .const[["kSheetJapaneseName"]] <- "name"

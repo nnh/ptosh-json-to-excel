@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -32,15 +32,12 @@ InstallAndLoadPackage("here")
 InstallAndLoadPackage("jsonlite")
 InstallAndLoadPackage("openxlsx")
 InstallAndLoadPackage("rlang")
-# source の読み込み順序について：
-# constants.R は直感に反して最後に読み込む。
-# これは SetConstants() 内で GetEngToJpnColumnMappings() を呼んでおり、
-# 同関数が edit_checklist_function.R 経由でソースされる
-# edit_checklist_convert_column_name.R に定義されているため。
-# 読み込み順序： common_functions → edit_checklist_function → constants
+# 読み込み順序： common_functions → constants → edit_checklist_function
+# edit_checklist_function.R 内で GetEngToJpnColumnMappings() を .const に追加するため、
+# constants.R より後に読み込む必要がある。
 source(here("prg", "functions", "common_functions.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8")
 source(here("prg", "functions", "constants.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8")
 # ------ main ------
 temp         <- ExecReadJsonFiles()
 sheets       <- temp$sheets
