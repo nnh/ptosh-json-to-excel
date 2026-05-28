@@ -58,6 +58,7 @@ SetConstants <- function() {
     .const[["kValidateDateBeforeOrEqualTo"]] <- c("validators", "date", "validate_date_before_or_equal_to")
     .const[["kValidatePresenceIf"]] <- c("validators", "presence", "validate_presence_if")
     .const[["kValidateFormulaIf"]] <- c("validators", "formula", "validate_formula_if")
+    .const[["kValidateFormulaMessage"]] <- c("validators", "formula", "validate_formula_message")
     .const[["kValidatorsNumericality"]] <- c("validators", "numericality")
     .const[["kValidatorsNumericalityLessThanOrEqualTo"]] <- c(.const[["kValidatorsNumericality"]], "validate_numericality_less_than_or_equal_to")
     .const[["kValidatorsNumericalityGreaterThanOrEqualTo"]] <- c(.const[["kValidatorsNumericality"]], "validate_numericality_greater_than_or_equal_to")

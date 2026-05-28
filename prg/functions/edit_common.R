@@ -43,6 +43,14 @@ GetFieldList <- function(sheets) {
 PluckConst <- function(x, key_const, default = NULL) {
     purrr::pluck(x, !!!key_const, .default = default)
 }
+#' PluckConst の NA デフォルト版ショートカット
+#'
+#' @param x 対象のリストオブジェクト
+#' @param key_const 定数として定義されたパスベクトル（.const[["kXxx"]] 等）または文字列
+#' @return pluck で取得した値、存在しない場合は NA
+PluckOrNA <- function(x, key_const) {
+    PluckConst(x, key_const, default = NA)
+}
 CombineSheetSafety <- function(sheet_data_list) {
     targetSheetNames <- .const[["kTargetSheetNames"]] %>% append("name", .)
     sheet_data_combine <- targetSheetNames %>%

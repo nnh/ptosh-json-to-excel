@@ -12,9 +12,9 @@ GetMaster <- function(field_items, sheet) {
                 return(NULL)
             }
             return(tibble::tibble(
-                name = .x[[.const[["kFieldItemsFieldId"]]]] %||% NA,
-                label = .x[[.const[["kFieldItemsFieldName"]]]] %||% NA,
-                !!condition_column := .x[[condition_column]] %||% NA
+                name = PluckOrNA(.x, .const[["kFieldItemsFieldId"]]),
+                label = PluckOrNA(.x, .const[["kFieldItemsFieldName"]]),
+                !!condition_column := PluckOrNA(.x, condition_column)
             ))
         }) %>%
         bind_rows()

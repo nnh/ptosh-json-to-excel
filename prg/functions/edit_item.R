@@ -34,8 +34,8 @@ EditItem <- function(field_items, alias_name) {
             GetFieldText(alias_name, field_list, visit_info)
         numericality <- PluckConst(.x, .const[["kValidatorsNumericality"]])
         numericality_check <- !is.null(numericality)
-        normal_range_gte <- PluckConst(.x, .const[["kNormalRangeGreaterThanOrEqualTo"]], NA)
-        normal_range_lss <- PluckConst(.x, .const[["kNormalRangeLessThanOrEqualTo"]], NA)
+        normal_range_gte <- PluckOrNA(.x, .const[["kNormalRangeGreaterThanOrEqualTo"]])
+        normal_range_lss <- PluckOrNA(.x, .const[["kNormalRangeLessThanOrEqualTo"]])
         normal_range_check <- (!is.null(normal_range_gte) && !is.na(normal_range_gte)) ||
             (!is.null(normal_range_lss) && !is.na(normal_range_lss))
         numericality_normal_range_check <- dplyr::case_when(
@@ -52,22 +52,22 @@ EditItem <- function(field_items, alias_name) {
             TRUE ~ NA_character_
         )
         res <- tibble::tibble(
-            name = .x[[.const[["kFieldItemsFieldId"]]]] %||% NA,
-            label = .x[[.const[["kFieldItemsFieldName"]]]] %||% NA,
-            option.name = .x[["option_name"]] %||% NA,
-            default_value = .x[[.const[["kFieldItemDefaultValue"]]]] %||% NA,
-            validators.presence.validate_presence_if = PluckConst(.x, .const[["kValidatePresenceIf"]], NA),
+            name = PluckOrNA(.x, .const[["kFieldItemsFieldId"]]),
+            label = PluckOrNA(.x, .const[["kFieldItemsFieldName"]]),
+            option.name = PluckOrNA(.x, "option_name"),
+            default_value = PluckOrNA(.x, .const[["kFieldItemDefaultValue"]]),
+            validators.presence.validate_presence_if = PluckOrNA(.x, .const[["kValidatePresenceIf"]]),
             presence_if_references = presence_if_references %||% NA,
-            validators.formula.validate_formula_if = PluckConst(.x, .const[["kValidateFormulaIf"]], NA),
+            validators.formula.validate_formula_if = PluckOrNA(.x, .const[["kValidateFormulaIf"]]),
             formula_if_references = formula_if_references %||% NA,
-            validators.formula.validate_formula_message = purrr::pluck(.x, "validators", "formula", "validate_formula_message", .default = NA),
-            validators.date.validate_date_after_or_equal_to = PluckConst(.x, .const[["kValidateDateAfterOrEqualTo"]], NA),
+            validators.formula.validate_formula_message = PluckOrNA(.x, .const[["kValidateFormulaMessage"]]),
+            validators.date.validate_date_after_or_equal_to = PluckOrNA(.x, .const[["kValidateDateAfterOrEqualTo"]]),
             references_after = references_after %||% NA,
-            validators.date.validate_date_before_or_equal_to = PluckConst(.x, .const[["kValidateDateBeforeOrEqualTo"]], NA),
+            validators.date.validate_date_before_or_equal_to = PluckOrNA(.x, .const[["kValidateDateBeforeOrEqualTo"]]),
             references_before = references_before %||% NA,
             field_type = field_type,
             numericality_normal_range_check = numericality_normal_range_check,
-            field_item.seq = .x[[.const[["kFieldItemsSeq"]]]] %||% NA,
+            field_item.seq = PluckOrNA(.x, .const[["kFieldItemsSeq"]]),
         )
         res[["sheet.seq"]] <- sheet_seq
         return(res)

@@ -25,11 +25,11 @@ EditLimitation <- function(input_field_items, sheet) {
         res <- tibble::tibble(
             name = .x[[.const[["kFieldItemsFieldId"]]]],
             label = .x[[.const[["kFieldItemsFieldName"]]]],
-            default_value = .x[[.const[["kFieldItemDefaultValue"]]]] %||% NA,
-            normal_range.less_than_or_equal_to = PluckConst(.x, .const[["kNormalRangeLessThanOrEqualTo"]], NA),
-            normal_range.greater_than_or_equal_to = PluckConst(.x, .const[["kNormalRangeGreaterThanOrEqualTo"]], NA),
-            validators.numericality.validate_numericality_less_than_or_equal_to = PluckConst(.x, .const[["kValidatorsNumericalityLessThanOrEqualTo"]], NA),
-            validators.numericality.validate_numericality_greater_than_or_equal_to = PluckConst(.x, .const[["kValidatorsNumericalityGreaterThanOrEqualTo"]], NA)
+            default_value = PluckOrNA(.x, .const[["kFieldItemDefaultValue"]]),
+            normal_range.less_than_or_equal_to = PluckOrNA(.x, .const[["kNormalRangeLessThanOrEqualTo"]]),
+            normal_range.greater_than_or_equal_to = PluckOrNA(.x, .const[["kNormalRangeGreaterThanOrEqualTo"]]),
+            validators.numericality.validate_numericality_less_than_or_equal_to = PluckOrNA(.x, .const[["kValidatorsNumericalityLessThanOrEqualTo"]]),
+            validators.numericality.validate_numericality_greater_than_or_equal_to = PluckOrNA(.x, .const[["kValidatorsNumericalityGreaterThanOrEqualTo"]])
         )
         return(res)
     })

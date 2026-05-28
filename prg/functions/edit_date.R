@@ -25,9 +25,9 @@ EditDate <- function(input_field_items, sheet) {
         res <- tibble::tibble(
             name = .x[[.const[["kFieldItemsFieldId"]]]],
             label = .x[[.const[["kFieldItemsFieldName"]]]],
-            validators.date.validate_date_after_or_equal_to = PluckConst(.x, .const[["kValidateDateAfterOrEqualTo"]], NA),
+            validators.date.validate_date_after_or_equal_to = PluckOrNA(.x, .const[["kValidateDateAfterOrEqualTo"]]),
             references_after = references_after %||% NA,
-            validators.date.validate_date_before_or_equal_to = PluckConst(.x, .const[["kValidateDateBeforeOrEqualTo"]], NA),
+            validators.date.validate_date_before_or_equal_to = PluckOrNA(.x, .const[["kValidateDateBeforeOrEqualTo"]]),
             references_before = references_before %||% NA
         )
         return(res)
