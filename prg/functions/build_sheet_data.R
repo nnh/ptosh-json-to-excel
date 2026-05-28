@@ -2,7 +2,7 @@
 #'
 #' @file build_sheet_data.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 #'
 #' @param sheet シートオブジェクト（json_files$sheets の1要素）
 #' @param is_visit VISIT対応試験かどうかのフラグ
