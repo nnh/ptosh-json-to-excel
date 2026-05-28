@@ -19,6 +19,10 @@ SetConstants <- function() {
     .const[["kCheckBoth"]]         <- "数値・アラート有"
     .const[["kOptionSeqColname"]] <- "option.values_seq"
     .const[["kReferenceColnames"]] <- c("条件の参照先情報", "論理式の参照先情報", "最小値の参照先情報", "最大値の参照先情報")
+    .const[["kSheetKeysToRemove"]] <- c(
+        "stylesheet", "fax_stylesheet", "odm", "registration_config",
+        "uuid", "digest", "lock_version", "created_at", "updated_at"
+    )
 
     # jsonファイルの要素名
     .const[["kSheetJapaneseName"]] <- "name"

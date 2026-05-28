@@ -2,7 +2,7 @@
 #'
 #' @file common_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.27
+#' @date 2026.5.28
 # ------ functions ------
 #' Create an output folder if it does not exist.
 #'
@@ -107,15 +107,9 @@ GetSheetNamesAndSortOrderFromJson <- function(json_file) {
     current_alias <- res[[.const[["kAliasName"]]]]
     res[[.const[["kSheetGroups"]]]] <- GetSheetGroupRow(sheet_groups, current_alias)
     res[["sort_order"]] <- GetSheetSortOrder(sheet_orders, current_alias)
-    res[["stylesheet"]] <- NULL
-    res[["fax_stylesheet"]] <- NULL
-    res[["odm"]] <- NULL
-    res[["registration_config"]] <- NULL
-    res[["uuid"]] <- NULL
-    res[["digest"]] <- NULL
-    res[["lock_version"]] <- NULL
-    res[["created_at"]] <- NULL
-    res[["updated_at"]] <- NULL
+    for (key in .const[["kSheetKeysToRemove"]]) {
+      res[[key]] <- NULL
+    }
     return(res)
   })
   sheetNameList <- sheets %>% map_chr(~ .x[[.const[["kAliasName"]]]])
