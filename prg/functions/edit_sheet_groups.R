@@ -217,7 +217,7 @@ EditSheetGroups <- function(json_files, sheet_info) {
   )
 
   # 列名を英数字キー（header_2）に設定し、ヘッダー行にセンチネル値と表示ラベルを書き込む
-  # -999 / -888: SortSheetsMain でヘッダー行を通常データと区別するためのセンチネル値
+  # -999 / -888: SplitCrossTab でヘッダー行を通常データと区別するためのセンチネル値
   colnames(cross_tab) <- header_2
   cross_tab[1, 1] <- "-999"
   cross_tab[2, 1] <- "-888"

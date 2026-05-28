@@ -10,16 +10,13 @@ SortSheetAndField <- function(df, sheet_sort_info, field_sort_info) {
     df %>%
         left_join(
             field_sort_info,
-            by = setNames(
-                c(.const[["kAliasName"]], "name"),
-                c(.const[["kAliasNameJapaneseColumnName"]], "フィールドID")
-            )
+            by = c(.const[["kAliasName"]], .const[["kFieldItemsFieldId"]])
         ) %>%
         arrange(sort_order, field_seq) %>%
         select(-sort_order, -field_seq)
 }
-SortBySeqColumns <- function(target, output_checklist, extra_sort_cols = character(0)) {
-    df <- output_checklist[[target]]
+SortBySeqColumns <- function(target, sheet_data, extra_sort_cols = character(0)) {
+    df <- sheet_data[[target]]
     if (nrow(df) == 0) {
         return(df)
     }
@@ -29,8 +26,8 @@ SortBySeqColumns <- function(target, output_checklist, extra_sort_cols = charact
         distinct()
 }
 
-SortSheetsMain <- function(output_checklist, sheet_info, field_list, visit_info) {
-    temp <- output_checklist
+SortRowsMain <- function(sheet_data, sheet_info, field_list, visit_info) {
+    temp <- sheet_data
     sheet_sort_info <- sheet_info %>%
         select(alias_name, sort_order) %>%
         distinct()
@@ -44,24 +41,22 @@ SortSheetsMain <- function(output_checklist, sheet_info, field_list, visit_info)
         filter(sort_order == min(sort_order, na.rm = TRUE)) %>%
         ungroup()
 
-    # 各シートをソート
+    # 各シートの行順をソート（英語列名のまま処理）
     # item_nonvisit
-    temp[[.const[["kItemNonVisit"]]]] <- SortBySeqColumns(.const[["kItemNonVisit"]], output_checklist)
+    temp[[.const[["kItemNonVisit"]]]] <- SortBySeqColumns(.const[["kItemNonVisit"]], sheet_data)
     # option
-    temp[[.const[["kOption"]]]] <- SortBySeqColumns(.const[["kOption"]], output_checklist, .const[["kOptionSeqColname"]])
+    temp[[.const[["kOption"]]]] <- SortBySeqColumns(.const[["kOption"]], sheet_data, .const[["kOptionSeqColname"]])
     # name
-    temp[[.const[["kName"]]]] <- output_checklist[[.const[["kName"]]]] %>%
+    temp[[.const[["kName"]]]] <- sheet_data[[.const[["kName"]]]] %>%
         left_join(
             sheet_sort_info,
-            by = setNames(.const[["kAliasName"]], .const[["kAliasNameJapaneseColumnName"]])
+            by = .const[["kAliasName"]]
         ) %>%
         arrange(sort_order) %>%
         select(-sort_order)
     # limitation, date, master, assigned
     for (target in c(.const[["kLimitation"]], .const[["kDate"]], .const[["kMaster"]], .const[["kAssigned"]])) {
-        temp[[target]] <- SortSheetAndField(output_checklist[[target]], sheet_sort_info, field_sort_info)
+        temp[[target]] <- SortSheetAndField(sheet_data[[target]], sheet_sort_info, field_sort_info)
     }
-    # シート出力順の変更
-    res <- temp[.const[["kSortOrderSheetNames"]]]
-    return(res)
+    return(temp)
 }

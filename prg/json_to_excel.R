@@ -61,8 +61,10 @@ summary_sheet_data <- SummarizeByVisit(sheet_data_combine, visit_info)
 if (is_visit) {
   summary_sheet_data[[.const[["kVisit"]]]] <- GetVisitIsVisit(visit_info)
 }
+# 各シートの行順をソートする（英語列名のまま処理）
+sorted_sheet_data <- SortRowsMain(summary_sheet_data, sheet_info, field_list, visit_info)
 # 日本語列名に変換する
-output_checklist <- convertSheetColumnsToJapanese(summary_sheet_data)
+output_checklist <- convertSheetColumnsToJapanese(sorted_sheet_data)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
 output_checklist[[.const[["kItemVisit"]]]] <- EditItemVisit(output_checklist[[.const[["kItemVisit_old"]]]], field_list, visit_info, sheet_info)
 # remove item_visit_old sheet
@@ -71,8 +73,8 @@ output_checklist[[.const[["kItemVisit_old"]]]] <- NULL
 sheet_groups_table <- EditSheetGroupsMain(json_files, sheet_info)
 output_checklist[[.const[["kSheetGroupsVisit"]]]] <- sheet_groups_table$visit_cross_tab
 output_checklist[[.const[["kSheetGroupsNonVisit"]]]] <- sheet_groups_table$non_visit_cross_tab
-# シート出力順、各シートの行順の変更
-sort_output_checklist <- SortSheetsMain(output_checklist, sheet_info, field_list, visit_info)
+# シート出力順の変更
+sort_output_checklist <- output_checklist[.const[["kSortOrderSheetNames"]]]
 
 # create output folder.
 output_folder_name <- Sys.time() %>%
