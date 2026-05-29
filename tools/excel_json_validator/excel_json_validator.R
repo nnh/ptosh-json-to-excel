@@ -28,6 +28,10 @@ ExecExcelJsonValidator <- function(trialName) {
   fieldOrders <<- GetFieldOrders()
   sheetAndFieldOrders <<- GetSheetAndFieldOrders(sheetOrders, c("alias_name" = "sheet"))
   isVisit <<- GetVisitInfo()
+  # 各シートの列名を検証する
+  CheckColumnNames(sheetList, isVisit, trialName)
+  # 各シートのソート順を検証する
+  CheckSortOrder(sheetList, isVisit, trialName)
   jpNameAndAliasName <<- target_json |> GetNameAndAliasNameByJson()
   jpNameAndGroup <<- GetNameAndGroupByJson()
   fieldItems <<- target_json |> GetFieldItemsByJsonList()

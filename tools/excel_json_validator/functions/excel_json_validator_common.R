@@ -399,4 +399,8 @@ source(here("tools", "excel_json_validator", "functions", "excel_json_validator_
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_sheet_groups.R"), encoding = "UTF-8")
 # references
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_get_ref.R"), encoding = "UTF-8")
+# column names
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_column_names.R"), encoding = "UTF-8")
+# sort order
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_sort_order.R"), encoding = "UTF-8")
 # ------ main ------
