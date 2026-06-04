@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_common.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.28
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
 library(here, warn.conflicts = F)
@@ -11,6 +11,9 @@ library(jsonlite, warn.conflicts = F)
 source(here("prg", "functions", "edit_checklist_convert_column_name.R"), encoding = "UTF-8")
 # ------ constants ------
 kItemVisitConditionalFormattingColumnName <- "数値チェック・アラート条件の有無"
+kVisitNumber <- "Visit Number"
+kLinkType    <- "link_type"
+kDefault     <- "default"
 engToJpnColumnMappings <- GetEngToJpnColumnMappings()
 # ------ functions ------
 GetHomeDir <- function() {
@@ -263,6 +266,25 @@ CheckSheetNotExists <- function(sheetList, sheetName) {
   }
   invisible(TRUE)
 }
+# シートの並び順が期待値と一致するかを検証する（比較ロジックのみ、データ読み込みは行わない）
+CheckSheetOrder <- function(sheetList, trialName) {
+  expected <- c(
+    "item_visit", "item_nonvisit", "visit", "allocation",
+    "sheet_groups_visit", "sheet_groups_nonvisit",
+    "limitation", "date", "option", "name", "master", "assigned"
+  )
+  actual <- names(sheetList)
+  if (!identical(expected, actual)) {
+    print(actual)
+    stop(str_c("Sheet order is incorrect in trial: ", trialName))
+  }
+}
+# 単体実行用エントリポイント：データ読み込みからシート並び順チェックまでを一括実行する
+# 使用例: RunCheckSheetOrder("Bev-FOLFOX-SBC")
+RunCheckSheetOrder <- function(trialName) {
+  sheetList <- GetJsonAndSheet(trialName)[["sheetList"]]
+  CheckSheetOrder(sheetList, trialName)
+}
 JoinVisitGroupsValidator <- function(df, key = "alias_name", target = "group") {
   joinVisitGroups <- left_join(df, visitGroups[, c(key, target)], by = key)
   for (row in 1:nrow(joinVisitGroups)) {
@@ -373,6 +395,12 @@ source(here("tools", "excel_json_validator", "functions", "excel_json_validator_
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_date.R"), encoding = "UTF-8")
 # visit_groups
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_visit_groups.R"), encoding = "UTF-8")
+# sheet_groups
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_sheet_groups.R"), encoding = "UTF-8")
 # references
 source(here("tools", "excel_json_validator", "functions", "excel_json_validator_get_ref.R"), encoding = "UTF-8")
+# column names
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_column_names.R"), encoding = "UTF-8")
+# sort order
+source(here("tools", "excel_json_validator", "functions", "excel_json_validator_sort_order.R"), encoding = "UTF-8")
 # ------ main ------

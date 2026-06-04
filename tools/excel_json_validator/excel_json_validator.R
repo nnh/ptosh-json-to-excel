@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.27
 rm(list = ls())
 # ------ libraries ------
 library(tidyverse, warn.conflicts = F)
@@ -28,6 +28,10 @@ ExecExcelJsonValidator <- function(trialName) {
   fieldOrders <<- GetFieldOrders()
   sheetAndFieldOrders <<- GetSheetAndFieldOrders(sheetOrders, c("alias_name" = "sheet"))
   isVisit <<- GetVisitInfo()
+  # 各シートの列名を検証する
+  CheckColumnNames(sheetList, isVisit, trialName)
+  # 各シートのソート順を検証する
+  CheckSortOrder(sheetList, isVisit, trialName)
   jpNameAndAliasName <<- target_json |> GetNameAndAliasNameByJson()
   jpNameAndGroup <<- GetNameAndGroupByJson()
   fieldItems <<- target_json |> GetFieldItemsByJsonList()
@@ -36,13 +40,6 @@ ExecExcelJsonValidator <- function(trialName) {
   options_json <<- target_json[[kOptions]]
   fieldInfoForGetReference <<- GetFieldInfoForGetRef()
 
-  # シート並び順のチェックを実行
-  checkSheetNames <- sheetList |> names()
-  sheetSortOrders <- c("item_visit", "item_nonvisit", "visit", "allocation", "limitation", "date", "option", "name", "master", "assigned")
-  if (!identical(sheetSortOrders, checkSheetNames)) {
-    print(checkSheetNames)
-    stop(str_c("Sheet order is incorrect in trial: ", trialName))
-  }
   checkChecklist <- list()
   # ########
   # # item #
@@ -68,6 +65,10 @@ ExecExcelJsonValidator <- function(trialName) {
   sheetName <- "allocation"
   checkChecklist[[sheetName]] <- sheetList |> CheckAllocation(fieldItems, sheetName)
   dummy <- ExecValidateSheetAndJsonEquality(checkChecklist, sheetName)
+  ################
+  # sheet_groups #
+  ################
+  CheckSheetGroups(target_json, sheetList, trialName)
   # ##########
   # # action #
   # ##########
@@ -148,7 +149,9 @@ for (i in 1:length(kTrialNames)) {
   trialName <- kTrialNames[i]
   jsonAndSheet <- GetJsonAndSheet(trialName)
   target_json <- jsonAndSheet[["json"]]
-  sheetList <- jsonAndSheet[["sheetList"]]
+  sheetList   <- jsonAndSheet[["sheetList"]]
+  # 全検証の前提条件としてシート並び順を確認する
+  CheckSheetOrder(sheetList, trialName)
   checkChecklist <- ExecExcelJsonValidator(trialName)
   if (length(checkChecklist) > 0) {
     print(names(checkChecklist))

@@ -2,7 +2,7 @@
 #'
 #' @file json_to_excel.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.28
 rm(list = ls())
 # ------ functions ------
 #' Install and Load R Package
@@ -32,69 +32,49 @@ InstallAndLoadPackage("here")
 InstallAndLoadPackage("jsonlite")
 InstallAndLoadPackage("openxlsx")
 InstallAndLoadPackage("rlang")
+# 読み込み順序： common_functions → constants → edit_checklist_function
+# edit_checklist_function.R 内で GetEngToJpnColumnMappings() を .const に追加するため、
+# constants.R より後に読み込む必要がある。
 source(here("prg", "functions", "common_functions.R"), encoding = "UTF-8")
-source(here("prg", "functions", "io_functions.R"), encoding = "UTF-8")
-source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8")
 source(here("prg", "functions", "constants.R"), encoding = "UTF-8")
+source(here("prg", "functions", "edit_checklist_function.R"), encoding = "UTF-8")
 # ------ main ------
-temp <- ExecReadJsonFiles()
-for (name in names(temp)) {
-  assign(name, temp[[name]])
-}
+temp         <- ExecReadJsonFiles()
+sheets       <- temp$sheets
+sheet_info   <- temp$sheet_info
+json_files   <- temp$json_files
+trialName    <- temp$trialName
+options_flag <- temp$options_flag
+options_json <- temp$options_json
+is_visit     <- temp$is_visit
+visit_info   <- temp$visit_info
 rm(temp)
-
+# field_list は replace_ref_text.R::GetFieldText の参照先情報解決に必要
 field_list <- GetFieldList(sheets)
-
-sheet_data_list_group <- sheets %>% map(~ {
-  sheet <- .x
-  sheet_name <- sheet[[.const[["kAliasName"]]]]
-  field_items <- sheet %>% GetFieldItems()
-  temp <- EditItemAndItemVisit(field_items, sheet_name)
-  item_nonvisit <- temp[[.const[["kItemNonVisit"]]]]
-  item_visit_old <- temp[[.const[["kItemVisit"]]]]
-  allocation <- sheet %>% GetAllocation()
-  master <- field_items %>% GetMaster(sheet)
-  if (!is_visit) {
-    visit <- field_items %>% GetVisit(sheet)
-  } else {
-    visit <- NULL
-  }
-  name <- tibble(name = sheet[[.const[["kSheetJapaneseName"]]]], alias_name = sheet_name, images_count = sheet[["images_count"]])
-  option <- field_items %>% GetOptions(sheet)
-  assigned <- field_items %>% EditAssigned(sheet)
-  limitation <- field_items %>% EditLimitation(sheet)
-  date <- field_items %>% EditDate(sheet)
-  item_nonvisit <- JoinJpnameAndAliasNameAndSelectColumns(.const[["kItemNonVisit"]], sheet)
-  item_visit_old <- JoinJpnameAndAliasNameAndSelectColumns(.const[["kItemVisit_old"]], sheet)
-  return(list(
-    name = name,
-    item_nonvisit = item_nonvisit,
-    allocation = allocation,
-    master = master,
-    visit = visit,
-    item_visit_old = item_visit_old,
-    option = option,
-    assigned = assigned,
-    limitation = limitation,
-    date = date
-  ))
-})
+# シートごとにシートデータを作成する
+sheet_data_list_group <- sheets %>% map(~ BuildSheetData(.x, is_visit, options_flag, options_json))
 # シートデータを結合し、空データを補完する
 sheet_data_combine <- CombineSheetSafety(sheet_data_list_group)
 # VISIT情報を集約する
-summary_sheet_data <- SummarizeByVisit(sheet_data_combine)
+summary_sheet_data <- SummarizeByVisit(sheet_data_combine, visit_info)
 # VISIT対応シートを使用している試験のVISIT情報を格納する
 if (is_visit) {
-  summary_sheet_data[[.const[["kVisit"]]]] <- GetVisitIsVisit()
+  summary_sheet_data[[.const[["kVisit"]]]] <- GetVisitIsVisit(visit_info)
 }
+# 各シートの行順をソートする（英語列名のまま処理）
+sorted_sheet_data <- SortRowsMain(summary_sheet_data, sheet_info, field_list, visit_info)
 # 日本語列名に変換する
-output_checklist <- convertSheetColumnsToJapanese(summary_sheet_data)
+output_checklist <- convertSheetColumnsToJapanese(sorted_sheet_data, is_visit)
 # item_visit、同一グループでシート情報以外がidenticalなものはまとめる
-output_checklist[[.const[["kItemVisit"]]]] <- EditItemVisit(output_checklist[[.const[["kItemVisit_old"]]]])
+output_checklist[[.const[["kItemVisit"]]]] <- EditItemVisit(output_checklist[[.const[["kItemVisit_old"]]]], field_list, visit_info, sheet_info)
 # remove item_visit_old sheet
 output_checklist[[.const[["kItemVisit_old"]]]] <- NULL
-# シート出力順、各シートの行順の変更
-sort_output_checklist <- SortSheetsMain(output_checklist)
+# シートグループの編集
+sheet_groups_table <- EditSheetGroupsMain(json_files, sheet_info)
+output_checklist[[.const[["kSheetGroupsVisit"]]]] <- sheet_groups_table$visit_cross_tab
+output_checklist[[.const[["kSheetGroupsNonVisit"]]]] <- sheet_groups_table$non_visit_cross_tab
+# シート出力順の変更
+sort_output_checklist <- output_checklist[.const[["kSortOrderSheetNames"]]]
 
 # create output folder.
 output_folder_name <- Sys.time() %>%

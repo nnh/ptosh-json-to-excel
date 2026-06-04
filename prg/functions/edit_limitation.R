@@ -2,36 +2,18 @@
 #'
 #' @file edit_limitation.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.28
 HasValueLimitation <- function(x) {
     !is.null(x) && !is.na(x) && x != ""
 }
+HasLimitationValidation <- function(x) {
+    HasValueLimitation(PluckConst(x, .const[["kNormalRangeLessThanOrEqualTo"]])) ||
+        HasValueLimitation(PluckConst(x, .const[["kNormalRangeGreaterThanOrEqualTo"]])) ||
+        HasValueLimitation(PluckConst(x, .const[["kValidatorsNumericalityLessThanOrEqualTo"]])) ||
+        HasValueLimitation(PluckConst(x, .const[["kValidatorsNumericalityGreaterThanOrEqualTo"]]))
+}
 GetLimitation <- function(field_items) {
-    target <- field_items %>%
-        keep(~ {
-            normal_lte <- purrr::pluck(
-                .x, !!!.const[["kNormalRangeLessThanOrEqualTo"]],
-                .default = NULL
-            )
-            normal_gte <- purrr::pluck(
-                .x, !!!.const[["kNormalRangeGreaterThanOrEqualTo"]],
-                .default = NULL
-            )
-
-            num_lte <- purrr::pluck(
-                .x, !!!.const[["kValidatorsNumericalityLessThanOrEqualTo"]],
-                .default = NULL
-            )
-            num_gte <- purrr::pluck(
-                .x, !!!.const[["kValidatorsNumericalityGreaterThanOrEqualTo"]],
-                .default = NULL
-            )
-
-            HasValueLimitation(normal_lte) ||
-                HasValueLimitation(normal_gte) ||
-                HasValueLimitation(num_lte) ||
-                HasValueLimitation(num_gte)
-        })
+    target <- field_items %>% keep(HasLimitationValidation)
     if (length(target) == 0) {
         return(NULL)
     }
@@ -43,14 +25,14 @@ EditLimitation <- function(input_field_items, sheet) {
         res <- tibble::tibble(
             name = .x[[.const[["kFieldItemsFieldId"]]]],
             label = .x[[.const[["kFieldItemsFieldName"]]]],
-            default_value = .x[[.const[["kFieldItemDefaultValue"]]]] %||% NA,
-            normal_range.less_than_or_equal_to = purrr::pluck(.x, !!!.const[["kNormalRangeLessThanOrEqualTo"]], .default = NA),
-            normal_range.greater_than_or_equal_to = purrr::pluck(.x, !!!.const[["kNormalRangeGreaterThanOrEqualTo"]], .default = NA),
-            validators.numericality.validate_numericality_less_than_or_equal_to = purrr::pluck(.x, !!!.const[["kValidatorsNumericalityLessThanOrEqualTo"]], .default = NA),
-            validators.numericality.validate_numericality_greater_than_or_equal_to = purrr::pluck(.x, !!!.const[["kValidatorsNumericalityGreaterThanOrEqualTo"]], .default = NA)
+            default_value = PluckOrNA(.x, .const[["kFieldItemDefaultValue"]]),
+            normal_range.less_than_or_equal_to = PluckOrNA(.x, .const[["kNormalRangeLessThanOrEqualTo"]]),
+            normal_range.greater_than_or_equal_to = PluckOrNA(.x, .const[["kNormalRangeGreaterThanOrEqualTo"]]),
+            validators.numericality.validate_numericality_less_than_or_equal_to = PluckOrNA(.x, .const[["kValidatorsNumericalityLessThanOrEqualTo"]]),
+            validators.numericality.validate_numericality_greater_than_or_equal_to = PluckOrNA(.x, .const[["kValidatorsNumericalityGreaterThanOrEqualTo"]])
         )
         return(res)
     })
-    res <- JoinJpnameAndAliasNameAndSelectColumns("limitation", sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(limitation, .const[["kLimitation"]], sheet)
     return(res)
 }

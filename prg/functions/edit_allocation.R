@@ -2,9 +2,9 @@
 #'
 #' @file edit_allocation.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.28
 GetAllocation <- function(json_file) {
-    allocation <- json_file[["allocation"]]
+    allocation <- json_file[[.const[["kAllocation"]]]]
     if (is.null(allocation)) {
         return(NULL)
     }
@@ -21,11 +21,11 @@ GetAllocation <- function(json_file) {
     } else {
         ""
     }
-    groups <- allocation[["groups"]] %>% map_df(~ {
-        if_references <- GetFieldText(.x[["if"]], json_file[[.const[["kAliasName"]]]])
+    groups <- allocation[[.const[["kAllocationGroups"]]]] %>% map_df(~ {
+        if_references <- GetFieldText(.x[["if"]], json_file[[.const[["kAliasName"]]]], field_list, visit_info)
         group_tbl <- tibble::tibble(
-            groups.code = .x[["code"]],
-            groups.label = .x[["label"]],
+            groups.code = .x[[.const[["kAllocationGroupsCode"]]]],
+            groups.label = .x[[.const[["kAllocationGroupsLabel"]]]],
             groups.if = .x[["if"]],
             groups.if_references = if (is.null(if_references)) NA else if_references,
             groups.message = .x[["message"]]
@@ -43,13 +43,13 @@ GetAllocation <- function(json_file) {
     res[["formula_field"]] <- formula_field_str
     temp_formula_field_references <- GetDfSheetField(formula_field_str, json_file[[.const[["kAliasName"]]]])
     if (!is.null(temp_formula_field_references)) {
-        formula_field_references <- temp_formula_field_references %>% EditRefFieldTextVec()
+        formula_field_references <- temp_formula_field_references %>% EditRefFieldTextVec(field_list, visit_info)
         # Replace raw in formula_field_str with text for all rows if raw is present
         if (!is.null(formula_field_references) && nrow(formula_field_references) > 0) {
             for (i in 1:nrow(formula_field_references)) {
-                raw_val <- formula_field_references[i, "raw"]
-                text_val <- formula_field_references[i, "text"]
-                if (!is.null(raw_val) && !is.null(text_val)) {
+                raw_val  <- formula_field_references[["raw"]][i]
+                text_val <- formula_field_references[["text"]][i]
+                if (!is.na(raw_val) && !is.na(text_val)) {
                     if (grepl(raw_val, formula_field_str, fixed = TRUE)) {
                         formula_field_str <- gsub(raw_val, text_val, formula_field_str, fixed = TRUE)
                     }
@@ -58,7 +58,6 @@ GetAllocation <- function(json_file) {
         }
     }
     res[["formula_field_references"]] <- formula_field_str
-    allocation <- res
-    res <- JoinJpnameAndAliasNameAndSelectColumns("allocation", json_file)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(res, .const[["kAllocation"]], json_file)
     return(res)
 }

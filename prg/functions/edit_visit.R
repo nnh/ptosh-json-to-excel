@@ -2,19 +2,10 @@
 #'
 #' @file edit_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.27
 GetVisit <- function(field_items, sheet) {
-    kNonvisitCondition <- "Visit Number"
     target <- field_items %>%
-        keep(~ {
-            if (is.null(.x[[.const[["kFieldItemsFieldName"]]]])) {
-                return(FALSE)
-            } else if (.x[[.const[["kFieldItemsFieldName"]]]] == kNonvisitCondition) {
-                return(TRUE)
-            } else {
-                return(FALSE)
-            }
-        })
+        keep(~ identical(.x[[.const[["kFieldItemsFieldName"]]]], .const[["kVisitNumber"]]))
     if (length(target) == 0) {
         return(NULL)
     }
@@ -27,7 +18,7 @@ GetVisit <- function(field_items, sheet) {
             return(res)
         })
 
-    res <- JoinJpnameAndAliasNameAndSelectColumns(.const[["kVisit"]], sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(visit, .const[["kVisit"]], sheet)
     return(res)
 }
 GetVisitGroupsFromJson <- function(json_files) {
@@ -67,7 +58,7 @@ GetVisitGroupAndVisitsFromJson <- function(json_files) {
         left_join(visits, by = c("visitnum" = "visitnum"))
     return(res)
 }
-GetVisitIsVisit <- function() {
+GetVisitIsVisit <- function(visit_info) {
     visit <- visit_info %>%
         select(visitnum, visit_name) %>%
         arrange(visitnum) %>%

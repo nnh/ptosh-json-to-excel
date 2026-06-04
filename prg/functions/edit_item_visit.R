@@ -1,13 +1,14 @@
 #' edit_item_visit.R
 #'
-#' @file edit_item.R
+#' @file edit_item_visit.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
-EditItemVisit <- function(item_visit) {
+#' @date 2026.5.27
+EditItemVisit <- function(item_visit, field_list, visit_info, sheet_info) {
     if (nrow(item_visit) == 0) {
         return(item_visit)
     }
     temp_itemVisitSeq <- "seq"
+    kLabelCountColname <- "ラベルの個数"
     # シートソート順の取得
     sheet_name_and_sort_order <- sheet_info %>%
         select(alias_name, sort_order) %>%
@@ -38,7 +39,7 @@ EditItemVisit <- function(item_visit) {
         ) %>%
         select(
             visit_group_name,
-            ラベル,
+            all_of(.const[["kLabelJapaneseColumnName"]]),
             all_of(.const[["kItemVisitConditionalFormattingColumnName"]])
         )
     target_item_visit_distinct <- target_item_visit %>%
@@ -53,7 +54,8 @@ EditItemVisit <- function(item_visit) {
         select(visit_group_name, label, sort_order, field_seq) %>%
         inner_join(
             target_item_visit_distinct,
-            by = c("visit_group_name" = "visit_group_name", "label" = "ラベル")
+            by = c("visit_group_name" = "visit_group_name",
+                   setNames(.const[["kLabelJapaneseColumnName"]], "label"))
         )
     item_visit_rownames <- target_field_items %>%
         arrange(sort_order, field_seq) %>%
@@ -64,25 +66,24 @@ EditItemVisit <- function(item_visit) {
     label_count_by_sheet <- target_item_visit %>%
         group_by(
             visit_group_name,
-            ラベル,
+            !!sym(.const[["kLabelJapaneseColumnName"]]),
             !!sym(.const[["kItemVisitConditionalFormattingColumnName"]])
         ) %>%
         summarise(
-            ラベルの個数 = n(),
+            !!sym(kLabelCountColname) := n(),
             .groups = "drop"
         )
-
     # ピボット操作で visit_group_name ごとに列を分ける
     label_count_wide <- label_count_by_sheet %>%
         pivot_wider(
             names_from = visit_group_name,
-            values_from = ラベルの個数,
-            values_fill = list(ラベルの個数 = 0)
+            values_from = all_of(kLabelCountColname),
+            values_fill = setNames(list(0), kLabelCountColname)
         )
     output_item_visit <- item_visit_rownames %>%
         inner_join(
             label_count_wide,
-            by = c("label" = "ラベル")
+            by = setNames(.const[["kLabelJapaneseColumnName"]], "label")
         ) %>%
         select(all_of(output_colname_order)) %>%
         arrange(temp_itemVisitSeq)

@@ -16,6 +16,10 @@
 /forTest_input_*/*
 dummy
 
+# Claude Code settings (settings.json is shared; settings.local.json is personal)
+.claude/**
+!.claude/settings.json
+
 *.Rproj
 # History files
 .Rhistory

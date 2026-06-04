@@ -2,18 +2,10 @@
 #'
 #' @file edit_common.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.27
 GetTargetByType <- function(field_items, type) {
     target <- field_items %>%
-        keep(~ {
-            if (is.null(.x[[.const[["kFieldItemsType"]]]])) {
-                return(FALSE)
-            } else if (.x[[.const[["kFieldItemsType"]]]] == type) {
-                return(TRUE)
-            } else {
-                return(FALSE)
-            }
-        })
+        keep(~ identical(.x[[.const[["kFieldItemsType"]]]], type))
     if (length(target) == 0) {
         return(NULL)
     }
@@ -41,6 +33,23 @@ GetFieldList <- function(sheets) {
         }) %>%
         bind_rows()
     return(field_list)
+}
+#' 定数パスによる purrr::pluck のラッパー
+#'
+#' @param x 対象のリストオブジェクト
+#' @param key_const 定数として定義されたパスベクトル（.const[["kXxx"]] 等）
+#' @param default 値が存在しない場合のデフォルト値（省略時は NULL）
+#' @return pluck で取得した値、存在しない場合は default
+PluckConst <- function(x, key_const, default = NULL) {
+    purrr::pluck(x, !!!key_const, .default = default)
+}
+#' PluckConst の NA デフォルト版ショートカット
+#'
+#' @param x 対象のリストオブジェクト
+#' @param key_const 定数として定義されたパスベクトル（.const[["kXxx"]] 等）または文字列
+#' @return pluck で取得した値、存在しない場合は NA
+PluckOrNA <- function(x, key_const) {
+    PluckConst(x, key_const, default = NA)
 }
 CombineSheetSafety <- function(sheet_data_list) {
     targetSheetNames <- .const[["kTargetSheetNames"]] %>% append("name", .)

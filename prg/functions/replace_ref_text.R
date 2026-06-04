@@ -2,9 +2,9 @@
 #'
 #' @file replace_ref_text.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.28
 #
-EditRefFieldTextVec <- function(df_sheet_field) {
+EditRefFieldTextVec <- function(df_sheet_field, field_list, visit_info) {
     join_field_info <- dplyr::left_join(df_sheet_field, field_list, by = c(.const[["kAliasName"]], "field_number")) %>% select(-field_seq)
     join_field_info <- join_field_info %>%
         dplyr::left_join(visit_info, by = .const[["kAliasName"]])
@@ -32,7 +32,16 @@ ExtractAliasAndField <- function(x, thisSheetName) {
     list(alias = alias, number = number)
 }
 GetDfSheetField <- function(target, thisSheetName) {
-    kFieldText <- c("ref\\('\\w[\\w\\d\\p{Punct}]*', \\d+\\)", "f\\d+", "field\\d+", "ref\\('[^']+',\\s*\\d+\\)")
+    kFieldText <- c(
+        # ref('alias_name', 123) 形式（英数字・記号を含むエイリアス名）
+        "ref\\('\\w[\\w\\d\\p{Punct}]*', \\d+\\)",
+        # f1, f2, ... 形式（フィールド番号短縮表記）
+        "f\\d+",
+        # field1, field2, ... 形式（フィールド番号完全表記）
+        "field\\d+",
+        # ref('any name', 123) 形式（スペース等を含むエイリアス名にも対応）
+        "ref\\('[^']+',\\s*\\d+\\)"
+    )
     fieldTextList <- unlist(lapply(kFieldText, function(pattern) str_extract_all(target, pattern))) %>% unique()
 
     if (length(fieldTextList) == 0) {
@@ -50,19 +59,15 @@ GetDfSheetField <- function(target, thisSheetName) {
         select(-parsed)
     return(df_sheet_field)
 }
-RegexEscape <- function(text) {
-    # 正規表現の特殊文字をバックスラッシュでエスケープ
-    gsub("([][{}()+*^$|\\\\?.])", "\\\\\\1", text)
-}
-GetFieldText <- function(target, thisSheetName) {
+GetFieldText <- function(target, thisSheetName, field_list, visit_info) {
     df_sheet_field <- GetDfSheetField(target, thisSheetName)
     if (is.null(df_sheet_field)) {
         return(NULL)
     }
-    df_refFieldText <- EditRefFieldTextVec(df_sheet_field)
+    df_refFieldText <- EditRefFieldTextVec(df_sheet_field, field_list, visit_info)
     temp_ref <- target
     for (i in 1:nrow(df_refFieldText)) {
-        raw_pattern <- RegexEscape(df_refFieldText[["raw"]][i])
+        raw_pattern <- stringr::str_escape(df_refFieldText[["raw"]][i])
         # 後に数字が続かない場合のみマッチ
         regex_pattern <- paste0("(", raw_pattern, ")(?![0-9])")
         if (str_detect(temp_ref, regex(regex_pattern))) {

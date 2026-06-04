@@ -2,7 +2,7 @@
 #'
 #' @file common_functions.R
 #' @author Mariko Ohtsuka
-#' @date 2025.1.9
+#' @date 2026.5.28
 # ------ functions ------
 #' Create an output folder if it does not exist.
 #'
@@ -54,6 +54,16 @@ AddSlashIfMissing <- function(input_string) {
     return(input_string)
   }
 }
+GetSheetGroupRow <- function(sheet_groups, alias) {
+  row <- sheet_groups %>% filter(alias_name == alias)
+  if (nrow(row) == 0) NA else row
+}
+GetSheetSortOrder <- function(sheet_orders, alias) {
+  row <- sheet_orders %>% filter(alias_name == alias)
+  if (nrow(row) == 0) return(NA)
+  if (nrow(row) == 1) return(row[["sort_order"]][1])
+  stop(paste0("sheet_ordersに同じalias_nameが複数存在します: ", alias))
+}
 GetSheetNamesAndSortOrderFromJson <- function(json_file) {
   sheets <- json_file[["sheets"]] %>% map_df(~ {
     res <- tibble::tibble(
@@ -63,17 +73,17 @@ GetSheetNamesAndSortOrderFromJson <- function(json_file) {
     )
     return(res)
   })
-  sheet_groups <- json_file[["sheet_groups"]] %>% map_df(~ {
+  sheet_groups <- json_file[[.const[["kSheetGroups"]]]] %>% map_df(~ {
     group_name <- .x[["name"]]
     group_alias_name <- .x[[.const[["kAliasName"]]]]
-    group_alocation_group <- .x[["allocation_group"]]
+    group_allocation_group <- .x[[.const[["kSheetGroupAllocationGroup"]]]]
     group_is_default <- .x[["is_default"]]
     res <- .x[["sheets"]] %>% map_df(~ {
       res <- tibble::tibble(
         alias_name = .x[[.const[["kAliasName"]]]],
         group_name = group_name,
         group_alias_name = group_alias_name,
-        allocation_group = group_alocation_group,
+        allocation_group = group_allocation_group,
         is_default = group_is_default
       )
       return(res)
@@ -94,29 +104,12 @@ GetSheetNamesAndSortOrderFromJson <- function(json_file) {
     arrange(sort_order)
   sheets <- json_file[["sheets"]] %>% map(~ {
     res <- .x
-    sheet_group_row <- sheet_groups %>% filter(alias_name == res[[.const[["kAliasName"]]]])
-    if (nrow(sheet_group_row) == 0) {
-      res[["sheet_groups"]] <- NA
-    } else {
-      res[["sheet_groups"]] <- sheet_group_row
+    current_alias <- res[[.const[["kAliasName"]]]]
+    res[[.const[["kSheetGroups"]]]] <- GetSheetGroupRow(sheet_groups, current_alias)
+    res[["sort_order"]] <- GetSheetSortOrder(sheet_orders, current_alias)
+    for (key in .const[["kSheetKeysToRemove"]]) {
+      res[[key]] <- NULL
     }
-    sheet_order_row <- sheet_orders %>% filter(alias_name == res[[.const[["kAliasName"]]]])
-    if (nrow(sheet_order_row) == 0) {
-      res[["sort_order"]] <- NA
-    } else if (nrow(sheet_order_row) == 1) {
-      res[["sort_order"]] <- sheet_order_row[["sort_order"]][1]
-    } else {
-      stop(paste0("sheet_ordersに同じalias_nameが複数存在します: ", res[[.const[["kAliasName"]]]]))
-    }
-    res[["stylesheet"]] <- NULL
-    res[["fax_stylesheet"]] <- NULL
-    res[["odm"]] <- NULL
-    res[["registration_config"]] <- NULL
-    res[["uuid"]] <- NULL
-    res[["digest"]] <- NULL
-    res[["lock_version"]] <- NULL
-    res[["created_at"]] <- NULL
-    res[["updated_at"]] <- NULL
     return(res)
   })
   sheetNameList <- sheets %>% map_chr(~ .x[[.const[["kAliasName"]]]])
@@ -137,17 +130,17 @@ GetSheetNamesAndSortOrderFromJson <- function(json_file) {
 #' @import ReadJsonFiles
 #' @export
 ExecReadJsonFiles <- function() {
-  json_filenames <- list.files(.const[["kInputFolderName"]], pattern = "*.json", full.names = F)
-  if (length(json_filenames) == 0) {
+  json_filename <- list.files(.const[["kInputFolderName"]], pattern = "*.json", full.names = F)
+  if (length(json_filename) == 0) {
     stop("inputフォルダの中にjsonファイルが存在しません。")
     return(NULL)
   }
-  if (length(json_filenames) > 1) {
+  if (length(json_filename) > 1) {
     stop("inputフォルダの中にjsonファイルが複数存在します。jsonファイルを一つだけ格納して再実行してください。")
     return(NULL)
   }
-  json_file <- ReadJsonFiles(json_filenames, .const[["kInputFolderName"]])
-  trial_name <- json_filenames %>% str_remove("_[0-9]{6}_[0-9]{4}\\.json$")
+  json_file <- ReadJsonFiles(json_filename, .const[["kInputFolderName"]])
+  trial_name <- json_filename %>% str_remove("_[0-9]{6}_[0-9]{4}\\.json$")
   options_flag <- .const[["kOptions"]] %in% names(json_file)
   if (options_flag) {
     options_json <- GetListSetName(json_file, .const[["kOptions"]], "name")
@@ -173,7 +166,7 @@ ExecReadJsonFiles <- function() {
   res[["json_files"]] <- json_file
   res[["trialName"]] <- trial_name
   res[["options_flag"]] <- options_flag
-  res[["options_json"]] <- options_json
+  res[["options_json"]] <- if (options_flag) options_json else NULL
   res[["is_visit"]] <- is_visit
   res[["visit_info"]] <- visit_info
   return(res)
@@ -195,4 +188,15 @@ GetListSetName <- function(input_list, target_name, target_col_name) {
   targetNames <- GetNamesFromList(target_list, target_col_name)
   res <- setNames(target_list, targetNames)
   return(res)
+}
+#' Read a JSON file and return its contents.
+#'
+#' @param json_filename A single JSON file name.
+#' @param targetTrialFolder The path of the folder containing the JSON file.
+#' @return A list containing the JSON file contents.
+ReadJsonFiles <- function(json_filename, targetTrialFolder) {
+  json_file <- json_filename %>%
+    file.path(targetTrialFolder, .) %>%
+    read_json()
+  return(json_file)
 }

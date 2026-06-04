@@ -2,7 +2,7 @@
 #'
 #' @file edit_option.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.9
+#' @date 2026.5.28
 GetOptionsValues <- function(option) {
     option_name <- option[["name"]]
     option_values <- option[["values"]]
@@ -17,7 +17,7 @@ GetOptionsValues <- function(option) {
     return(df_option_values)
 }
 
-GetOptions <- function(field_items, sheet) {
+GetOptions <- function(field_items, sheet, options_flag, options_json) {
     if (options_flag) {
         target <- field_items %>%
             keep(~ !is.null(.x[["option_name"]]) && .x[[.const[["kFieldItemsType"]]]] == .const[["kArticle"]])
@@ -38,7 +38,7 @@ GetOptions <- function(field_items, sheet) {
                 option <- .x[["option"]]
             }
             if (length(option) == 0) {
-                stop(paste("Option ID", option_id, "not found in options JSON."))
+                stop(paste("Option ID", option_name, "not found in options JSON."))
             }
             field_item_seq <- .x[[.const[["kFieldItemsSeq"]]]]
             df_option_values <- option %>% GetOptionsValues(.)
@@ -49,7 +49,7 @@ GetOptions <- function(field_items, sheet) {
         distinct() %>%
         filter(option.values_is_usable == TRUE)
     option[["sheet.seq"]] <- sheet[["sort_order"]]
-    res <- JoinJpnameAndAliasNameAndSelectColumns("option", sheet)
+    res <- JoinJpnameAndAliasNameAndSelectColumns(option, .const[["kOption"]], sheet)
 
     return(res)
 }
