@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(input/**)",
+      "Write(input/**)",
+      "Read(output/**)",
+      "Write(output/**)",
+      "Read(forTest_input_ALL-B19/**)",
+      "Write(forTest_input_ALL-B19/**)",
+      "Read(forTest_input_AML224-FLT3-ITD/**)",
+      "Write(forTest_input_AML224-FLT3-ITD/**)",
+      "Read(forTest_input_Bev-FOLFOX-SBC/**)",
+      "Write(forTest_input_Bev-FOLFOX-SBC/**)",
+      "Read(20260420forTest_input_AML224-FLT3-ITD/**)",
+      "Write(20260420forTest_input_AML224-FLT3-ITD/**)"
+    ]
+  }
+}
