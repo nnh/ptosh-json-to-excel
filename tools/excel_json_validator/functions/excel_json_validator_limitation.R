@@ -22,7 +22,12 @@ CheckLimitation <- function(sheetList, sheetName) {
             stringsAsFactors = FALSE
         )
     }
-    sheet[["normal_range.less_than_or_equal_to"]] <- ifelse(sheet[["normal_range.less_than_or_equal_to"]] == "1e+06", "1000000", sheet[["normal_range.less_than_or_equal_to"]])
+    normalize_numeric_str <- function(x) {
+        num <- suppressWarnings(as.numeric(x))
+        ifelse(!is.na(num), ifelse(num == floor(num), as.character(as.integer(num)), as.character(num)), x)
+    }
+    sheet[["normal_range.less_than_or_equal_to"]]    <- normalize_numeric_str(sheet[["normal_range.less_than_or_equal_to"]])
+    sheet[["normal_range.greater_than_or_equal_to"]] <- normalize_numeric_str(sheet[["normal_range.greater_than_or_equal_to"]])
     return(CheckTarget(sheet, json))
 }
 GetLimitationFromJson <- function() {
@@ -64,15 +69,24 @@ GetLimitationFromJson <- function() {
             aliasName <- .x[["alias_name"]]
             res <- .x[["field_items"]] %>%
                 map(~ {
+                    to_chr <- function(x) {
+                        v <- x %||% NA_character_
+                        num <- suppressWarnings(as.numeric(v))
+                        if (!is.na(num)) {
+                            if (num == floor(num)) as.character(as.integer(num)) else as.character(num)
+                        } else {
+                            as.character(v)
+                        }
+                    }
                     res <- tibble(
                         alias_name = aliasName,
                         name = .x[["name"]],
                         label = .x[["label"]],
-                        default_value = as.character(.x[["default_value"]] %||% NA_character_),
-                        normal_range.less_than_or_equal_to = as.character(.x[["normal_range"]][["less_than_or_equal_to"]] %||% NA_character_),
-                        normal_range.greater_than_or_equal_to = as.character(.x[["normal_range"]][["greater_than_or_equal_to"]] %||% NA_character_),
-                        validators.numericality.validate_numericality_less_than_or_equal_to = as.character(.x[["validators"]][["numericality"]][["validate_numericality_less_than_or_equal_to"]] %||% NA_character_),
-                        validators.numericality.validate_numericality_greater_than_or_equal_to = as.character(.x[["validators"]][["numericality"]][["validate_numericality_greater_than_or_equal_to"]] %||% NA_character_)
+                        default_value = to_chr(.x[["default_value"]]),
+                        normal_range.less_than_or_equal_to = to_chr(.x[["normal_range"]][["less_than_or_equal_to"]]),
+                        normal_range.greater_than_or_equal_to = to_chr(.x[["normal_range"]][["greater_than_or_equal_to"]]),
+                        validators.numericality.validate_numericality_less_than_or_equal_to = to_chr(.x[["validators"]][["numericality"]][["validate_numericality_less_than_or_equal_to"]]),
+                        validators.numericality.validate_numericality_greater_than_or_equal_to = to_chr(.x[["validators"]][["numericality"]][["validate_numericality_greater_than_or_equal_to"]])
                     )
                     return(res)
                 }) %>%
