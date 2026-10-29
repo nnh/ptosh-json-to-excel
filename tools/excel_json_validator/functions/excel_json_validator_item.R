@@ -61,25 +61,27 @@ GetItemVisitOldFromJson <- function() {
         discard(~ is.null(.) | length(.) == 0)
     item_visit_old <- EditItemFromJsonForValidate(item_json)
     item_visit_old$alert <- FALSE
-    for (i in 1:length(alert[[1]])) {
-        alert_aliasname <- alert[[1]][[i]][["alias_name"]]
-        alert_fieldid <- alert[[1]][[i]][["name"]]
-        for (row in 1:nrow(item_visit_old)) {
-            if (item_visit_old[row, "alias_name"] == alert_aliasname) {
-                if (item_visit_old[row, "name"] == alert_fieldid) {
-                    item_visit_old[row, "alert"] <- TRUE
+    if (length(alert) > 0) {
+        for (i in 1:length(alert[[1]])) {
+            alert_aliasname <- alert[[1]][[i]][["alias_name"]]
+            alert_fieldid <- alert[[1]][[i]][["name"]]
+            for (row in 1:nrow(item_visit_old)) {
+                if (item_visit_old[row, "alias_name"] == alert_aliasname) {
+                    if (item_visit_old[row, "name"] == alert_fieldid) {
+                        item_visit_old[row, "alert"] <- TRUE
+                    }
                 }
             }
         }
-    }
-    for (row in 1:nrow(item_visit_old)) {
-        target_alias_name <- item_visit_old[row, "alias_name"]
-        target_name <- item_visit_old[row, "name"]
-        alert_text <- ""
-        for (i in 1:length(alert)) {
-            if (alert[[1]][[i]][["alias_name"]] == target_alias_name) {
-                if (alert[[1]][[i]][["name"]] == target_name) {
-                    item_visit_old[row, "alert"] <- TRUE
+        for (row in 1:nrow(item_visit_old)) {
+            target_alias_name <- item_visit_old[row, "alias_name"]
+            target_name <- item_visit_old[row, "name"]
+            alert_text <- ""
+            for (i in 1:length(alert)) {
+                if (alert[[1]][[i]][["alias_name"]] == target_alias_name) {
+                    if (alert[[1]][[i]][["name"]] == target_name) {
+                        item_visit_old[row, "alert"] <- TRUE
+                    }
                 }
             }
         }
