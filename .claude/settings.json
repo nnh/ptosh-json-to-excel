@@ -11,8 +11,8 @@
       "Write(forTest_input_AML224-FLT3-ITD/**)",
       "Read(forTest_input_Bev-FOLFOX-SBC/**)",
       "Write(forTest_input_Bev-FOLFOX-SBC/**)",
-      "Read(20260420forTest_input_AML224-FLT3-ITD/**)",
-      "Write(20260420forTest_input_AML224-FLT3-ITD/**)"
+      "Read(forTest_input_Ivonescimab-NSCLC/**)",
+      "Write(forTest_input_Ivonescimab-NSCLC/**)"
     ]
   }
 }
