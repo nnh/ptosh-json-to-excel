@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_item.R
 #' @author Mariko Ohtsuka
-#' @date 2026.1.13
+#' @date 2026.10.29
 GetItemVisitOldFromJson <- function() {
     item_json <- target_json[["sheets"]] %>% keep(~ .x[["category"]] == "visit")
     if (length(item_json) == 0) {
