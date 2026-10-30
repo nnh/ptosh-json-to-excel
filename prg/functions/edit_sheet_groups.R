@@ -101,6 +101,14 @@ BuildAllocationGroupMaster <- function(json_files) {
 
 #' 列情報（割当グループ → シートグループ名の対応表）を構築する
 BuildColumnInformation <- function(allocation_group_master, sheet_group_allocations) {
+  if (nrow(allocation_group_master) == 0) {
+    return(tibble(
+      !!sym(kSgSheetName)                  := character(),
+      !!sym(.const[["kSheetAliasName"]])   := character(),
+      !!sym(kSgSheetGroupName)             := character(),
+      !!sym(kSgGroupCode)                  := character()
+    ))
+  }
   allocation_group_master %>%
     left_join(sheet_group_allocations, by = c(.const[["kAliasName"]], kSgGroupCode)) %>%
     select(

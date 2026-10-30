@@ -2,7 +2,7 @@
 #'
 #' @file excel_json_validator_sheet_groups.R
 #' @author Mariko Ohtsuka
-#' @date 2026.5.28
+#' @date 2026.10.29
 ValidateSheetGroup <- function(target_sheet_df, reference_table, type_label, header_rows = 2, trial_name) {
     # 1. 行数のチェック
     if (nrow(target_sheet_df) != nrow(reference_table) + header_rows) {
@@ -20,8 +20,11 @@ ValidateSheetGroup <- function(target_sheet_df, reference_table, type_label, hea
     }
 }
 ValidateAllocationCols <- function(sheet_group_df, reference_allocations, type_label, trial_name) {
+    if (nrow(reference_allocations) == 0 && ncol(reference_allocations) == 0) {
+        return(invisible(NULL))
+    }
     # 1. 1〜2行目の3列目以降を抽出して転置
-    extracted_cols <- sheet_group_df[1:2, 3:ncol(sheet_group_df)] %>% 
+    extracted_cols <- sheet_group_df[1:2, 3:ncol(sheet_group_df)] %>%
         as.matrix() %>% 
         t() %>% 
         as.data.frame()

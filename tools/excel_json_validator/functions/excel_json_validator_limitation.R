@@ -68,11 +68,11 @@ GetLimitationFromJson <- function() {
                         alias_name = aliasName,
                         name = .x[["name"]],
                         label = .x[["label"]],
-                        default_value = .x[["default_value"]],
-                        normal_range.less_than_or_equal_to = .x[["normal_range"]][["less_than_or_equal_to"]],
-                        normal_range.greater_than_or_equal_to = .x[["normal_range"]][["greater_than_or_equal_to"]],
-                        validators.numericality.validate_numericality_less_than_or_equal_to = .x[["validators"]][["numericality"]][["validate_numericality_less_than_or_equal_to"]],
-                        validators.numericality.validate_numericality_greater_than_or_equal_to = .x[["validators"]][["numericality"]][["validate_numericality_greater_than_or_equal_to"]]
+                        default_value = as.character(.x[["default_value"]] %||% NA_character_),
+                        normal_range.less_than_or_equal_to = as.character(.x[["normal_range"]][["less_than_or_equal_to"]] %||% NA_character_),
+                        normal_range.greater_than_or_equal_to = as.character(.x[["normal_range"]][["greater_than_or_equal_to"]] %||% NA_character_),
+                        validators.numericality.validate_numericality_less_than_or_equal_to = as.character(.x[["validators"]][["numericality"]][["validate_numericality_less_than_or_equal_to"]] %||% NA_character_),
+                        validators.numericality.validate_numericality_greater_than_or_equal_to = as.character(.x[["validators"]][["numericality"]][["validate_numericality_greater_than_or_equal_to"]] %||% NA_character_)
                     )
                     return(res)
                 }) %>%
