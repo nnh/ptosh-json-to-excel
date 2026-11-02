@@ -52,6 +52,21 @@ ptosh-json-to-excel
         └── yyy.zip
 ```
 
+## 修正が必要な場合
+
+<details>
+<summary>ISR修正担当者向け手順（クリックで展開）</summary>
+
+出力結果に誤りや不具合が見つかった場合は、以下の手順で対応してください。
+
+1. システム担当DMに内容を報告する
+2. 修正を実施する
+3. GitHub の master にマージする
+4. 以下のリンクをシステム担当DMに送付し、バリデーションを取得してもらう
+   https://github.com/nnh/ptosh-json-to-excel/tree/master
+
+</details>
+
 ## 注意事項
 
 - プログラムが前提とするフォルダ構造が整っていることを確認してください。
